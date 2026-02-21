@@ -7,6 +7,9 @@
 
   <link rel="preconnect" href="https://cse.google.com" />
   <link rel="preconnect" href="https://www.google.com" />
+  <link rel="preconnect" href="https://suggestqueries.google.com" />
+  <link rel="preconnect" href="https://nominatim.openstreetmap.org" />
+  <link rel="preconnect" href="https://api.open-meteo.com" />
 
   <style>
     :root{
@@ -15,6 +18,7 @@
       --btn:#f8f9fa; --btnText:#3c4043; --btnBorder:#dadce0;
       --hover:rgba(60,64,67,.08);
       --link:#1a0dab; --visited:#681da8;
+      --good:#188038; --bad:#d93025;
     }
     body.dark{
       --bg:#202124; --text:#e8eaed; --muted:#9aa0a6; --card:#303134; --border:#5f6368;
@@ -22,16 +26,16 @@
       --btn:#303134; --btnText:#e8eaed; --btnBorder:#5f6368;
       --hover:rgba(232,234,237,.08);
       --link:#8ab4f8; --visited:#c58af9;
+      --good:#81c995; --bad:#f28b82;
     }
-
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
     .topbar{height:56px;display:flex;justify-content:flex-end;align-items:center;padding:0 16px}
     .icon-btn{width:38px;height:38px;border-radius:999px;border:0;background:transparent;color:var(--text);cursor:pointer}
     .icon-btn:hover{background:var(--hover)}
+    .wrap{max-width:980px;margin:0 auto;padding:0 16px 40px}
 
-    .wrap{max-width:760px;margin:0 auto;padding:0 16px 40px}
-    .logo{text-align:center;font-size:84px;font-weight:700;letter-spacing:-1px;margin-top:70px;user-select:none}
+    .logo{text-align:center;font-size:84px;font-weight:700;letter-spacing:-1px;margin-top:56px;user-select:none}
     .logo span:nth-child(1){color:#4285f4}
     .logo span:nth-child(2){color:#ea4335}
     .logo span:nth-child(3){color:#fbbc05}
@@ -39,7 +43,7 @@
     .logo span:nth-child(5){color:#34a853}
     .logo span:nth-child(6){color:#ea4335}
 
-    .search-area{margin-top:26px;position:relative}
+    form.search-area{margin-top:22px;position:relative}
     .searchbar{
       display:flex;align-items:center;gap:10px;width:100%;
       padding:12px 14px;border-radius:999px;border:1px solid var(--border);
@@ -59,13 +63,99 @@
     .sugg{padding:10px 16px;cursor:pointer}
     .sugg:hover{background:var(--hover)}
 
-    .actions{margin-top:22px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+    .actions{margin-top:16px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
     .btn{padding:10px 16px;border-radius:4px;border:1px solid var(--btnBorder);background:var(--btn);color:var(--btnText);cursor:pointer;font-size:14px}
     .btn:hover{box-shadow:0 1px 1px rgba(0,0,0,.1)}
 
-    #resultsWrap{margin-top:26px}
+    .module{
+      margin-top:18px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow:0 1px 2px rgba(0,0,0,.06);
+      padding:14px;
+      display:none;
+    }
+    .module.show{display:block}
+    .module h2{margin:0 0 6px;font-size:16px}
+    .module p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.35}
+    .module .row{display:flex;gap:10px;flex-wrap:wrap}
+
+    .pill-link{
+      display:inline-block;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--btnBorder);
+      background:var(--btn);
+      color:var(--btnText);
+      text-decoration:none;
+      font-size:14px;
+      cursor:pointer;
+    }
+    .pill-link:hover{box-shadow:0 1px 1px rgba(0,0,0,.1)}
+
+    /* Weather card */
+    .weather-grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    @media (min-width: 720px){
+      .weather-grid{grid-template-columns: 1.1fr .9fr;}
+    }
+    .weather-main{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:transparent;
+    }
+    .weather-left{min-width:0}
+    .weather-loc{font-weight:700;font-size:14px;margin-bottom:2px}
+    .weather-desc{color:var(--muted);font-size:13px}
+    .weather-temp{
+      font-size:36px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .weather-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .wxchip{
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:4px 10px;
+    }
+    .forecast{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+    }
+    .forecast-title{font-weight:700;font-size:14px;margin:0 0 8px}
+    .forecast-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:8px 0;
+      border-top:1px solid var(--border);
+      font-size:13px;
+      color:var(--text);
+    }
+    .forecast-row:first-of-type{border-top:0}
+    .fmuted{color:var(--muted)}
+    .statusline{margin-top:8px;color:var(--muted);font-size:13px}
 
     /* CSE polish */
+    #resultsWrap{margin-top:18px}
     .gsc-search-box{display:none !important;}
     .gsc-control-cse{padding:0 !important;border:0 !important;background:transparent !important}
     .gsc-webResult.gsc-result{
@@ -79,8 +169,9 @@
     .gs-visibleUrl{color:var(--muted) !important}
 
     @media (max-width:480px){
-      .logo{font-size:64px;margin-top:48px}
+      .logo{font-size:64px;margin-top:40px}
       #suggestions{top:52px}
+      .weather-temp{font-size:32px}
     }
   </style>
 </head>
@@ -95,20 +186,56 @@
       <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
     </div>
 
-    <!-- ✅ BULLETPROOF SEARCH: HTML FORM (no JS required) -->
     <form class="search-area" id="searchForm" method="GET" action="/">
       <div class="searchbar">
-        <!-- name="q" is what makes /?q=... happen -->
         <input id="q" name="q" type="search" placeholder="Search the web" autocomplete="off" spellcheck="false" />
       </div>
 
       <div id="suggestions" role="listbox" aria-label="Suggestions"></div>
 
       <div class="actions">
-        <!-- submit guarantees navigation even if JS is broken -->
         <button class="btn" type="submit">Joogle Search</button>
-        <!-- lucky is JS-driven -->
         <button class="btn" type="button" id="luckyBtn">I’m Feeling Joogly</button>
+      </div>
+
+      <!-- Weather module -->
+      <div class="module" id="weatherModule">
+        <h2 id="weatherTitle">Weather</h2>
+        <div class="weather-grid">
+          <div>
+            <div class="weather-main">
+              <div class="weather-left">
+                <div class="weather-loc" id="wxLoc">—</div>
+                <div class="weather-desc" id="wxDesc">—</div>
+                <div class="weather-meta" id="wxMeta"></div>
+              </div>
+              <div class="weather-temp" id="wxTemp">—</div>
+            </div>
+            <div class="statusline" id="wxStatus"></div>
+          </div>
+
+          <div class="forecast">
+            <div class="forecast-title">Next 3 days</div>
+            <div id="wxForecast"></div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <a class="pill-link" id="wxOpen" target="_blank" rel="noopener">Open full forecast</a>
+        </div>
+      </div>
+
+      <!-- Near-me helper module (free buttons) -->
+      <div class="module" id="localModule">
+        <h2 id="localTitle">Local results</h2>
+        <p>
+          Free mode: we can’t embed Google Maps local pack without paid APIs.
+          But you can open the real local/map results in one click.
+        </p>
+        <div class="row">
+          <a class="pill-link" id="mapsLink" target="_blank" rel="noopener">Open map results</a>
+          <a class="pill-link" id="localLink" target="_blank" rel="noopener">Open Google local pack</a>
+        </div>
       </div>
 
       <div id="resultsWrap">
@@ -118,14 +245,15 @@
   </div>
 
   <script>
-    /************ CONFIG ************/
+    /*****************
+     * CONFIG
+     *****************/
     const CX = "427c85c8321db4c63";
+    const BLOCKED_DOMAINS = ["pinterest.","quora.","brainly.","answers.com","chegg.","coursehero.","scribd.com"];
 
-    const BLOCKED_DOMAINS = [
-      "pinterest.","quora.","brainly.","answers.com","chegg.","coursehero.","scribd.com"
-    ];
-
-    /************ DARK MODE ************/
+    /*****************
+     * Dark mode
+     *****************/
     const darkToggle = document.getElementById("darkToggle");
     function setDark(on){
       document.body.classList.toggle("dark", !!on);
@@ -135,40 +263,42 @@
     setDark(localStorage.getItem("joogle_dark") === "1");
     darkToggle.addEventListener("click", ()=>setDark(!document.body.classList.contains("dark")));
 
-    /************ HYDRATE INPUT FROM URL ************/
-    const q = document.getElementById("q");
-    (function hydrate(){
-      const params = new URLSearchParams(location.search);
-      const initial = params.get("q");
-      if(initial) q.value = initial;
-    })();
+    /*****************
+     * Query hydrate
+     *****************/
+    const qEl = document.getElementById("q");
+    const params = new URLSearchParams(location.search);
+    const queryFromUrl = (params.get("q") || "").trim();
+    if(queryFromUrl) qEl.value = queryFromUrl;
 
-    /************ "I’M FEELING JOOGY" ************/
+    /*****************
+     * Lucky
+     *****************/
     document.getElementById("luckyBtn").addEventListener("click", ()=>{
-      const query = q.value.trim();
-      if(!query){ q.focus(); return; }
-      location.href = "https://www.google.com/search?q=" + encodeURIComponent(query) + "&btnI=1";
+      const q = qEl.value.trim();
+      if(!q){ qEl.focus(); return; }
+      location.href = "https://www.google.com/search?q=" + encodeURIComponent(q) + "&btnI=1";
     });
 
-    /************ SUGGESTIONS ************/
+    /*****************
+     * Suggestions
+     *****************/
     const suggestions = document.getElementById("suggestions");
-    let suggAbort = null;
-    let suggTimer = null;
+    let suggAbort = null, suggTimer = null;
 
     function closeSuggestions(){ suggestions.style.display="none"; suggestions.innerHTML=""; }
     function openSuggestions(){ if(suggestions.children.length) suggestions.style.display="block"; }
 
-    q.addEventListener("input", ()=>{
-      const query = q.value.trim();
+    qEl.addEventListener("input", ()=>{
+      const q = qEl.value.trim();
       clearTimeout(suggTimer);
-
-      if(!query){ closeSuggestions(); return; }
+      if(!q){ closeSuggestions(); return; }
 
       suggTimer = setTimeout(async ()=>{
         try{
           if(suggAbort) suggAbort.abort();
           suggAbort = new AbortController();
-          const url = "https://suggestqueries.google.com/complete/search?client=firefox&q="+encodeURIComponent(query);
+          const url = "https://suggestqueries.google.com/complete/search?client=firefox&q=" + encodeURIComponent(q);
           const res = await fetch(url, { signal: suggAbort.signal });
           const data = await res.json();
           const list = (data && data[1]) ? data[1].slice(0,8) : [];
@@ -180,29 +310,25 @@
             div.textContent=text;
             div.addEventListener("mousedown",(e)=>e.preventDefault());
             div.addEventListener("click", ()=>{
-              q.value = text;
+              qEl.value = text;
               closeSuggestions();
-              // Submit the form (guaranteed /?q= navigation)
               document.getElementById("searchForm").requestSubmit();
             });
             suggestions.appendChild(div);
           });
           openSuggestions();
-        }catch(e){
-          // ignore aborts/errors
-        }
+        }catch(e){}
       }, 120);
     });
 
     document.addEventListener("click",(e)=>{
       if(!document.querySelector(".search-area").contains(e.target)) closeSuggestions();
     });
+    qEl.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSuggestions(); });
 
-    q.addEventListener("keydown",(e)=>{
-      if(e.key === "Escape") closeSuggestions();
-    });
-
-    /************ PROGRAMMABLE SEARCH (READS ?q=) ************/
+    /*****************
+     * CSE render
+     *****************/
     window.__gcse = {
       callback: function(){
         try{
@@ -214,7 +340,6 @@
         }catch(e){}
       }
     };
-
     (function loadCSE(){
       const s = document.createElement("script");
       s.async = true;
@@ -222,7 +347,9 @@
       document.head.appendChild(s);
     })();
 
-    /************ SPAM FILTER ************/
+    /*****************
+     * Spam filter
+     *****************/
     function filterResults(){
       document.querySelectorAll(".gsc-webResult.gsc-result, .gsc-result").forEach(el=>{
         const a = el.querySelector("a");
@@ -232,6 +359,258 @@
       });
     }
     new MutationObserver(()=>filterResults()).observe(document.documentElement,{childList:true,subtree:true});
+
+    /*****************
+     * Clean #gsc hash (keep ?q=)
+     *****************/
+    (function cleanGscHash(){
+      const strip = () => {
+        if (location.hash && location.hash.startsWith("#gsc.")) {
+          history.replaceState({}, "", location.pathname + location.search);
+        }
+      };
+      window.addEventListener("hashchange", strip);
+      strip();
+    })();
+
+    /*****************
+     * Near-me helper module (free buttons)
+     *****************/
+    const localModule = document.getElementById("localModule");
+    const localTitle = document.getElementById("localTitle");
+    const mapsLink = document.getElementById("mapsLink");
+    const localLink = document.getElementById("localLink");
+
+    function isNearMe(q){
+      return /\bnear me\b/i.test(q) || /\bnearby\b/i.test(q);
+    }
+    function baseTerm(q){
+      return q.replace(/\bnear me\b/ig,"").replace(/\bnearby\b/ig,"").trim();
+    }
+
+    if(queryFromUrl && isNearMe(queryFromUrl)){
+      const term = baseTerm(queryFromUrl) || "places";
+      localTitle.textContent = `Local results: ${term}`;
+      mapsLink.href = "https://www.google.com/maps/search/" + encodeURIComponent(queryFromUrl);
+      localLink.href = "https://www.google.com/search?q=" + encodeURIComponent(queryFromUrl) + "&tbm=lcl";
+      localModule.classList.add("show");
+    } else {
+      localModule.classList.remove("show");
+    }
+
+    /*****************
+     * WEATHER (FREE)
+     * - Geocode via Nominatim (OSM)
+     * - Weather via Open-Meteo (no key)
+     *****************/
+    const weatherModule = document.getElementById("weatherModule");
+    const weatherTitle = document.getElementById("weatherTitle");
+    const wxLoc = document.getElementById("wxLoc");
+    const wxDesc = document.getElementById("wxDesc");
+    const wxTemp = document.getElementById("wxTemp");
+    const wxMeta = document.getElementById("wxMeta");
+    const wxForecast = document.getElementById("wxForecast");
+    const wxStatus = document.getElementById("wxStatus");
+    const wxOpen = document.getElementById("wxOpen");
+
+    function isWeatherQuery(q){
+      // Covers: "weather", "weather in ___", "weather ___", "forecast ___"
+      return /\b(weather|forecast)\b/i.test(q);
+    }
+
+    function parseWeatherPlace(q){
+      // Strip leading "weather" / "forecast" and common join words.
+      // Examples:
+      // "weather in chicago" -> "chicago"
+      // "forecast dallas tx" -> "dallas tx"
+      // "weather near me" -> "near me"
+      let s = q.trim();
+      s = s.replace(/^\s*(weather|forecast)\s*/i, "");
+      s = s.replace(/^\s*(in|for|at)\s+/i, "");
+      s = s.trim();
+      return s || ""; // may be empty (then we can use geolocation)
+    }
+
+    function wxCodeToText(code){
+      // Open-Meteo weathercode mapping (high-level)
+      // https://open-meteo.com/en/docs
+      const map = new Map([
+        [0, "Clear sky"], [1, "Mainly clear"], [2, "Partly cloudy"], [3, "Overcast"],
+        [45, "Fog"], [48, "Depositing rime fog"],
+        [51, "Light drizzle"], [53, "Moderate drizzle"], [55, "Dense drizzle"],
+        [56, "Freezing drizzle"], [57, "Dense freezing drizzle"],
+        [61, "Slight rain"], [63, "Moderate rain"], [65, "Heavy rain"],
+        [66, "Freezing rain"], [67, "Heavy freezing rain"],
+        [71, "Slight snow"], [73, "Moderate snow"], [75, "Heavy snow"],
+        [77, "Snow grains"],
+        [80, "Rain showers"], [81, "Heavy showers"], [82, "Violent showers"],
+        [85, "Snow showers"], [86, "Heavy snow showers"],
+        [95, "Thunderstorm"], [96, "Thunderstorm with hail"], [99, "Thunderstorm with heavy hail"],
+      ]);
+      return map.get(code) || "Weather";
+    }
+
+    function codeToEmoji(code){
+      if(code === 0) return "☀️";
+      if(code >= 1 && code <= 3) return "⛅";
+      if(code === 45 || code === 48) return "🌫️";
+      if((code >= 51 && code <= 57) || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "🌧️";
+      if((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "🌨️";
+      if(code >= 95) return "⛈️";
+      return "🌡️";
+    }
+
+    function chip(label, value){
+      const span = document.createElement("span");
+      span.className = "wxchip";
+      span.textContent = `${label}: ${value}`;
+      return span;
+    }
+
+    async function geocodePlace(place){
+      const url = new URL("https://nominatim.openstreetmap.org/search");
+      url.searchParams.set("q", place);
+      url.searchParams.set("format", "json");
+      url.searchParams.set("limit", "1");
+      // Nominatim likes explicit address details; helps results
+      url.searchParams.set("addressdetails", "1");
+
+      const res = await fetch(url.toString(), {
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+      if(!res.ok) throw new Error("Geocode failed");
+      const data = await res.json();
+      if(!Array.isArray(data) || !data.length) throw new Error("No geocode results");
+      return {
+        lat: Number(data[0].lat),
+        lon: Number(data[0].lon),
+        label: data[0].display_name
+      };
+    }
+
+    async function getBrowserLocation(){
+      return new Promise((resolve, reject)=>{
+        if(!navigator.geolocation) return reject(new Error("No geolocation"));
+        navigator.geolocation.getCurrentPosition(
+          (pos)=>resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, label: "Your location" }),
+          (err)=>reject(err),
+          { enableHighAccuracy: false, timeout: 8000 }
+        );
+      });
+    }
+
+    async function fetchWeather(lat, lon){
+      const url = new URL("https://api.open-meteo.com/v1/forecast");
+      url.searchParams.set("latitude", lat);
+      url.searchParams.set("longitude", lon);
+      url.searchParams.set("current", "temperature_2m,apparent_temperature,weather_code,wind_speed_10m");
+      url.searchParams.set("daily", "weather_code,temperature_2m_max,temperature_2m_min");
+      url.searchParams.set("temperature_unit", "fahrenheit");
+      url.searchParams.set("wind_speed_unit", "mph");
+      url.searchParams.set("timezone", "auto");
+      url.searchParams.set("forecast_days", "3");
+
+      const res = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
+      if(!res.ok) throw new Error("Weather fetch failed");
+      return await res.json();
+    }
+
+    function fmtDay(isoDate){
+      try{
+        const d = new Date(isoDate + "T00:00:00");
+        return d.toLocaleDateString(undefined, { weekday: "short" });
+      }catch{ return isoDate; }
+    }
+
+    function showWeather(){
+      weatherModule.classList.add("show");
+    }
+    function hideWeather(){
+      weatherModule.classList.remove("show");
+    }
+
+    async function renderWeatherForQuery(fullQuery){
+      const placeRaw = parseWeatherPlace(fullQuery);
+
+      // Only show weather module when the query is actually about weather/forecast
+      if(!isWeatherQuery(fullQuery)) { hideWeather(); return; }
+
+      showWeather();
+      wxStatus.textContent = "Loading weather…";
+      wxForecast.innerHTML = "";
+      wxMeta.innerHTML = "";
+      wxTemp.textContent = "—";
+      wxDesc.textContent = "—";
+      wxLoc.textContent = "—";
+
+      let loc;
+      try{
+        if(/\bnear me\b/i.test(fullQuery) || placeRaw.toLowerCase() === "near me" || placeRaw.toLowerCase() === "nearby" || placeRaw === ""){
+          // weather near me OR just "weather" -> use geolocation
+          loc = await getBrowserLocation();
+        } else {
+          loc = await geocodePlace(placeRaw);
+        }
+      }catch(err){
+        wxStatus.textContent = "Couldn’t determine location for this weather search.";
+        wxOpen.href = "https://www.google.com/search?q=" + encodeURIComponent(fullQuery);
+        return;
+      }
+
+      wxLoc.textContent = loc.label;
+      wxOpen.href = "https://www.google.com/search?q=" + encodeURIComponent(fullQuery);
+
+      try{
+        const wx = await fetchWeather(loc.lat, loc.lon);
+
+        const cur = wx.current || {};
+        const emoji = codeToEmoji(cur.weather_code);
+        const desc = wxCodeToText(cur.weather_code);
+
+        wxDesc.textContent = `${emoji} ${desc}`;
+        wxTemp.textContent = (typeof cur.temperature_2m === "number") ? `${Math.round(cur.temperature_2m)}°F` : "—";
+
+        // Meta chips
+        if(typeof cur.apparent_temperature === "number") wxMeta.appendChild(chip("Feels like", `${Math.round(cur.apparent_temperature)}°F`));
+        if(typeof cur.wind_speed_10m === "number") wxMeta.appendChild(chip("Wind", `${Math.round(cur.wind_speed_10m)} mph`));
+
+        // Forecast (3 days)
+        const daily = wx.daily || {};
+        const days = daily.time || [];
+        const maxs = daily.temperature_2m_max || [];
+        const mins = daily.temperature_2m_min || [];
+        const codes = daily.weather_code || [];
+
+        wxForecast.innerHTML = "";
+        for(let i=0;i<Math.min(3, days.length);i++){
+          const row = document.createElement("div");
+          row.className = "forecast-row";
+          const emo = codeToEmoji(codes[i]);
+          const hi = (typeof maxs[i] === "number") ? `${Math.round(maxs[i])}°` : "—";
+          const lo = (typeof mins[i] === "number") ? `${Math.round(mins[i])}°` : "—";
+          row.innerHTML = `
+            <div class="fmuted">${fmtDay(days[i])}</div>
+            <div>${emo} <span class="fmuted">${wxCodeToText(codes[i])}</span></div>
+            <div><strong>${hi}</strong> <span class="fmuted">/ ${lo}</span></div>
+          `;
+          wxForecast.appendChild(row);
+        }
+
+        wxStatus.textContent = "";
+        weatherTitle.textContent = "Weather";
+      }catch(err){
+        wxStatus.textContent = "Couldn’t load weather right now.";
+      }
+    }
+
+    // Run weather module only when relevant
+    if(queryFromUrl){
+      renderWeatherForQuery(queryFromUrl);
+    } else {
+      hideWeather();
+    }
   </script>
 </body>
 </html>
