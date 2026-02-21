@@ -1,245 +1,290 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Joogle</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Joogle</title>
 
-<link rel="preconnect" href="https://cse.google.com">
-<link rel="preconnect" href="https://www.google.com">
+  <link rel="preconnect" href="https://cse.google.com" />
+  <link rel="preconnect" href="https://www.google.com" />
 
-<style>
-body{
-  font-family:Arial,Helvetica,sans-serif;
-  background:#fff;
-  color:#202124;
-  margin:0;
-  text-align:center;
-}
-body.dark{
-  background:#202124;
-  color:#e8eaed;
-}
+  <style>
+    :root{
+      --bg:#fff; --text:#202124; --muted:#5f6368; --card:#fff; --border:#dfe1e5;
+      --shadow:0 1px 6px rgba(32,33,36,.28);
+      --btn:#f8f9fa; --btnText:#3c4043; --btnBorder:#dadce0;
+      --hover:rgba(60,64,67,.08);
+      --link:#1a0dab; --visited:#681da8;
+    }
+    body.dark{
+      --bg:#202124; --text:#e8eaed; --muted:#9aa0a6; --card:#303134; --border:#5f6368;
+      --shadow:0 1px 10px rgba(0,0,0,.6);
+      --btn:#303134; --btnText:#e8eaed; --btnBorder:#5f6368;
+      --hover:rgba(232,234,237,.08);
+      --link:#8ab4f8; --visited:#c58af9;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    .topbar{height:56px;display:flex;justify-content:flex-end;align-items:center;padding:0 16px}
+    .icon-btn{width:38px;height:38px;border-radius:999px;border:0;background:transparent;color:var(--text);cursor:pointer}
+    .icon-btn:hover{background:var(--hover)}
+    .wrap{max-width:760px;margin:0 auto;padding:0 16px 40px}
+    .logo{text-align:center;font-size:84px;font-weight:700;letter-spacing:-1px;margin-top:70px;user-select:none}
+    .logo span:nth-child(1){color:#4285f4}
+    .logo span:nth-child(2){color:#ea4335}
+    .logo span:nth-child(3){color:#fbbc05}
+    .logo span:nth-child(4){color:#4285f4}
+    .logo span:nth-child(5){color:#34a853}
+    .logo span:nth-child(6){color:#ea4335}
 
-.logo{
-  font-size:80px;
-  margin-top:80px;
-  font-weight:bold;
-}
-.logo span:nth-child(1){color:#4285f4}
-.logo span:nth-child(2){color:#ea4335}
-.logo span:nth-child(3){color:#fbbc05}
-.logo span:nth-child(4){color:#4285f4}
-.logo span:nth-child(5){color:#34a853}
-.logo span:nth-child(6){color:#ea4335}
+    .search-area{margin-top:26px;position:relative}
+    .searchbar{
+      display:flex;align-items:center;gap:10px;width:100%;
+      padding:12px 14px;border-radius:999px;border:1px solid var(--border);
+      background:var(--card);transition:.15s;
+    }
+    .searchbar:hover,.searchbar:focus-within{box-shadow:var(--shadow);border-color:transparent}
+    input[type="search"]{flex:1;border:0;outline:0;font-size:16px;background:transparent;color:var(--text);min-width:0}
+    #suggestions{
+      position:absolute;left:0;right:0;top:54px;
+      background:var(--card);border:1px solid var(--border);border-top:none;
+      border-radius:0 0 20px 20px;overflow:hidden;box-shadow:var(--shadow);
+      z-index:50;display:none;
+    }
+    .sugg{padding:10px 16px;cursor:pointer}
+    .sugg:hover{background:var(--hover)}
 
-.searchbox{
-  margin:25px auto;
-  width:90%;
-  max-width:600px;
-  position:relative;
-}
+    .actions{margin-top:22px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+    .btn{padding:10px 16px;border-radius:4px;border:1px solid var(--btnBorder);background:var(--btn);color:var(--btnText);cursor:pointer;font-size:14px}
+    .btn:hover{box-shadow:0 1px 1px rgba(0,0,0,.1)}
 
-input{
-  width:100%;
-  padding:14px;
-  border-radius:30px;
-  border:1px solid #dfe1e5;
-  font-size:16px;
-  outline:none;
-}
-input:focus{
-  box-shadow:0 1px 6px rgba(32,33,36,.28);
-}
+    /* CSE polish */
+    .gsc-search-box{display:none !important;}
+    .gsc-control-cse{padding:0 !important;border:0 !important;background:transparent !important}
+    .gsc-webResult.gsc-result{
+      background:var(--card) !important;border:1px solid var(--border) !important;border-radius:14px !important;
+      padding:14px 16px !important;margin-bottom:12px !important;
+      transition:.18s;
+    }
+    .gsc-webResult.gsc-result:hover{box-shadow:var(--shadow) !important}
+    a.gs-title, a.gs-title:link{color:var(--link) !important;text-decoration:none !important}
+    a.gs-title:visited{color:var(--visited) !important}
+    .gs-snippet{color:var(--text) !important;opacity:.92}
+    .gs-visibleUrl{color:var(--muted) !important}
 
-#suggestions{
-  position:absolute;
-  width:100%;
-  background:white;
-  border:1px solid #ddd;
-  border-top:none;
-  text-align:left;
-  z-index:999;
-}
-body.dark #suggestions{
-  background:#303134;
-}
-
-.suggestion{
-  padding:10px;
-  cursor:pointer;
-}
-.suggestion:hover{
-  background:#f1f3f4;
-}
-
-.buttons{
-  margin-top:20px;
-}
-button{
-  margin:5px;
-  padding:10px 16px;
-  border:1px solid #dadce0;
-  background:#f8f9fa;
-  cursor:pointer;
-}
-body.dark button{
-  background:#303134;
-  color:white;
-}
-
-#darkToggle{
-  position:absolute;
-  right:20px;
-  top:20px;
-  cursor:pointer;
-}
-
-.gsc-result{
-  border-radius:12px !important;
-  padding:12px !important;
-}
-.gsc-result:hover{
-  box-shadow:0 2px 12px rgba(0,0,0,.15);
-}
-.gsc-search-box{display:none !important;}
-</style>
-
-<script>
-const CX="427c85c8321db4c63";
-
-/* ---------- DARK MODE ---------- */
-function setDark(on){
-  document.body.classList.toggle("dark",on);
-  localStorage.setItem("dark",on);
-}
-window.onload=()=>setDark(localStorage.getItem("dark")==="true");
-
-/* ---------- LOAD GOOGLE CSE ---------- */
-window.__gcse={
- callback:function(){
-   const params=new URLSearchParams(location.search);
-   const q=params.get("q");
-   if(q) runSearch(q);
- }
-};
-
-(function(){
-  const s=document.createElement("script");
-  s.async=true;
-  s.src="https://cse.google.com/cse.js?cx="+CX;
-  document.head.appendChild(s);
-})();
-</script>
+    #resultsWrap{margin-top:26px}
+    .status{margin-top:14px;text-align:center;color:var(--muted);font-size:13px;min-height:18px}
+  </style>
 </head>
 
 <body>
+  <div class="topbar">
+    <button class="icon-btn" id="darkToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+  </div>
 
-<button id="darkToggle" onclick="setDark(!document.body.classList.contains('dark'))">🌙</button>
+  <div class="wrap">
+    <div class="logo"><span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></div>
 
-<div class="logo">
-<span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-</div>
+    <div class="search-area">
+      <div class="searchbar">
+        <input id="q" type="search" placeholder="Search the web" autocomplete="off" spellcheck="false" />
+      </div>
+      <div id="suggestions" role="listbox"></div>
 
-<div class="searchbox">
-<input id="searchBox" placeholder="Search the web">
-<div id="suggestions"></div>
-</div>
+      <div class="actions">
+        <button class="btn" id="searchBtn">Joogle Search</button>
+        <button class="btn" id="luckyBtn">I’m Feeling Joogly</button>
+      </div>
 
-<div class="buttons">
-<button onclick="runSearch()">Joogle Search</button>
-<button onclick="feelingJoogly()">I'm Feeling Joogly</button>
-</div>
+      <div class="status" id="status"></div>
 
-<div class="gcse-searchresults-only"></div>
+      <div id="resultsWrap">
+        <!-- We render CSE results into this container ourselves -->
+        <div id="cse-results"></div>
+      </div>
+    </div>
+  </div>
 
-<script>
-const input=document.getElementById("searchBox");
-const suggestions=document.getElementById("suggestions");
+  <script>
+    /************ CONFIG ************/
+    const CX = "427c85c8321db4c63";
+    const CSE_ELEMENT_NAME = "joogle-results";
 
-/* ---------- SEARCH EXECUTION (FIXED) ---------- */
-function getCSE(){
-  try{
-    return google.search.cse.element.getElement('searchresults-only0');
-  }catch(e){return null;}
-}
+    // Spam filter list (edit anytime)
+    const BLOCKED_DOMAINS = ["pinterest.","quora.","brainly.","answers.com","chegg.","coursehero.","scribd.com"];
 
-function runSearch(val){
-  const query=(val||input.value).trim();
-  if(!query)return;
+    /************ UI ************/
+    const q = document.getElementById("q");
+    const statusEl = document.getElementById("status");
+    const suggestions = document.getElementById("suggestions");
+    const darkToggle = document.getElementById("darkToggle");
 
-  const url=new URL(location);
-  url.searchParams.set("q",query);
-  history.replaceState({},'',url);
+    function setStatus(msg){ statusEl.textContent = msg || ""; }
 
-  const start=Date.now();
-
-  function wait(){
-    const el=getCSE();
-    if(el){
-      el.execute(query);
-      return;
+    // Dark mode
+    function setDark(on){
+      document.body.classList.toggle("dark", !!on);
+      localStorage.setItem("joogle_dark", on ? "1":"0");
+      darkToggle.textContent = on ? "☀️" : "🌙";
     }
-    if(Date.now()-start<5000)
-      requestAnimationFrame(wait);
-    else
-      location.href="?q="+encodeURIComponent(query);
-  }
-  wait();
-}
+    setDark(localStorage.getItem("joogle_dark") === "1");
+    darkToggle.addEventListener("click", ()=>setDark(!document.body.classList.contains("dark")));
 
-/* ENTER KEY */
-input.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    e.preventDefault();
-    runSearch();
-  }
-});
+    /************ SUGGESTIONS ************/
+    let suggAbort = null;
+    let suggTimer = null;
 
-/* ---------- I'M FEELING JOOGY ---------- */
-function feelingJoogly(){
-  const q=input.value.trim();
-  if(!q)return;
-  location.href=
-   "https://www.google.com/search?q="+encodeURIComponent(q)+"&btnI=1";
-}
+    function closeSuggestions(){ suggestions.style.display="none"; suggestions.innerHTML=""; }
+    function openSuggestions(){ if(suggestions.children.length) suggestions.style.display="block"; }
 
-/* ---------- GOOGLE SUGGESTIONS ---------- */
-input.addEventListener("input",async()=>{
-  const q=input.value;
-  if(!q){suggestions.innerHTML="";return;}
+    q.addEventListener("input", ()=>{
+      const query = q.value.trim();
+      clearTimeout(suggTimer);
 
-  const res=await fetch(
-    "https://suggestqueries.google.com/complete/search?client=firefox&q="+encodeURIComponent(q)
-  );
-  const data=await res.json();
+      if(!query){ closeSuggestions(); return; }
 
-  suggestions.innerHTML="";
-  data[1].slice(0,8).forEach(text=>{
-    const div=document.createElement("div");
-    div.className="suggestion";
-    div.textContent=text;
-    div.onclick=()=>{
-      input.value=text;
-      suggestions.innerHTML="";
-      runSearch(text);
+      suggTimer = setTimeout(async ()=>{
+        try{
+          if(suggAbort) suggAbort.abort();
+          suggAbort = new AbortController();
+          const url = "https://suggestqueries.google.com/complete/search?client=firefox&q="+encodeURIComponent(query);
+          const res = await fetch(url, { signal: suggAbort.signal });
+          const data = await res.json();
+          const list = (data && data[1]) ? data[1].slice(0,8) : [];
+
+          suggestions.innerHTML="";
+          list.forEach(text=>{
+            const div = document.createElement("div");
+            div.className="sugg";
+            div.textContent=text;
+            div.addEventListener("mousedown",(e)=>e.preventDefault());
+            div.addEventListener("click", ()=>{
+              q.value = text;
+              closeSuggestions();
+              runSearch(text);
+            });
+            suggestions.appendChild(div);
+          });
+          openSuggestions();
+        }catch(e){
+          // ignore aborts/errors
+        }
+      }, 120);
+    });
+
+    document.addEventListener("click",(e)=>{
+      if(!document.querySelector(".search-area").contains(e.target)) closeSuggestions();
+    });
+
+    /************ PROGRAMMABLE SEARCH (RELIABLE RENDER) ************/
+    let cseReady = false;
+
+    // GitHub Pages / caching safe: always render CSE element in callback
+    window.__gcse = {
+      callback: function(){
+        try{
+          google.search.cse.element.render({
+            div: "cse-results",
+            tag: "searchresults-only",
+            attributes: {
+              // Make sure it reads ?q= from URL too
+              queryParameterName: "q",
+              // Naming is what allows getElement(name) reliably:
+              gname: CSE_ELEMENT_NAME
+            }
+          });
+          cseReady = true;
+          setStatus("");
+          // If URL already has q, execute immediately
+          const params = new URLSearchParams(location.search);
+          const initial = params.get("q");
+          if(initial) runSearch(initial);
+        }catch(err){
+          setStatus("CSE failed to initialize.");
+        }
+      }
     };
-    suggestions.appendChild(div);
-  });
-});
 
-/* ---------- SPAM FILTER ---------- */
-const blocked=["pinterest.","quora.","brainly.","answers.com"];
+    // Load CSE
+    (function loadCSE(){
+      const s = document.createElement("script");
+      s.async = true;
+      s.src = "https://cse.google.com/cse.js?cx=" + encodeURIComponent(CX);
+      document.head.appendChild(s);
+    })();
 
-new MutationObserver(()=>{
- document.querySelectorAll(".gsc-result").forEach(r=>{
-   const a=r.querySelector("a");
-   if(!a)return;
-   if(blocked.some(d=>a.href.includes(d)))
-     r.style.display="none";
- });
-}).observe(document.body,{childList:true,subtree:true});
-</script>
+    function getCse(){
+      try{
+        return google.search.cse.element.getElement(CSE_ELEMENT_NAME) || null;
+      }catch(e){
+        return null;
+      }
+    }
 
+    function updateUrlQuery(query){
+      const url = new URL(location.href);
+      url.searchParams.set("q", query);
+      history.replaceState({}, "", url.toString());
+    }
+
+    function runSearch(value){
+      const query = (value ?? q.value).trim();
+      if(!query){ setStatus("Type something first 🙂"); q.focus(); return; }
+
+      closeSuggestions();
+      setStatus("Searching…");
+      updateUrlQuery(query);
+
+      const start = Date.now();
+      const tick = () => {
+        const el = getCse();
+        if(el && typeof el.execute === "function"){
+          el.execute(query);
+          setStatus("");
+          return;
+        }
+        // If CSE isn't ready quickly, fall back so it never "does nothing"
+        if(Date.now() - start > 4000){
+          setStatus("Search is taking too long — opening Google results…");
+          location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+          return;
+        }
+        requestAnimationFrame(tick);
+      };
+      tick();
+    }
+
+    // Buttons + Enter
+    document.getElementById("searchBtn").addEventListener("click", ()=>runSearch());
+    document.getElementById("luckyBtn").addEventListener("click", ()=>{
+      const query = q.value.trim();
+      if(!query){ setStatus("Type something first 🙂"); q.focus(); return; }
+      closeSuggestions();
+      location.href = "https://www.google.com/search?q=" + encodeURIComponent(query) + "&btnI=1";
+    });
+
+    q.addEventListener("keydown",(e)=>{
+      if(e.key === "Enter"){ e.preventDefault(); runSearch(); }
+      if(e.key === "Escape"){ closeSuggestions(); }
+    });
+
+    /************ SPAM FILTER ************/
+    function filterResults(){
+      document.querySelectorAll(".gsc-webResult.gsc-result, .gsc-result").forEach(el=>{
+        const a = el.querySelector("a");
+        if(!a || !a.href) return;
+        const href = a.href.toLowerCase();
+        if(BLOCKED_DOMAINS.some(d => href.includes(d))) el.style.display="none";
+      });
+    }
+    new MutationObserver(()=>filterResults()).observe(document.documentElement,{childList:true,subtree:true});
+
+    /************ Hydrate input from URL ************/
+    (function hydrate(){
+      const params = new URLSearchParams(location.search);
+      const initial = params.get("q");
+      if(initial) q.value = initial;
+    })();
+  </script>
 </body>
 </html>
