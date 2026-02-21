@@ -45,6 +45,7 @@
     }
     .searchbar:hover,.searchbar:focus-within{box-shadow:var(--shadow);border-color:transparent}
     input[type="search"]{flex:1;border:0;outline:0;font-size:16px;background:transparent;color:var(--text);min-width:0}
+
     #suggestions{
       position:absolute;left:0;right:0;top:54px;
       background:var(--card);border:1px solid var(--border);border-top:none;
@@ -57,6 +58,18 @@
     .actions{margin-top:22px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
     .btn{padding:10px 16px;border-radius:4px;border:1px solid var(--btnBorder);background:var(--btn);color:var(--btnText);cursor:pointer;font-size:14px}
     .btn:hover{box-shadow:0 1px 1px rgba(0,0,0,.1)}
+
+    #resultsWrap{margin-top:26px}
+
+    .status{
+      margin-top:14px;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      min-height:18px;
+    }
+    .status a{color:var(--link);text-decoration:none}
+    .status a:hover{text-decoration:underline}
 
     /* CSE polish */
     .gsc-search-box{display:none !important;}
@@ -72,8 +85,10 @@
     .gs-snippet{color:var(--text) !important;opacity:.92}
     .gs-visibleUrl{color:var(--muted) !important}
 
-    #resultsWrap{margin-top:26px}
-    .status{margin-top:14px;text-align:center;color:var(--muted);font-size:13px;min-height:18px}
+    @media (max-width:480px){
+      .logo{font-size:64px;margin-top:48px}
+      #suggestions{top:52px}
+    }
   </style>
 </head>
 
@@ -83,13 +98,16 @@
   </div>
 
   <div class="wrap">
-    <div class="logo"><span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></div>
+    <div class="logo" aria-label="Joogle">
+      <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+    </div>
 
     <div class="search-area">
       <div class="searchbar">
         <input id="q" type="search" placeholder="Search the web" autocomplete="off" spellcheck="false" />
       </div>
-      <div id="suggestions" role="listbox"></div>
+
+      <div id="suggestions" role="listbox" aria-label="Suggestions"></div>
 
       <div class="actions">
         <button class="btn" id="searchBtn">Joogle Search</button>
@@ -97,9 +115,9 @@
       </div>
 
       <div class="status" id="status"></div>
+      <div class="status" id="openGoogle" style="display:none;"></div>
 
       <div id="resultsWrap">
-        <!-- We render CSE results into this container ourselves -->
         <div id="cse-results"></div>
       </div>
     </div>
@@ -111,26 +129,35 @@
     const CSE_ELEMENT_NAME = "joogle-results";
 
     // Spam filter list (edit anytime)
-    const BLOCKED_DOMAINS = ["pinterest.","quora.","brainly.","answers.com","chegg.","coursehero.","scribd.com"];
+    const BLOCKED_DOMAINS = [
+      "pinterest.","quora.","brainly.","answers.com","chegg.","coursehero.","scribd.com"
+    ];
 
     /************ UI ************/
     const q = document.getElementById("q");
     const statusEl = document.getElementById("status");
+    const openGoogle = document.getElementById("openGoogle");
     const suggestions = document.getElementById("suggestions");
     const darkToggle = document.getElementById("darkToggle");
 
     function setStatus(msg){ statusEl.textContent = msg || ""; }
+    function hideOpenGoogle(){ openGoogle.style.display="none"; openGoogle.innerHTML=""; }
+    function showOpenGoogle(query){
+      openGoogle.style.display="block";
+      openGoogle.innerHTML =
+        `Or <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank" rel="noopener">open in Google</a>`;
+    }
 
-    // Dark mode
+    // Dark mode (persisted)
     function setDark(on){
       document.body.classList.toggle("dark", !!on);
-      localStorage.setItem("joogle_dark", on ? "1":"0");
+      localStorage.setItem("joogle_dark", on ? "1" : "0");
       darkToggle.textContent = on ? "☀️" : "🌙";
     }
     setDark(localStorage.getItem("joogle_dark") === "1");
     darkToggle.addEventListener("click", ()=>setDark(!document.body.classList.contains("dark")));
 
-    /************ SUGGESTIONS ************/
+    /************ Suggestions ************/
     let suggAbort = null;
     let suggTimer = null;
 
@@ -176,10 +203,7 @@
       if(!document.querySelector(".search-area").contains(e.target)) closeSuggestions();
     });
 
-    /************ PROGRAMMABLE SEARCH (RELIABLE RENDER) ************/
-    let cseReady = false;
-
-    // GitHub Pages / caching safe: always render CSE element in callback
+    /************ Programmable Search (reliable render) ************/
     window.__gcse = {
       callback: function(){
         try{
@@ -187,25 +211,25 @@
             div: "cse-results",
             tag: "searchresults-only",
             attributes: {
-              // Make sure it reads ?q= from URL too
               queryParameterName: "q",
-              // Naming is what allows getElement(name) reliably:
               gname: CSE_ELEMENT_NAME
             }
           });
-          cseReady = true;
-          setStatus("");
-          // If URL already has q, execute immediately
+
+          // If page opened with ?q=..., run it immediately
           const params = new URLSearchParams(location.search);
           const initial = params.get("q");
-          if(initial) runSearch(initial);
+          if(initial){
+            q.value = initial;
+            runSearch(initial);
+          }
         }catch(err){
-          setStatus("CSE failed to initialize.");
+          setStatus("Search failed to initialize.");
+          showOpenGoogle(q.value.trim() || "");
         }
       }
     };
 
-    // Load CSE
     (function loadCSE(){
       const s = document.createElement("script");
       s.async = true;
@@ -229,13 +253,19 @@
 
     function runSearch(value){
       const query = (value ?? q.value).trim();
-      if(!query){ setStatus("Type something first 🙂"); q.focus(); return; }
+      if(!query){
+        setStatus("Type something first 🙂");
+        q.focus();
+        return;
+      }
 
       closeSuggestions();
+      hideOpenGoogle();
       setStatus("Searching…");
       updateUrlQuery(query);
 
       const start = Date.now();
+
       const tick = () => {
         const el = getCse();
         if(el && typeof el.execute === "function"){
@@ -243,14 +273,16 @@
           setStatus("");
           return;
         }
-        // If CSE isn't ready quickly, fall back so it never "does nothing"
-        if(Date.now() - start > 4000){
-          setStatus("Search is taking too long — opening Google results…");
-          location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-          return;
+
+        // No auto-redirect. Just provide a manual link if it's slow.
+        if(Date.now() - start > 3000){
+          setStatus("Still loading results…");
+          showOpenGoogle(query);
         }
+
         requestAnimationFrame(tick);
       };
+
       tick();
     }
 
@@ -258,9 +290,14 @@
     document.getElementById("searchBtn").addEventListener("click", ()=>runSearch());
     document.getElementById("luckyBtn").addEventListener("click", ()=>{
       const query = q.value.trim();
-      if(!query){ setStatus("Type something first 🙂"); q.focus(); return; }
+      if(!query){
+        setStatus("Type something first 🙂");
+        q.focus();
+        return;
+      }
       closeSuggestions();
-      location.href = "https://www.google.com/search?q=" + encodeURIComponent(query) + "&btnI=1";
+      hideOpenGoogle();
+      window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query) + "&btnI=1";
     });
 
     q.addEventListener("keydown",(e)=>{
@@ -268,7 +305,7 @@
       if(e.key === "Escape"){ closeSuggestions(); }
     });
 
-    /************ SPAM FILTER ************/
+    /************ Spam filter ************/
     function filterResults(){
       document.querySelectorAll(".gsc-webResult.gsc-result, .gsc-result").forEach(el=>{
         const a = el.querySelector("a");
@@ -278,13 +315,6 @@
       });
     }
     new MutationObserver(()=>filterResults()).observe(document.documentElement,{childList:true,subtree:true});
-
-    /************ Hydrate input from URL ************/
-    (function hydrate(){
-      const params = new URLSearchParams(location.search);
-      const initial = params.get("q");
-      if(initial) q.value = initial;
-    })();
   </script>
 </body>
 </html>
