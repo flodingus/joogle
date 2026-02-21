@@ -18,7 +18,6 @@
       --btn:#f8f9fa; --btnText:#3c4043; --btnBorder:#dadce0;
       --hover:rgba(60,64,67,.08);
       --link:#1a0dab; --visited:#681da8;
-      --good:#188038; --bad:#d93025;
     }
     body.dark{
       --bg:#202124; --text:#e8eaed; --muted:#9aa0a6; --card:#303134; --border:#5f6368;
@@ -26,7 +25,6 @@
       --btn:#303134; --btnText:#e8eaed; --btnBorder:#5f6368;
       --hover:rgba(232,234,237,.08);
       --link:#8ab4f8; --visited:#c58af9;
-      --good:#81c995; --bad:#f28b82;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
@@ -154,6 +152,34 @@
     .fmuted{color:var(--muted)}
     .statusline{margin-top:8px;color:var(--muted);font-size:13px}
 
+    /* Hourly strip */
+    .hourly{
+      margin-top:10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      overflow:auto;
+    }
+    .hourly-title{font-weight:700;font-size:14px;margin:0 0 8px}
+    .hourly-strip{
+      display:flex;
+      gap:10px;
+      min-width:max-content;
+      padding-bottom:4px;
+    }
+    .hour{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:8px 10px;
+      min-width:92px;
+      text-align:center;
+      background:transparent;
+    }
+    .hour .t{font-size:12px;color:var(--muted);margin-bottom:6px;white-space:nowrap}
+    .hour .icon{font-size:18px;margin-bottom:4px}
+    .hour .temp{font-weight:700;font-size:14px}
+    .hour .pop{font-size:12px;color:var(--muted);margin-top:4px}
+
     /* CSE polish */
     #resultsWrap{margin-top:18px}
     .gsc-search-box{display:none !important;}
@@ -172,6 +198,7 @@
       .logo{font-size:64px;margin-top:40px}
       #suggestions{top:52px}
       .weather-temp{font-size:32px}
+      .hour{min-width:86px}
     }
   </style>
 </head>
@@ -201,6 +228,7 @@
       <!-- Weather module -->
       <div class="module" id="weatherModule">
         <h2 id="weatherTitle">Weather</h2>
+
         <div class="weather-grid">
           <div>
             <div class="weather-main">
@@ -212,6 +240,12 @@
               <div class="weather-temp" id="wxTemp">—</div>
             </div>
             <div class="statusline" id="wxStatus"></div>
+
+            <!-- Hourly strip -->
+            <div class="hourly">
+              <div class="hourly-title">Next 12 hours</div>
+              <div class="hourly-strip" id="wxHourly"></div>
+            </div>
           </div>
 
           <div class="forecast">
@@ -225,19 +259,7 @@
         </div>
       </div>
 
-      <!-- Near-me helper module (free buttons) -->
-      <div class="module" id="localModule">
-        <h2 id="localTitle">Local results</h2>
-        <p>
-          Free mode: we can’t embed Google Maps local pack without paid APIs.
-          But you can open the real local/map results in one click.
-        </p>
-        <div class="row">
-          <a class="pill-link" id="mapsLink" target="_blank" rel="noopener">Open map results</a>
-          <a class="pill-link" id="localLink" target="_blank" rel="noopener">Open Google local pack</a>
-        </div>
-      </div>
-
+      <!-- Web results -->
       <div id="resultsWrap">
         <div id="cse-results"></div>
       </div>
@@ -245,15 +267,10 @@
   </div>
 
   <script>
-    /*****************
-     * CONFIG
-     *****************/
     const CX = "427c85c8321db4c63";
     const BLOCKED_DOMAINS = ["pinterest.","quora.","brainly.","answers.com","chegg.","coursehero.","scribd.com"];
 
-    /*****************
-     * Dark mode
-     *****************/
+    // Dark mode
     const darkToggle = document.getElementById("darkToggle");
     function setDark(on){
       document.body.classList.toggle("dark", !!on);
@@ -263,26 +280,20 @@
     setDark(localStorage.getItem("joogle_dark") === "1");
     darkToggle.addEventListener("click", ()=>setDark(!document.body.classList.contains("dark")));
 
-    /*****************
-     * Query hydrate
-     *****************/
+    // Query hydrate
     const qEl = document.getElementById("q");
     const params = new URLSearchParams(location.search);
     const queryFromUrl = (params.get("q") || "").trim();
     if(queryFromUrl) qEl.value = queryFromUrl;
 
-    /*****************
-     * Lucky
-     *****************/
+    // Lucky
     document.getElementById("luckyBtn").addEventListener("click", ()=>{
       const q = qEl.value.trim();
       if(!q){ qEl.focus(); return; }
       location.href = "https://www.google.com/search?q=" + encodeURIComponent(q) + "&btnI=1";
     });
 
-    /*****************
-     * Suggestions
-     *****************/
+    // Suggestions
     const suggestions = document.getElementById("suggestions");
     let suggAbort = null, suggTimer = null;
 
@@ -326,9 +337,7 @@
     });
     qEl.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSuggestions(); });
 
-    /*****************
-     * CSE render
-     *****************/
+    // CSE render
     window.__gcse = {
       callback: function(){
         try{
@@ -347,9 +356,7 @@
       document.head.appendChild(s);
     })();
 
-    /*****************
-     * Spam filter
-     *****************/
+    // Spam filter
     function filterResults(){
       document.querySelectorAll(".gsc-webResult.gsc-result, .gsc-result").forEach(el=>{
         const a = el.querySelector("a");
@@ -360,9 +367,7 @@
     }
     new MutationObserver(()=>filterResults()).observe(document.documentElement,{childList:true,subtree:true});
 
-    /*****************
-     * Clean #gsc hash (keep ?q=)
-     *****************/
+    // Clean #gsc hash (keep ?q=)
     (function cleanGscHash(){
       const strip = () => {
         if (location.hash && location.hash.startsWith("#gsc.")) {
@@ -374,37 +379,14 @@
     })();
 
     /*****************
-     * Near-me helper module (free buttons)
-     *****************/
-    const localModule = document.getElementById("localModule");
-    const localTitle = document.getElementById("localTitle");
-    const mapsLink = document.getElementById("mapsLink");
-    const localLink = document.getElementById("localLink");
-
-    function isNearMe(q){
-      return /\bnear me\b/i.test(q) || /\bnearby\b/i.test(q);
-    }
-    function baseTerm(q){
-      return q.replace(/\bnear me\b/ig,"").replace(/\bnearby\b/ig,"").trim();
-    }
-
-    if(queryFromUrl && isNearMe(queryFromUrl)){
-      const term = baseTerm(queryFromUrl) || "places";
-      localTitle.textContent = `Local results: ${term}`;
-      mapsLink.href = "https://www.google.com/maps/search/" + encodeURIComponent(queryFromUrl);
-      localLink.href = "https://www.google.com/search?q=" + encodeURIComponent(queryFromUrl) + "&tbm=lcl";
-      localModule.classList.add("show");
-    } else {
-      localModule.classList.remove("show");
-    }
-
-    /*****************
      * WEATHER (FREE)
-     * - Geocode via Nominatim (OSM)
-     * - Weather via Open-Meteo (no key)
+     * - Geocode: Nominatim
+     * - Weather: Open-Meteo
+     * Adds:
+     *  1) Next 12 hours strip
+     *  2) Precip chance + humidity chips
      *****************/
     const weatherModule = document.getElementById("weatherModule");
-    const weatherTitle = document.getElementById("weatherTitle");
     const wxLoc = document.getElementById("wxLoc");
     const wxDesc = document.getElementById("wxDesc");
     const wxTemp = document.getElementById("wxTemp");
@@ -412,44 +394,33 @@
     const wxForecast = document.getElementById("wxForecast");
     const wxStatus = document.getElementById("wxStatus");
     const wxOpen = document.getElementById("wxOpen");
+    const wxHourly = document.getElementById("wxHourly");
 
     function isWeatherQuery(q){
-      // Covers: "weather", "weather in ___", "weather ___", "forecast ___"
       return /\b(weather|forecast)\b/i.test(q);
     }
-
     function parseWeatherPlace(q){
-      // Strip leading "weather" / "forecast" and common join words.
-      // Examples:
-      // "weather in chicago" -> "chicago"
-      // "forecast dallas tx" -> "dallas tx"
-      // "weather near me" -> "near me"
       let s = q.trim();
       s = s.replace(/^\s*(weather|forecast)\s*/i, "");
       s = s.replace(/^\s*(in|for|at)\s+/i, "");
-      s = s.trim();
-      return s || ""; // may be empty (then we can use geolocation)
+      return s.trim();
     }
-
     function wxCodeToText(code){
-      // Open-Meteo weathercode mapping (high-level)
-      // https://open-meteo.com/en/docs
       const map = new Map([
-        [0, "Clear sky"], [1, "Mainly clear"], [2, "Partly cloudy"], [3, "Overcast"],
-        [45, "Fog"], [48, "Depositing rime fog"],
-        [51, "Light drizzle"], [53, "Moderate drizzle"], [55, "Dense drizzle"],
-        [56, "Freezing drizzle"], [57, "Dense freezing drizzle"],
-        [61, "Slight rain"], [63, "Moderate rain"], [65, "Heavy rain"],
-        [66, "Freezing rain"], [67, "Heavy freezing rain"],
-        [71, "Slight snow"], [73, "Moderate snow"], [75, "Heavy snow"],
-        [77, "Snow grains"],
-        [80, "Rain showers"], [81, "Heavy showers"], [82, "Violent showers"],
-        [85, "Snow showers"], [86, "Heavy snow showers"],
-        [95, "Thunderstorm"], [96, "Thunderstorm with hail"], [99, "Thunderstorm with heavy hail"],
+        [0,"Clear sky"],[1,"Mainly clear"],[2,"Partly cloudy"],[3,"Overcast"],
+        [45,"Fog"],[48,"Rime fog"],
+        [51,"Light drizzle"],[53,"Moderate drizzle"],[55,"Dense drizzle"],
+        [56,"Freezing drizzle"],[57,"Dense freezing drizzle"],
+        [61,"Slight rain"],[63,"Moderate rain"],[65,"Heavy rain"],
+        [66,"Freezing rain"],[67,"Heavy freezing rain"],
+        [71,"Slight snow"],[73,"Moderate snow"],[75,"Heavy snow"],
+        [77,"Snow grains"],
+        [80,"Rain showers"],[81,"Heavy showers"],[82,"Violent showers"],
+        [85,"Snow showers"],[86,"Heavy snow showers"],
+        [95,"Thunderstorm"],[96,"Thunderstorm w/ hail"],[99,"Thunderstorm w/ heavy hail"]
       ]);
       return map.get(code) || "Weather";
     }
-
     function codeToEmoji(code){
       if(code === 0) return "☀️";
       if(code >= 1 && code <= 3) return "⛅";
@@ -459,7 +430,6 @@
       if(code >= 95) return "⛈️";
       return "🌡️";
     }
-
     function chip(label, value){
       const span = document.createElement("span");
       span.className = "wxchip";
@@ -472,24 +442,13 @@
       url.searchParams.set("q", place);
       url.searchParams.set("format", "json");
       url.searchParams.set("limit", "1");
-      // Nominatim likes explicit address details; helps results
       url.searchParams.set("addressdetails", "1");
-
-      const res = await fetch(url.toString(), {
-        headers: {
-          "Accept": "application/json"
-        }
-      });
+      const res = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
       if(!res.ok) throw new Error("Geocode failed");
       const data = await res.json();
       if(!Array.isArray(data) || !data.length) throw new Error("No geocode results");
-      return {
-        lat: Number(data[0].lat),
-        lon: Number(data[0].lon),
-        label: data[0].display_name
-      };
+      return { lat: Number(data[0].lat), lon: Number(data[0].lon), label: data[0].display_name };
     }
-
     async function getBrowserLocation(){
       return new Promise((resolve, reject)=>{
         if(!navigator.geolocation) return reject(new Error("No geolocation"));
@@ -505,8 +464,16 @@
       const url = new URL("https://api.open-meteo.com/v1/forecast");
       url.searchParams.set("latitude", lat);
       url.searchParams.set("longitude", lon);
-      url.searchParams.set("current", "temperature_2m,apparent_temperature,weather_code,wind_speed_10m");
+
+      // Current: temp + feels + code + wind + humidity
+      url.searchParams.set("current", "temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m");
+
+      // Hourly: temp + code + precip probability
+      url.searchParams.set("hourly", "temperature_2m,weather_code,precipitation_probability");
+
+      // Daily: code + hi/lo
       url.searchParams.set("daily", "weather_code,temperature_2m_max,temperature_2m_min");
+
       url.searchParams.set("temperature_unit", "fahrenheit");
       url.searchParams.set("wind_speed_unit", "mph");
       url.searchParams.set("timezone", "auto");
@@ -523,44 +490,41 @@
         return d.toLocaleDateString(undefined, { weekday: "short" });
       }catch{ return isoDate; }
     }
-
-    function showWeather(){
-      weatherModule.classList.add("show");
-    }
-    function hideWeather(){
-      weatherModule.classList.remove("show");
+    function fmtHour(isoDT){
+      try{
+        const d = new Date(isoDT);
+        return d.toLocaleTimeString(undefined, { hour: "numeric" });
+      }catch{ return isoDT; }
     }
 
     async function renderWeatherForQuery(fullQuery){
-      const placeRaw = parseWeatherPlace(fullQuery);
+      if(!isWeatherQuery(fullQuery)) { weatherModule.classList.remove("show"); return; }
 
-      // Only show weather module when the query is actually about weather/forecast
-      if(!isWeatherQuery(fullQuery)) { hideWeather(); return; }
-
-      showWeather();
+      weatherModule.classList.add("show");
       wxStatus.textContent = "Loading weather…";
       wxForecast.innerHTML = "";
       wxMeta.innerHTML = "";
+      wxHourly.innerHTML = "";
       wxTemp.textContent = "—";
       wxDesc.textContent = "—";
       wxLoc.textContent = "—";
+      wxOpen.href = "https://www.google.com/search?q=" + encodeURIComponent(fullQuery);
 
+      const placeRaw = parseWeatherPlace(fullQuery);
       let loc;
+
       try{
-        if(/\bnear me\b/i.test(fullQuery) || placeRaw.toLowerCase() === "near me" || placeRaw.toLowerCase() === "nearby" || placeRaw === ""){
-          // weather near me OR just "weather" -> use geolocation
+        if(/\bnear me\b/i.test(fullQuery) || !placeRaw || placeRaw.toLowerCase()==="near me" || placeRaw.toLowerCase()==="nearby"){
           loc = await getBrowserLocation();
         } else {
           loc = await geocodePlace(placeRaw);
         }
-      }catch(err){
+      }catch{
         wxStatus.textContent = "Couldn’t determine location for this weather search.";
-        wxOpen.href = "https://www.google.com/search?q=" + encodeURIComponent(fullQuery);
         return;
       }
 
       wxLoc.textContent = loc.label;
-      wxOpen.href = "https://www.google.com/search?q=" + encodeURIComponent(fullQuery);
 
       try{
         const wx = await fetchWeather(loc.lat, loc.lon);
@@ -572,44 +536,80 @@
         wxDesc.textContent = `${emoji} ${desc}`;
         wxTemp.textContent = (typeof cur.temperature_2m === "number") ? `${Math.round(cur.temperature_2m)}°F` : "—";
 
-        // Meta chips
+        // Meta chips (adds humidity + "precip chance" using next hour)
         if(typeof cur.apparent_temperature === "number") wxMeta.appendChild(chip("Feels like", `${Math.round(cur.apparent_temperature)}°F`));
         if(typeof cur.wind_speed_10m === "number") wxMeta.appendChild(chip("Wind", `${Math.round(cur.wind_speed_10m)} mph`));
+        if(typeof cur.relative_humidity_2m === "number") wxMeta.appendChild(chip("Humidity", `${Math.round(cur.relative_humidity_2m)}%`));
 
-        // Forecast (3 days)
+        // Hourly strip (next 12 hours)
+        const h = wx.hourly || {};
+        const times = h.time || [];
+        const temps = h.temperature_2m || [];
+        const codes = h.weather_code || [];
+        const pops  = h.precipitation_probability || [];
+
+        // Find the first index at or after "now" in the returned timezone
+        const now = new Date();
+        let startIdx = 0;
+        for(let i=0;i<times.length;i++){
+          const dt = new Date(times[i]);
+          if(dt >= now){ startIdx = i; break; }
+        }
+
+        // Precip chance chip: use the next hour's pop if available
+        if(typeof pops[startIdx] === "number"){
+          wxMeta.appendChild(chip("Precip", `${Math.round(pops[startIdx])}%`));
+        }
+
+        wxHourly.innerHTML = "";
+        for(let i=startIdx;i<Math.min(times.length, startIdx + 12);i++){
+          const box = document.createElement("div");
+          box.className = "hour";
+          const t = fmtHour(times[i]);
+          const temp = (typeof temps[i] === "number") ? `${Math.round(temps[i])}°` : "—";
+          const ico = codeToEmoji(codes[i]);
+          const pop = (typeof pops[i] === "number") ? `${Math.round(pops[i])}%` : "—";
+          box.innerHTML = `
+            <div class="t">${t}</div>
+            <div class="icon">${ico}</div>
+            <div class="temp">${temp}</div>
+            <div class="pop">💧 ${pop}</div>
+          `;
+          wxHourly.appendChild(box);
+        }
+
+        // Daily forecast (3 days)
         const daily = wx.daily || {};
         const days = daily.time || [];
         const maxs = daily.temperature_2m_max || [];
         const mins = daily.temperature_2m_min || [];
-        const codes = daily.weather_code || [];
+        const dcodes = daily.weather_code || [];
 
         wxForecast.innerHTML = "";
         for(let i=0;i<Math.min(3, days.length);i++){
           const row = document.createElement("div");
           row.className = "forecast-row";
-          const emo = codeToEmoji(codes[i]);
+          const emo = codeToEmoji(dcodes[i]);
           const hi = (typeof maxs[i] === "number") ? `${Math.round(maxs[i])}°` : "—";
           const lo = (typeof mins[i] === "number") ? `${Math.round(mins[i])}°` : "—";
           row.innerHTML = `
             <div class="fmuted">${fmtDay(days[i])}</div>
-            <div>${emo} <span class="fmuted">${wxCodeToText(codes[i])}</span></div>
+            <div>${emo} <span class="fmuted">${wxCodeToText(dcodes[i])}</span></div>
             <div><strong>${hi}</strong> <span class="fmuted">/ ${lo}</span></div>
           `;
           wxForecast.appendChild(row);
         }
 
         wxStatus.textContent = "";
-        weatherTitle.textContent = "Weather";
-      }catch(err){
+      }catch{
         wxStatus.textContent = "Couldn’t load weather right now.";
       }
     }
 
-    // Run weather module only when relevant
     if(queryFromUrl){
       renderWeatherForQuery(queryFromUrl);
     } else {
-      hideWeather();
+      weatherModule.classList.remove("show");
     }
   </script>
 </body>
