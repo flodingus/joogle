@@ -5,11 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Joogle</title>
 
+  <!-- Performance -->
   <link rel="preconnect" href="https://cse.google.com" />
   <link rel="preconnect" href="https://www.google.com" />
   <link rel="preconnect" href="https://suggestqueries.google.com" />
   <link rel="preconnect" href="https://nominatim.openstreetmap.org" />
   <link rel="preconnect" href="https://api.open-meteo.com" />
+  <link rel="preconnect" href="https://overpass-api.de" />
+  <link rel="preconnect" href="https://tile.openstreetmap.org" />
+
+  <!-- Leaflet (open-source map library) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     :root{
@@ -62,7 +69,10 @@
     .sugg:hover{background:var(--hover)}
 
     .actions{margin-top:16px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
-    .btn{padding:10px 16px;border-radius:4px;border:1px solid var(--btnBorder);background:var(--btn);color:var(--btnText);cursor:pointer;font-size:14px}
+    .btn{
+      padding:10px 16px;border-radius:4px;border:1px solid var(--btnBorder);
+      background:var(--btn);color:var(--btnText);cursor:pointer;font-size:14px
+    }
     .btn:hover{box-shadow:0 1px 1px rgba(0,0,0,.1)}
 
     .module{
@@ -75,9 +85,8 @@
       display:none;
     }
     .module.show{display:block}
-    .module h2{margin:0 0 6px;font-size:16px}
-    .module p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.35}
-    .module .row{display:flex;gap:10px;flex-wrap:wrap}
+    .module h2{margin:0 0 8px;font-size:16px}
+    .statusline{margin-top:8px;color:var(--muted);font-size:13px;min-height:18px}
 
     .pill-link{
       display:inline-block;
@@ -92,47 +101,19 @@
     }
     .pill-link:hover{box-shadow:0 1px 1px rgba(0,0,0,.1)}
 
-    /* Weather card */
-    .weather-grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-      margin-top:10px;
-    }
-    @media (min-width: 720px){
-      .weather-grid{grid-template-columns: 1.1fr .9fr;}
-    }
+    /* Weather */
+    .weather-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+    @media (min-width: 720px){ .weather-grid{grid-template-columns: 1.1fr .9fr;} }
     .weather-main{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:10px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:transparent;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:10px;border:1px solid var(--border);border-radius:12px;
     }
-    .weather-left{min-width:0}
     .weather-loc{font-weight:700;font-size:14px;margin-bottom:2px}
     .weather-desc{color:var(--muted);font-size:13px}
-    .weather-temp{
-      font-size:36px;
-      font-weight:700;
-      white-space:nowrap;
-    }
-    .weather-meta{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:8px;
-      color:var(--muted);
-      font-size:13px;
-    }
-    .wxchip{
-      border:1px solid var(--border);
-      border-radius:999px;
-      padding:4px 10px;
-    }
+    .weather-temp{font-size:36px;font-weight:700;white-space:nowrap}
+    .weather-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;color:var(--muted);font-size:13px}
+    .wxchip{border:1px solid var(--border);border-radius:999px;padding:4px 10px}
+
     .forecast{
       border:1px solid var(--border);
       border-radius:12px;
@@ -140,45 +121,40 @@
     }
     .forecast-title{font-weight:700;font-size:14px;margin:0 0 8px}
     .forecast-row{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      padding:8px 0;
-      border-top:1px solid var(--border);
-      font-size:13px;
-      color:var(--text);
+      display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--border);
+      font-size:13px;color:var(--text);
     }
     .forecast-row:first-of-type{border-top:0}
     .fmuted{color:var(--muted)}
-    .statusline{margin-top:8px;color:var(--muted);font-size:13px}
 
-    /* Hourly strip */
     .hourly{
-      margin-top:10px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px;
-      overflow:auto;
+      margin-top:10px;border:1px solid var(--border);border-radius:12px;padding:10px;overflow:auto
     }
     .hourly-title{font-weight:700;font-size:14px;margin:0 0 8px}
-    .hourly-strip{
-      display:flex;
-      gap:10px;
-      min-width:max-content;
-      padding-bottom:4px;
-    }
-    .hour{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:8px 10px;
-      min-width:92px;
-      text-align:center;
-      background:transparent;
-    }
+    .hourly-strip{display:flex;gap:10px;min-width:max-content;padding-bottom:4px}
+    .hour{border:1px solid var(--border);border-radius:12px;padding:8px 10px;min-width:92px;text-align:center}
     .hour .t{font-size:12px;color:var(--muted);margin-bottom:6px;white-space:nowrap}
     .hour .icon{font-size:18px;margin-bottom:4px}
     .hour .temp{font-weight:700;font-size:14px}
     .hour .pop{font-size:12px;color:var(--muted);margin-top:4px}
+
+    /* Local (Map + List) */
+    .local-grid{display:grid;grid-template-columns: 1fr; gap:10px; margin-top:10px}
+    @media (min-width: 900px){ .local-grid{grid-template-columns: 1.2fr .8fr;} }
+    #localMap{height:420px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    @media (min-width: 900px){ #localMap{height:520px;} }
+    .placesPanel{border:1px solid var(--border);border-radius:12px;padding:10px;max-height:520px;overflow:auto}
+    .placeCard{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      cursor:pointer;
+      margin-bottom:10px;
+    }
+    .placeCard:hover{background:var(--hover)}
+    .placeName{font-weight:700;margin-bottom:4px}
+    .placeMeta{color:var(--muted);font-size:13px;line-height:1.35}
+    .badge{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:2px 8px;font-size:12px;color:var(--muted);margin-right:6px;margin-top:6px}
 
     /* CSE polish */
     #resultsWrap{margin-top:18px}
@@ -213,6 +189,7 @@
       <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
     </div>
 
+    <!-- Bulletproof core search -->
     <form class="search-area" id="searchForm" method="GET" action="/">
       <div class="searchbar">
         <input id="q" name="q" type="search" placeholder="Search the web" autocomplete="off" spellcheck="false" />
@@ -225,23 +202,23 @@
         <button class="btn" type="button" id="luckyBtn">I’m Feeling Joogly</button>
       </div>
 
-      <!-- Weather module -->
+      <!-- WEATHER -->
       <div class="module" id="weatherModule">
-        <h2 id="weatherTitle">Weather</h2>
+        <h2>Weather</h2>
 
         <div class="weather-grid">
           <div>
             <div class="weather-main">
-              <div class="weather-left">
+              <div style="min-width:0">
                 <div class="weather-loc" id="wxLoc">—</div>
                 <div class="weather-desc" id="wxDesc">—</div>
                 <div class="weather-meta" id="wxMeta"></div>
               </div>
               <div class="weather-temp" id="wxTemp">—</div>
             </div>
+
             <div class="statusline" id="wxStatus"></div>
 
-            <!-- Hourly strip -->
             <div class="hourly">
               <div class="hourly-title">Next 12 hours</div>
               <div class="hourly-strip" id="wxHourly"></div>
@@ -254,8 +231,25 @@
           </div>
         </div>
 
-        <div class="row" style="margin-top:12px">
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
           <a class="pill-link" id="wxOpen" target="_blank" rel="noopener">Open full forecast</a>
+        </div>
+      </div>
+
+      <!-- LOCAL MAP + PLACES (OpenStreetMap/Overpass) -->
+      <div class="module" id="localModule">
+        <h2 id="localTitle">Nearby</h2>
+
+        <div class="local-grid">
+          <div id="localMap"></div>
+          <div class="placesPanel">
+            <div class="statusline" id="localStatus">—</div>
+            <div id="placesList"></div>
+            <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn" type="button" id="useMyLocationBtn">Use my location</button>
+              <a class="pill-link" id="openMapsBtn" target="_blank" rel="noopener">Open in OSM</a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -267,10 +261,27 @@
   </div>
 
   <script>
+    /*****************
+     * CONFIG
+     *****************/
     const CX = "427c85c8321db4c63";
+
+    // Hide junk domains from web results
     const BLOCKED_DOMAINS = ["pinterest.","quora.","brainly.","answers.com","chegg.","coursehero.","scribd.com"];
 
-    // Dark mode
+    // Overpass endpoints (fallback if one is slow/busy)
+    const OVERPASS_ENDPOINTS = [
+      "https://overpass-api.de/api/interpreter",
+      "https://lz4.overpass-api.de/api/interpreter",
+      "https://z.overpass-api.de/api/interpreter"
+    ];
+
+    // OSM tile layer (fine for light use; if you grow, switch to a hosted tile provider)
+    const OSM_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+    /*****************
+     * DARK MODE
+     *****************/
     const darkToggle = document.getElementById("darkToggle");
     function setDark(on){
       document.body.classList.toggle("dark", !!on);
@@ -280,20 +291,26 @@
     setDark(localStorage.getItem("joogle_dark") === "1");
     darkToggle.addEventListener("click", ()=>setDark(!document.body.classList.contains("dark")));
 
-    // Query hydrate
+    /*****************
+     * QUERY HYDRATE
+     *****************/
     const qEl = document.getElementById("q");
     const params = new URLSearchParams(location.search);
     const queryFromUrl = (params.get("q") || "").trim();
     if(queryFromUrl) qEl.value = queryFromUrl;
 
-    // Lucky
+    /*****************
+     * LUCKY
+     *****************/
     document.getElementById("luckyBtn").addEventListener("click", ()=>{
       const q = qEl.value.trim();
       if(!q){ qEl.focus(); return; }
       location.href = "https://www.google.com/search?q=" + encodeURIComponent(q) + "&btnI=1";
     });
 
-    // Suggestions
+    /*****************
+     * SUGGESTIONS
+     *****************/
     const suggestions = document.getElementById("suggestions");
     let suggAbort = null, suggTimer = null;
 
@@ -337,7 +354,9 @@
     });
     qEl.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSuggestions(); });
 
-    // CSE render
+    /*****************
+     * CSE RENDER
+     *****************/
     window.__gcse = {
       callback: function(){
         try{
@@ -356,7 +375,9 @@
       document.head.appendChild(s);
     })();
 
-    // Spam filter
+    /*****************
+     * SPAM FILTER (web results)
+     *****************/
     function filterResults(){
       document.querySelectorAll(".gsc-webResult.gsc-result, .gsc-result").forEach(el=>{
         const a = el.querySelector("a");
@@ -367,7 +388,9 @@
     }
     new MutationObserver(()=>filterResults()).observe(document.documentElement,{childList:true,subtree:true});
 
-    // Clean #gsc hash (keep ?q=)
+    /*****************
+     * CLEAN #gsc HASH
+     *****************/
     (function cleanGscHash(){
       const strip = () => {
         if (location.hash && location.hash.startsWith("#gsc.")) {
@@ -379,12 +402,7 @@
     })();
 
     /*****************
-     * WEATHER (FREE)
-     * - Geocode: Nominatim
-     * - Weather: Open-Meteo
-     * Adds:
-     *  1) Next 12 hours strip
-     *  2) Precip chance + humidity chips
+     * WEATHER (Open-Meteo + Nominatim) + hourly + humidity + precip prob
      *****************/
     const weatherModule = document.getElementById("weatherModule");
     const wxLoc = document.getElementById("wxLoc");
@@ -405,6 +423,7 @@
       s = s.replace(/^\s*(in|for|at)\s+/i, "");
       return s.trim();
     }
+
     function wxCodeToText(code){
       const map = new Map([
         [0,"Clear sky"],[1,"Mainly clear"],[2,"Partly cloudy"],[3,"Overcast"],
@@ -436,7 +455,18 @@
       span.textContent = `${label}: ${value}`;
       return span;
     }
-
+    function fmtDay(isoDate){
+      try{
+        const d = new Date(isoDate + "T00:00:00");
+        return d.toLocaleDateString(undefined, { weekday: "short" });
+      }catch{ return isoDate; }
+    }
+    function fmtHour(isoDT){
+      try{
+        const d = new Date(isoDT);
+        return d.toLocaleTimeString(undefined, { hour: "numeric" });
+      }catch{ return isoDT; }
+    }
     async function geocodePlace(place){
       const url = new URL("https://nominatim.openstreetmap.org/search");
       url.searchParams.set("q", place);
@@ -455,46 +485,24 @@
         navigator.geolocation.getCurrentPosition(
           (pos)=>resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, label: "Your location" }),
           (err)=>reject(err),
-          { enableHighAccuracy: false, timeout: 8000 }
+          { enableHighAccuracy:false, timeout:8000 }
         );
       });
     }
-
     async function fetchWeather(lat, lon){
       const url = new URL("https://api.open-meteo.com/v1/forecast");
       url.searchParams.set("latitude", lat);
       url.searchParams.set("longitude", lon);
-
-      // Current: temp + feels + code + wind + humidity
       url.searchParams.set("current", "temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m");
-
-      // Hourly: temp + code + precip probability
       url.searchParams.set("hourly", "temperature_2m,weather_code,precipitation_probability");
-
-      // Daily: code + hi/lo
       url.searchParams.set("daily", "weather_code,temperature_2m_max,temperature_2m_min");
-
       url.searchParams.set("temperature_unit", "fahrenheit");
       url.searchParams.set("wind_speed_unit", "mph");
       url.searchParams.set("timezone", "auto");
       url.searchParams.set("forecast_days", "3");
-
       const res = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
       if(!res.ok) throw new Error("Weather fetch failed");
       return await res.json();
-    }
-
-    function fmtDay(isoDate){
-      try{
-        const d = new Date(isoDate + "T00:00:00");
-        return d.toLocaleDateString(undefined, { weekday: "short" });
-      }catch{ return isoDate; }
-    }
-    function fmtHour(isoDT){
-      try{
-        const d = new Date(isoDT);
-        return d.toLocaleTimeString(undefined, { hour: "numeric" });
-      }catch{ return isoDT; }
     }
 
     async function renderWeatherForQuery(fullQuery){
@@ -530,38 +538,30 @@
         const wx = await fetchWeather(loc.lat, loc.lon);
 
         const cur = wx.current || {};
-        const emoji = codeToEmoji(cur.weather_code);
-        const desc = wxCodeToText(cur.weather_code);
-
-        wxDesc.textContent = `${emoji} ${desc}`;
+        wxDesc.textContent = `${codeToEmoji(cur.weather_code)} ${wxCodeToText(cur.weather_code)}`;
         wxTemp.textContent = (typeof cur.temperature_2m === "number") ? `${Math.round(cur.temperature_2m)}°F` : "—";
 
-        // Meta chips (adds humidity + "precip chance" using next hour)
         if(typeof cur.apparent_temperature === "number") wxMeta.appendChild(chip("Feels like", `${Math.round(cur.apparent_temperature)}°F`));
         if(typeof cur.wind_speed_10m === "number") wxMeta.appendChild(chip("Wind", `${Math.round(cur.wind_speed_10m)} mph`));
         if(typeof cur.relative_humidity_2m === "number") wxMeta.appendChild(chip("Humidity", `${Math.round(cur.relative_humidity_2m)}%`));
 
-        // Hourly strip (next 12 hours)
+        // Hourly strip
         const h = wx.hourly || {};
         const times = h.time || [];
         const temps = h.temperature_2m || [];
         const codes = h.weather_code || [];
         const pops  = h.precipitation_probability || [];
 
-        // Find the first index at or after "now" in the returned timezone
         const now = new Date();
         let startIdx = 0;
         for(let i=0;i<times.length;i++){
           const dt = new Date(times[i]);
           if(dt >= now){ startIdx = i; break; }
         }
-
-        // Precip chance chip: use the next hour's pop if available
         if(typeof pops[startIdx] === "number"){
           wxMeta.appendChild(chip("Precip", `${Math.round(pops[startIdx])}%`));
         }
 
-        wxHourly.innerHTML = "";
         for(let i=startIdx;i<Math.min(times.length, startIdx + 12);i++){
           const box = document.createElement("div");
           box.className = "hour";
@@ -578,14 +578,13 @@
           wxHourly.appendChild(box);
         }
 
-        // Daily forecast (3 days)
+        // Daily forecast
         const daily = wx.daily || {};
         const days = daily.time || [];
         const maxs = daily.temperature_2m_max || [];
         const mins = daily.temperature_2m_min || [];
         const dcodes = daily.weather_code || [];
 
-        wxForecast.innerHTML = "";
         for(let i=0;i<Math.min(3, days.length);i++){
           const row = document.createElement("div");
           row.className = "forecast-row";
@@ -606,11 +605,344 @@
       }
     }
 
-    if(queryFromUrl){
-      renderWeatherForQuery(queryFromUrl);
-    } else {
-      weatherModule.classList.remove("show");
+    /*****************
+     * LOCAL SEARCH (Leaflet + Overpass) keyword detection
+     *****************/
+    const localModule = document.getElementById("localModule");
+    const localTitle = document.getElementById("localTitle");
+    const localStatus = document.getElementById("localStatus");
+    const placesList = document.getElementById("placesList");
+    const useMyLocationBtn = document.getElementById("useMyLocationBtn");
+    const openMapsBtn = document.getElementById("openMapsBtn");
+
+    let leafletMap = null;
+    let markersLayer = null;
+
+    function isNearMeQuery(q){
+      return /\bnear me\b/i.test(q) || /\bnearby\b/i.test(q);
     }
+
+    // Detect what the user is trying to find (extend whenever you want)
+    function detectLocalIntent(q){
+      const s = q.toLowerCase();
+
+      // Order matters (more specific first)
+      const rules = [
+        { key: "gas", label: "Gas stations", tags: ['amenity=fuel'] },
+        { key: "grocery", label: "Grocery stores", tags: ['shop=supermarket'] },
+        { key: "pharmacy", label: "Pharmacies", tags: ['amenity=pharmacy'] },
+        { key: "hotel", label: "Hotels", tags: ['tourism=hotel'] },
+        { key: "bar", label: "Bars", tags: ['amenity=bar'] },
+        { key: "coffee", label: "Coffee", tags: ['amenity=cafe'] },
+        { key: "cafe", label: "Cafes", tags: ['amenity=cafe'] },
+        { key: "library", label: "Libraries", tags: ['amenity=library'] },
+        { key: "restaurant", label: "Restaurants", tags: ['amenity=restaurant'] },
+        { key: "pizza", label: "Pizza", tags: ['amenity=restaurant','cuisine=pizza'] },
+        { key: "burger", label: "Burgers", tags: ['amenity=restaurant','cuisine=burger'] },
+        { key: "tacos", label: "Tacos", tags: ['amenity=restaurant','cuisine=mexican'] },
+        { key: "food", label: "Food", tags: ['amenity=restaurant'] },
+      ];
+
+      // Trigger local pack if query contains any local intent keyword
+      for(const r of rules){
+        if(s.includes(r.key)) return r;
+      }
+      return null;
+    }
+
+    function stripIntentAndLocationWords(q, intentKey){
+      // Try to leave a place name for geocoding when NOT "near me"
+      // Examples:
+      // "restaurants in chicago" -> "chicago"
+      // "coffee dallas tx" -> "dallas tx"
+      let s = q.toLowerCase();
+
+      // remove "near me/nearby"
+      s = s.replace(/\bnear me\b/g, "").replace(/\bnearby\b/g, "");
+
+      // remove intent keyword(s)
+      if(intentKey) s = s.replace(new RegExp("\\b" + intentKey + "s?\\b","g"), "");
+
+      // remove generic words
+      s = s.replace(/\b(best|top|good|open|now|closest|cheap|near|around|find|show|places|place)\b/g, "");
+      s = s.replace(/\b(in|at|for|by)\b/g, " ");
+
+      // collapse
+      s = s.replace(/\s+/g, " ").trim();
+      return s;
+    }
+
+    function ensureLeafletReady(){
+      return !!window.L;
+    }
+
+    function resetMap(){
+      const el = document.getElementById("localMap");
+      el.innerHTML = ""; // hard reset container
+      leafletMap = null;
+      markersLayer = null;
+    }
+
+    function initMap(lat, lon, zoom=14){
+      if(!ensureLeafletReady()){
+        localStatus.textContent = "Map library failed to load.";
+        return null;
+      }
+
+      resetMap();
+      leafletMap = L.map("localMap").setView([lat, lon], zoom);
+
+      L.tileLayer(OSM_TILES, {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(leafletMap);
+
+      markersLayer = L.layerGroup().addTo(leafletMap);
+      return leafletMap;
+    }
+
+    function setLocalVisible(on){
+      localModule.classList.toggle("show", !!on);
+    }
+
+    function osmLink(lat, lon, zoom=16){
+      return `https://www.openstreetmap.org/#map=${zoom}/${lat}/${lon}`;
+    }
+
+    async function tryOverpassFetch(postBody){
+      for(const endpoint of OVERPASS_ENDPOINTS){
+        try{
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+            body: "data=" + encodeURIComponent(postBody)
+          });
+          if(!res.ok) throw new Error("Overpass HTTP " + res.status);
+          return await res.json();
+        }catch(e){
+          // try next endpoint
+        }
+      }
+      throw new Error("All Overpass endpoints failed");
+    }
+
+    function elementLatLon(el){
+      if(typeof el.lat === "number" && typeof el.lon === "number") return { lat: el.lat, lon: el.lon };
+      if(el.center && typeof el.center.lat === "number" && typeof el.center.lon === "number") return { lat: el.center.lat, lon: el.center.lon };
+      return null;
+    }
+
+    function tag(el, key){
+      return (el.tags && el.tags[key]) ? el.tags[key] : "";
+    }
+
+    function formatAddress(el){
+      const hn = tag(el, "addr:housenumber");
+      const st = tag(el, "addr:street");
+      const city = tag(el, "addr:city");
+      const parts = [];
+      const line1 = [hn, st].filter(Boolean).join(" ");
+      if(line1) parts.push(line1);
+      if(city) parts.push(city);
+      return parts.join(", ");
+    }
+
+    function badgesFor(el){
+      const out = [];
+      const cuisine = tag(el, "cuisine");
+      const brand = tag(el, "brand");
+      const fuel = tag(el, "fuel");
+      const shop = tag(el, "shop");
+      const amenity = tag(el, "amenity");
+      if(cuisine) out.push("Cuisine: " + cuisine);
+      if(brand) out.push(brand);
+      if(fuel) out.push("Fuel: " + fuel);
+      if(shop) out.push("Shop: " + shop);
+      if(amenity) out.push("Amenity: " + amenity);
+      return out.slice(0, 3);
+    }
+
+    async function renderLocalPack({ query, intent, center, centerLabel }){
+      setLocalVisible(true);
+      localTitle.textContent = `${intent.label}${centerLabel ? " — " + centerLabel : ""}`;
+      localStatus.textContent = "Loading nearby results from OpenStreetMap…";
+      placesList.innerHTML = "";
+
+      const map = initMap(center.lat, center.lon, 14);
+      if(!map) return;
+
+      openMapsBtn.href = osmLink(center.lat, center.lon, 15);
+
+      // You marker (if this is "my location")
+      if(centerLabel === "Your location"){
+        L.marker([center.lat, center.lon]).addTo(map).bindPopup("You are here").openPopup();
+      }
+
+      // Overpass query:
+      // Use nwr (node/way/relation) with around radius
+      const R = 3000;
+      const filters = intent.tags
+        .map(kv => {
+          const [k,v] = kv.split("=");
+          return `["${k}"="${v}"]`;
+        })
+        .join("");
+
+      const ql = `
+        [out:json][timeout:25];
+        (
+          node${filters}(around:${R},${center.lat},${center.lon});
+          way${filters}(around:${R},${center.lat},${center.lon});
+          relation${filters}(around:${R},${center.lat},${center.lon});
+        );
+        out center tags 30;
+      `.trim();
+
+      let data;
+      try{
+        data = await tryOverpassFetch(ql);
+      }catch(e){
+        localStatus.textContent = "Overpass is busy right now — try again in a minute.";
+        return;
+      }
+
+      const items = (data.elements || [])
+        .map(el => ({ el, ll: elementLatLon(el) }))
+        .filter(x => x.ll && tag(x.el,"name"))
+        .slice(0, 30);
+
+      if(!items.length){
+        localStatus.textContent = "No nearby results found in OpenStreetMap data for that query.";
+        return;
+      }
+
+      localStatus.textContent = `Showing ${items.length} results nearby`;
+
+      // Markers + list
+      const bounds = [];
+      items.forEach((item, idx) => {
+        const name = tag(item.el, "name");
+        const addr = formatAddress(item.el);
+        const website = tag(item.el, "website") || tag(item.el,"contact:website");
+
+        const m = L.marker([item.ll.lat, item.ll.lon]).addTo(markersLayer);
+        m.bindPopup(`
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;max-width:260px">
+            <div style="font-weight:700;margin-bottom:4px">${name}</div>
+            <div style="color:#5f6368">${addr || ""}</div>
+            ${website ? `<div style="margin-top:6px"><a href="${website}" target="_blank" rel="noopener">Website</a></div>` : ""}
+          </div>
+        `);
+
+        bounds.push([item.ll.lat, item.ll.lon]);
+
+        const card = document.createElement("div");
+        card.className = "placeCard";
+        const badgeHtml = badgesFor(item.el).map(b => `<span class="badge">${b}</span>`).join("");
+        card.innerHTML = `
+          <div class="placeName">${idx+1}. ${name}</div>
+          <div class="placeMeta">${addr || "—"}</div>
+          <div>${badgeHtml}</div>
+        `;
+        card.addEventListener("click", ()=>{
+          map.setView([item.ll.lat, item.ll.lon], 16);
+          m.openPopup();
+        });
+        placesList.appendChild(card);
+      });
+
+      // Fit view
+      try{
+        if(bounds.length){
+          map.fitBounds(bounds, { padding: [30,30] });
+        }
+      }catch{}
+    }
+
+    async function resolveLocalCenter(query, intent){
+      // If near me/nearby => use geolocation
+      if(isNearMeQuery(query)){
+        const loc = await getBrowserLocation();
+        return { center: { lat: loc.lat, lon: loc.lon }, label: "Your location" };
+      }
+
+      // Otherwise attempt to geocode a place in the query
+      const maybePlace = stripIntentAndLocationWords(query, intent.key);
+      if(maybePlace){
+        try{
+          const g = await geocodePlace(maybePlace);
+          return { center: { lat: g.lat, lon: g.lon }, label: maybePlace };
+        }catch{}
+      }
+
+      // If no place parsed, we’ll require location permission
+      const loc = await getBrowserLocation();
+      return { center: { lat: loc.lat, lon: loc.lon }, label: "Your location" };
+    }
+
+    async function maybeShowLocalPack(query){
+      const intent = detectLocalIntent(query);
+      if(!intent){ setLocalVisible(false); return; }
+
+      // stash key so we can retry via the button
+      maybeShowLocalPack.lastIntent = intent;
+      maybeShowLocalPack.lastQuery = query;
+
+      setLocalVisible(true);
+      localTitle.textContent = intent.label;
+      localStatus.textContent = "Preparing map…";
+      placesList.innerHTML = "";
+
+      // Handle missing Leaflet (rare)
+      if(!ensureLeafletReady()){
+        localStatus.textContent = "Map library failed to load.";
+        return;
+      }
+
+      try{
+        const resolved = await resolveLocalCenter(query, intent);
+        await renderLocalPack({
+          query,
+          intent,
+          center: resolved.center,
+          centerLabel: resolved.label
+        });
+      }catch(e){
+        localStatus.textContent = "Location permission denied — click “Use my location” to try again.";
+      }
+    }
+
+    useMyLocationBtn.addEventListener("click", async ()=>{
+      const q = maybeShowLocalPack.lastQuery || queryFromUrl || "";
+      const intent = maybeShowLocalPack.lastIntent || detectLocalIntent(q);
+      if(!intent){ localStatus.textContent = "No local query detected."; return; }
+      try{
+        const loc = await getBrowserLocation();
+        await renderLocalPack({
+          query: q,
+          intent,
+          center: { lat: loc.lat, lon: loc.lon },
+          centerLabel: "Your location"
+        });
+      }catch{
+        localStatus.textContent = "Location permission denied.";
+      }
+    });
+
+    /*****************
+     * INIT: run modules for current query
+     *****************/
+    (function init(){
+      if(!queryFromUrl) return;
+
+      // Weather module only if query includes "weather"/"forecast"
+      renderWeatherForQuery(queryFromUrl);
+
+      // Local module only if local intent detected
+      // (restaurants/coffee/gas/library/etc.)
+      // Wait a tick for Leaflet (defer) to be ready on slower devices
+      setTimeout(()=>maybeShowLocalPack(queryFromUrl), 0);
+    })();
   </script>
 </body>
 </html>
