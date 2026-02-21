@@ -7,6 +7,8 @@
 
   <link rel="preconnect" href="https://cse.google.com" />
   <link rel="preconnect" href="https://www.google.com" />
+  <link rel="dns-prefetch" href="//cse.google.com" />
+  <link rel="dns-prefetch" href="//www.google.com" />
 
   <style>
     :root{
@@ -23,12 +25,15 @@
       --hover:rgba(232,234,237,.08);
       --link:#8ab4f8; --visited:#c58af9;
     }
+
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
     .topbar{height:56px;display:flex;justify-content:flex-end;align-items:center;padding:0 16px}
     .icon-btn{width:38px;height:38px;border-radius:999px;border:0;background:transparent;color:var(--text);cursor:pointer}
     .icon-btn:hover{background:var(--hover)}
+
     .wrap{max-width:760px;margin:0 auto;padding:0 16px 40px}
+
     .logo{text-align:center;font-size:84px;font-weight:700;letter-spacing:-1px;margin-top:70px;user-select:none}
     .logo span:nth-child(1){color:#4285f4}
     .logo span:nth-child(2){color:#ea4335}
@@ -44,7 +49,9 @@
       background:var(--card);transition:.15s;
     }
     .searchbar:hover,.searchbar:focus-within{box-shadow:var(--shadow);border-color:transparent}
-    input[type="search"]{flex:1;border:0;outline:0;font-size:16px;background:transparent;color:var(--text);min-width:0}
+    input[type="search"]{
+      flex:1;border:0;outline:0;font-size:16px;background:transparent;color:var(--text);min-width:0
+    }
 
     #suggestions{
       position:absolute;left:0;right:0;top:54px;
@@ -61,23 +68,12 @@
 
     #resultsWrap{margin-top:26px}
 
-    .status{
-      margin-top:14px;
-      text-align:center;
-      color:var(--muted);
-      font-size:13px;
-      min-height:18px;
-    }
-    .status a{color:var(--link);text-decoration:none}
-    .status a:hover{text-decoration:underline}
-
     /* CSE polish */
     .gsc-search-box{display:none !important;}
     .gsc-control-cse{padding:0 !important;border:0 !important;background:transparent !important}
     .gsc-webResult.gsc-result{
       background:var(--card) !important;border:1px solid var(--border) !important;border-radius:14px !important;
-      padding:14px 16px !important;margin-bottom:12px !important;
-      transition:.18s;
+      padding:14px 16px !important;margin-bottom:12px !important;transition:.18s;
     }
     .gsc-webResult.gsc-result:hover{box-shadow:var(--shadow) !important}
     a.gs-title, a.gs-title:link{color:var(--link) !important;text-decoration:none !important}
@@ -114,10 +110,8 @@
         <button class="btn" id="luckyBtn">I’m Feeling Joogly</button>
       </div>
 
-      <div class="status" id="status"></div>
-      <div class="status" id="openGoogle" style="display:none;"></div>
-
       <div id="resultsWrap">
+        <!-- We let CSE read ?q= and render results (reliable, no execute/polling) -->
         <div id="cse-results"></div>
       </div>
     </div>
@@ -126,7 +120,6 @@
   <script>
     /************ CONFIG ************/
     const CX = "427c85c8321db4c63";
-    const CSE_ELEMENT_NAME = "joogle-results";
 
     // Spam filter list (edit anytime)
     const BLOCKED_DOMAINS = [
@@ -135,18 +128,8 @@
 
     /************ UI ************/
     const q = document.getElementById("q");
-    const statusEl = document.getElementById("status");
-    const openGoogle = document.getElementById("openGoogle");
     const suggestions = document.getElementById("suggestions");
     const darkToggle = document.getElementById("darkToggle");
-
-    function setStatus(msg){ statusEl.textContent = msg || ""; }
-    function hideOpenGoogle(){ openGoogle.style.display="none"; openGoogle.innerHTML=""; }
-    function showOpenGoogle(query){
-      openGoogle.style.display="block";
-      openGoogle.innerHTML =
-        `Or <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank" rel="noopener">open in Google</a>`;
-    }
 
     // Dark mode (persisted)
     function setDark(on){
@@ -156,6 +139,37 @@
     }
     setDark(localStorage.getItem("joogle_dark") === "1");
     darkToggle.addEventListener("click", ()=>setDark(!document.body.classList.contains("dark")));
+
+    /************ URL-based search (reliable) ************/
+    function goSearch(query){
+      query = (query || "").trim();
+      if(!query){ q.focus(); return; }
+
+      // Navigate on YOUR domain (no Google redirect)
+      // This triggers CSE to render results for ?q=
+      const url = new URL(location.href);
+      url.searchParams.set("q", query);
+      location.href = url.toString();
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", ()=>goSearch(q.value));
+    document.getElementById("luckyBtn").addEventListener("click", ()=>{
+      const query = q.value.trim();
+      if(!query){ q.focus(); return; }
+      location.href = "https://www.google.com/search?q=" + encodeURIComponent(query) + "&btnI=1";
+    });
+
+    q.addEventListener("keydown",(e)=>{
+      if(e.key === "Enter"){ e.preventDefault(); goSearch(q.value); }
+      if(e.key === "Escape"){ closeSuggestions(); }
+    });
+
+    // Hydrate input from URL on load
+    (function hydrate(){
+      const params = new URLSearchParams(location.search);
+      const initial = params.get("q");
+      if(initial) q.value = initial;
+    })();
 
     /************ Suggestions ************/
     let suggAbort = null;
@@ -188,7 +202,7 @@
             div.addEventListener("click", ()=>{
               q.value = text;
               closeSuggestions();
-              runSearch(text);
+              goSearch(text);
             });
             suggestions.appendChild(div);
           });
@@ -203,30 +217,18 @@
       if(!document.querySelector(".search-area").contains(e.target)) closeSuggestions();
     });
 
-    /************ Programmable Search (reliable render) ************/
+    /************ Programmable Search (render results-only) ************/
     window.__gcse = {
       callback: function(){
+        // Render results-only into our div.
+        // It reads ?q= automatically because of queryParameterName
         try{
           google.search.cse.element.render({
             div: "cse-results",
             tag: "searchresults-only",
-            attributes: {
-              queryParameterName: "q",
-              gname: CSE_ELEMENT_NAME
-            }
+            attributes: { queryParameterName: "q" }
           });
-
-          // If page opened with ?q=..., run it immediately
-          const params = new URLSearchParams(location.search);
-          const initial = params.get("q");
-          if(initial){
-            q.value = initial;
-            runSearch(initial);
-          }
-        }catch(err){
-          setStatus("Search failed to initialize.");
-          showOpenGoogle(q.value.trim() || "");
-        }
+        }catch(e){}
       }
     };
 
@@ -236,74 +238,6 @@
       s.src = "https://cse.google.com/cse.js?cx=" + encodeURIComponent(CX);
       document.head.appendChild(s);
     })();
-
-    function getCse(){
-      try{
-        return google.search.cse.element.getElement(CSE_ELEMENT_NAME) || null;
-      }catch(e){
-        return null;
-      }
-    }
-
-    function updateUrlQuery(query){
-      const url = new URL(location.href);
-      url.searchParams.set("q", query);
-      history.replaceState({}, "", url.toString());
-    }
-
-    function runSearch(value){
-      const query = (value ?? q.value).trim();
-      if(!query){
-        setStatus("Type something first 🙂");
-        q.focus();
-        return;
-      }
-
-      closeSuggestions();
-      hideOpenGoogle();
-      setStatus("Searching…");
-      updateUrlQuery(query);
-
-      const start = Date.now();
-
-      const tick = () => {
-        const el = getCse();
-        if(el && typeof el.execute === "function"){
-          el.execute(query);
-          setStatus("");
-          return;
-        }
-
-        // No auto-redirect. Just provide a manual link if it's slow.
-        if(Date.now() - start > 3000){
-          setStatus("Still loading results…");
-          showOpenGoogle(query);
-        }
-
-        requestAnimationFrame(tick);
-      };
-
-      tick();
-    }
-
-    // Buttons + Enter
-    document.getElementById("searchBtn").addEventListener("click", ()=>runSearch());
-    document.getElementById("luckyBtn").addEventListener("click", ()=>{
-      const query = q.value.trim();
-      if(!query){
-        setStatus("Type something first 🙂");
-        q.focus();
-        return;
-      }
-      closeSuggestions();
-      hideOpenGoogle();
-      window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query) + "&btnI=1";
-    });
-
-    q.addEventListener("keydown",(e)=>{
-      if(e.key === "Enter"){ e.preventDefault(); runSearch(); }
-      if(e.key === "Escape"){ closeSuggestions(); }
-    });
 
     /************ Spam filter ************/
     function filterResults(){
