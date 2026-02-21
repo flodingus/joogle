@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Joogle</title>
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3EJ%3C/text%3E%3C/svg%3E">
+
+  <!-- Google Programmable Search -->
+  <script async src="https://cse.google.com/cse.js?cx=427c85c8321db4c63"></script>
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      color:#202124;
+      background:#ffffff;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:flex-end;
+      padding:14px 18px;
+      font-size:13px;
+      gap:18px;
+    }
+
+    .topbar a{
+      text-decoration:none;
+      color:#202124;
+    }
+
+    .topbar a:hover{
+      text-decoration:underline;
+    }
+
+    .wrap{
+      height:80vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .logo{
+      font-size:92px;
+      font-weight:600;
+      letter-spacing:-2px;
+      margin-bottom:28px;
+      user-select:none;
+    }
+
+    .b{color:#4285F4;}
+    .r{color:#DB4437;}
+    .y{color:#F4B400;}
+    .g{color:#0F9D58;}
+
+    .searchShell{
+      width:min(584px, 90%);
+    }
+
+    .buttons{
+      margin-top:18px;
+      display:flex;
+      justify-content:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      background:#f8f9fa;
+      border:1px solid #f8f9fa;
+      padding:10px 16px;
+      border-radius:4px;
+      font-size:14px;
+      cursor:pointer;
+    }
+
+    .btn:hover{
+      border:1px solid #dadce0;
+      box-shadow:0 1px 1px rgba(0,0,0,.1);
+    }
+
+    /* Programmable Search styling */
+    .gsc-control-cse{
+      border:none !important;
+      background:transparent !important;
+      padding:0 !important;
+    }
+
+    .gsc-search-box{
+      border:1px solid #dfe1e5 !important;
+      border-radius:24px !important;
+      padding:6px 14px !important;
+    }
+
+    .gsc-search-box:hover{
+      box-shadow:0 1px 6px rgba(32,33,36,.28);
+    }
+
+    input.gsc-input{
+      font-size:16px !important;
+      padding:8px 0 !important;
+    }
+
+    .gsc-search-button{
+      display:none !important;
+    }
+
+    footer{
+      position:absolute;
+      bottom:0;
+      width:100%;
+      background:#f2f2f2;
+      border-top:1px solid #dadce0;
+      font-size:14px;
+      color:#5f6368;
+    }
+
+    .footerRow{
+      padding:12px 20px;
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .footerRow a{
+      color:#5f6368;
+      text-decoration:none;
+      margin-right:18px;
+    }
+
+    .footerRow a:hover{
+      text-decoration:underline;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <a href="#">Jail</a>
+    <a href="#">Jmages</a>
+  </div>
+
+  <main class="wrap">
+
+    <div class="logo">
+      <span class="b">J</span><span class="r">o</span><span class="y">o</span><span class="b">g</span><span class="g">l</span><span class="r">e</span>
+    </div>
+
+    <div class="searchShell">
+      <div class="gcse-search"></div>
+
+      <div class="buttons">
+        <button class="btn" onclick="doSearch()">Joogle Search</button>
+        <button class="btn" onclick="doLucky()">I'm Feeling Jooky</button>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="footerRow">
+      <div>
+        <a href="#">About</a>
+        <a href="#">Advertising</a>
+        <a href="#">Business</a>
+      </div>
+      <div>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Settings</a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+function findInput(){
+  return document.querySelector('input.gsc-input');
+}
+
+function doSearch(){
+  const input = findInput();
+  if(!input) return;
+  input.focus();
+  input.dispatchEvent(new KeyboardEvent('keydown',{
+    bubbles:true,
+    key:'Enter',
+    keyCode:13
+  }));
+}
+
+function doLucky(){
+  doSearch();
+  setTimeout(()=>{
+    const first=document.querySelector('.gsc-result .gs-title a');
+    if(first) window.location.href=first.href;
+  },900);
+}
+
+setInterval(()=>{
+  const input=findInput();
+  if(input){
+    input.focus();
+  }
+},500);
+</script>
+
+</body>
+</html>
+
+<div class="logo">
+<span class="blue">J</span>
+<span class="red">o</span>
+<span class="yellow">o</span>
+<span class="blue">g</span>
+<span class="green">l</span>
+<span class="red">e</span>
+</div>
+
+<div class="gcse-search"></div>
+
+</body>
+</html>
