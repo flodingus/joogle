@@ -7,8 +7,6 @@
 
   <link rel="preconnect" href="https://cse.google.com" />
   <link rel="preconnect" href="https://www.google.com" />
-  <link rel="dns-prefetch" href="//cse.google.com" />
-  <link rel="dns-prefetch" href="//www.google.com" />
 
   <style>
     :root{
@@ -33,7 +31,6 @@
     .icon-btn:hover{background:var(--hover)}
 
     .wrap{max-width:760px;margin:0 auto;padding:0 16px 40px}
-
     .logo{text-align:center;font-size:84px;font-weight:700;letter-spacing:-1px;margin-top:70px;user-select:none}
     .logo span:nth-child(1){color:#4285f4}
     .logo span:nth-child(2){color:#ea4335}
@@ -98,40 +95,38 @@
       <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
     </div>
 
-    <div class="search-area">
+    <!-- ✅ BULLETPROOF SEARCH: HTML FORM (no JS required) -->
+    <form class="search-area" id="searchForm" method="GET" action="/">
       <div class="searchbar">
-        <input id="q" type="search" placeholder="Search the web" autocomplete="off" spellcheck="false" />
+        <!-- name="q" is what makes /?q=... happen -->
+        <input id="q" name="q" type="search" placeholder="Search the web" autocomplete="off" spellcheck="false" />
       </div>
 
       <div id="suggestions" role="listbox" aria-label="Suggestions"></div>
 
       <div class="actions">
-        <button class="btn" id="searchBtn">Joogle Search</button>
-        <button class="btn" id="luckyBtn">I’m Feeling Joogly</button>
+        <!-- submit guarantees navigation even if JS is broken -->
+        <button class="btn" type="submit">Joogle Search</button>
+        <!-- lucky is JS-driven -->
+        <button class="btn" type="button" id="luckyBtn">I’m Feeling Joogly</button>
       </div>
 
       <div id="resultsWrap">
-        <!-- We let CSE read ?q= and render results (reliable, no execute/polling) -->
         <div id="cse-results"></div>
       </div>
-    </div>
+    </form>
   </div>
 
   <script>
     /************ CONFIG ************/
     const CX = "427c85c8321db4c63";
 
-    // Spam filter list (edit anytime)
     const BLOCKED_DOMAINS = [
       "pinterest.","quora.","brainly.","answers.com","chegg.","coursehero.","scribd.com"
     ];
 
-    /************ UI ************/
-    const q = document.getElementById("q");
-    const suggestions = document.getElementById("suggestions");
+    /************ DARK MODE ************/
     const darkToggle = document.getElementById("darkToggle");
-
-    // Dark mode (persisted)
     function setDark(on){
       document.body.classList.toggle("dark", !!on);
       localStorage.setItem("joogle_dark", on ? "1" : "0");
@@ -140,38 +135,23 @@
     setDark(localStorage.getItem("joogle_dark") === "1");
     darkToggle.addEventListener("click", ()=>setDark(!document.body.classList.contains("dark")));
 
-    /************ URL-based search (reliable) ************/
-    function goSearch(query){
-      query = (query || "").trim();
-      if(!query){ q.focus(); return; }
-
-      // Navigate on YOUR domain (no Google redirect)
-      // This triggers CSE to render results for ?q=
-      const url = new URL(location.href);
-      url.searchParams.set("q", query);
-      location.href = url.toString();
-    }
-
-    document.getElementById("searchBtn").addEventListener("click", ()=>goSearch(q.value));
-    document.getElementById("luckyBtn").addEventListener("click", ()=>{
-      const query = q.value.trim();
-      if(!query){ q.focus(); return; }
-      location.href = "https://www.google.com/search?q=" + encodeURIComponent(query) + "&btnI=1";
-    });
-
-    q.addEventListener("keydown",(e)=>{
-      if(e.key === "Enter"){ e.preventDefault(); goSearch(q.value); }
-      if(e.key === "Escape"){ closeSuggestions(); }
-    });
-
-    // Hydrate input from URL on load
+    /************ HYDRATE INPUT FROM URL ************/
+    const q = document.getElementById("q");
     (function hydrate(){
       const params = new URLSearchParams(location.search);
       const initial = params.get("q");
       if(initial) q.value = initial;
     })();
 
-    /************ Suggestions ************/
+    /************ "I’M FEELING JOOGY" ************/
+    document.getElementById("luckyBtn").addEventListener("click", ()=>{
+      const query = q.value.trim();
+      if(!query){ q.focus(); return; }
+      location.href = "https://www.google.com/search?q=" + encodeURIComponent(query) + "&btnI=1";
+    });
+
+    /************ SUGGESTIONS ************/
+    const suggestions = document.getElementById("suggestions");
     let suggAbort = null;
     let suggTimer = null;
 
@@ -202,7 +182,8 @@
             div.addEventListener("click", ()=>{
               q.value = text;
               closeSuggestions();
-              goSearch(text);
+              // Submit the form (guaranteed /?q= navigation)
+              document.getElementById("searchForm").requestSubmit();
             });
             suggestions.appendChild(div);
           });
@@ -217,11 +198,13 @@
       if(!document.querySelector(".search-area").contains(e.target)) closeSuggestions();
     });
 
-    /************ Programmable Search (render results-only) ************/
+    q.addEventListener("keydown",(e)=>{
+      if(e.key === "Escape") closeSuggestions();
+    });
+
+    /************ PROGRAMMABLE SEARCH (READS ?q=) ************/
     window.__gcse = {
       callback: function(){
-        // Render results-only into our div.
-        // It reads ?q= automatically because of queryParameterName
         try{
           google.search.cse.element.render({
             div: "cse-results",
@@ -239,7 +222,7 @@
       document.head.appendChild(s);
     })();
 
-    /************ Spam filter ************/
+    /************ SPAM FILTER ************/
     function filterResults(){
       document.querySelectorAll(".gsc-webResult.gsc-result, .gsc-result").forEach(el=>{
         const a = el.querySelector("a");
