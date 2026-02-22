@@ -11,17 +11,20 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="https://unpkg.com/opening_hours@3.6.0/opening_hours.js"></script>
 
 <style>
 :root{
  --border:#dadce0;
  --muted:#5f6368;
- --green:#137333;
- --red:#d93025;
  --blue:#1a73e8;
- --bg:#fff;
- --panel:#fff;
+ --bg:#ffffff;
+ --panel:#ffffff;
+}
+body{
+ margin:0;
+ font:14px Arial,Helvetica,sans-serif;
+ background:var(--bg);
+ color:#202124;
 }
 .dark{
  --bg:#202124;
@@ -30,8 +33,7 @@
  --panel:#2d2e30;
  color:#e8eaed;
 }
-body{margin:0;font:14px Arial,Helvetica,sans-serif;background:var(--bg);transition:.2s}
-.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+.wrap{max-width:1300px;margin:0 auto;padding:0 16px}
 .logo{font-size:28px;font-weight:700;cursor:pointer}
 .logo span:nth-child(1){color:#4285F4}
 .logo span:nth-child(2){color:#DB4437}
@@ -39,100 +41,185 @@ body{margin:0;font:14px Arial,Helvetica,sans-serif;background:var(--bg);transiti
 .logo span:nth-child(4){color:#4285F4}
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
-.searchbar{max-width:720px;margin:20px auto;position:relative}
-.search{width:100%;padding:12px 44px;border-radius:999px;border:1px solid var(--border);font-size:16px;background:var(--panel);color:inherit}
-.search:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,115,232,.2)}
-.icon{position:absolute;top:50%;transform:translateY(-50%);color:var(--muted)}
-.icon.left{left:14px}
-.home{min-height:75vh;display:grid;place-items:center}
+
+.searchbar{max-width:700px;margin:20px auto;position:relative}
+.search{
+ width:100%;
+ padding:12px 44px;
+ border-radius:999px;
+ border:1px solid var(--border);
+ font-size:16px;
+ background:var(--panel);
+ color:inherit;
+}
+.search:focus{
+ outline:none;
+ border-color:var(--blue);
+ box-shadow:0 0 0 2px rgba(26,115,232,.2);
+}
+
+.home{
+ min-height:75vh;
+ display:grid;
+ place-items:center;
+}
 .home .logo{font-size:70px}
-.top{border-bottom:1px solid var(--border);padding:10px 0}
+
+.top{
+ border-bottom:1px solid var(--border);
+ padding:10px 0;
+}
+
 .page{padding:20px 0}
-.cols{display:grid;grid-template-columns:720px 1fr;gap:24px}
-@media(max-width:1000px){.cols{grid-template-columns:1fr}}
-.block{border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;background:var(--panel)}
-.row{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--border);cursor:pointer}
-.row:first-child{border-top:none}
-.thumb{width:64px;height:64px;border-radius:12px;background:#ccc;background-size:cover;background-position:center}
-.title{font-weight:700}
-.meta{font-size:12px;color:var(--muted)}
-.stars{color:#fbbc04}
-.badge{background:#e8f0fe;color:#1a73e8;font-size:11px;padding:3px 6px;border-radius:8px;margin-left:6px}
-.open{color:var(--green)}
-.closed{color:var(--red)}
-#map{height:340px;border-radius:12px;margin-top:12px}
+
+.cols{
+ display:grid;
+ grid-template-columns:720px 1fr;
+ gap:24px;
+}
+@media(max-width:1000px){
+ .cols{grid-template-columns:1fr}
+ #map{height:260px}
+}
+
+.block{
+ border:1px solid var(--border);
+ border-radius:16px;
+ padding:16px;
+ margin-bottom:14px;
+ background:var(--panel);
+}
+
+#map{
+ height:340px;
+ border-radius:12px;
+ margin-top:12px;
+}
+
 .panel{
- position:fixed;top:0;right:-420px;width:400px;height:100%;
- background:var(--panel);border-left:1px solid var(--border);
- box-shadow:-2px 0 10px rgba(0,0,0,.1);transition:.25s;overflow:auto;z-index:1000
+ position:fixed;
+ top:0;
+ right:-420px;
+ width:400px;
+ height:100%;
+ background:var(--panel);
+ border-left:1px solid var(--border);
+ box-shadow:-2px 0 10px rgba(0,0,0,.08);
+ transition:right .25s ease;
+ overflow:auto;
+ z-index:1000;
 }
 .panel.open{right:0}
-.panel img{width:100%;height:220px;object-fit:cover}
+.panel img{
+ width:100%;
+ height:220px;
+ object-fit:cover;
+}
 .panel-content{padding:16px}
-.panel button{margin-top:8px;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:transparent;color:inherit;cursor:pointer}
-.dark-toggle{position:fixed;bottom:20px;right:20px;padding:10px 14px;border-radius:999px;background:#1a73e8;color:#fff;cursor:pointer}
+
+.dark-toggle{
+ position:fixed;
+ bottom:20px;
+ right:20px;
+ padding:10px 14px;
+ border-radius:999px;
+ background:#1a73e8;
+ color:#fff;
+ cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
 <div class="panel" id="panel">
-<img id="panelImage"/>
-<div class="panel-content">
-<h2 id="panelName"></h2>
-<div id="panelMeta" class="meta"></div>
-<div id="panelStatus"></div>
-<div id="panelActions"></div>
-</div>
+  <img id="panelImage"/>
+  <div class="panel-content">
+    <h2 id="panelName"></h2>
+    <div id="panelMeta"></div>
+    <div id="panelActions"></div>
+  </div>
 </div>
 
 <div class="dark-toggle" onclick="toggleDark()">Dark Mode</div>
 
 <section class="home" id="home">
-<div>
-<div class="logo" onclick="goHome()">
-<span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-</div>
-<div class="searchbar">
-<div class="icon left">🔎</div>
-<input id="qHome" class="search" placeholder="Search Joogle…" autocomplete="off">
-</div>
-</div>
+  <div>
+    <div class="logo" onclick="goHome()">
+      <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+    </div>
+    <div class="searchbar">
+      <input id="qHome" class="search" placeholder="Search Joogle…" autocomplete="off">
+    </div>
+  </div>
 </section>
 
 <header class="top" id="top" style="display:none">
-<div class="wrap">
-<div class="logo" onclick="goHome()">
-<span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-</div>
-<div class="searchbar">
-<div class="icon left">🔎</div>
-<input id="q" class="search" autocomplete="off">
-</div>
-</div>
+  <div class="wrap">
+    <div class="logo" onclick="goHome()">
+      <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+    </div>
+    <div class="searchbar">
+      <input id="q" class="search" autocomplete="off">
+    </div>
+  </div>
 </header>
 
 <main class="wrap page" id="page" style="display:none">
-<div class="cols">
-<section><div id="results"></div></section>
-<aside><div class="block"><b>Your area</b><div id="geoLine" class="meta">Loading…</div></div></aside>
-</div>
+  <div class="cols">
+    <section>
+      <div id="results"></div>
+    </section>
+    <aside>
+      <div class="block">
+        <b>Your area</b>
+        <div id="geoLine">Loading…</div>
+      </div>
+    </aside>
+  </div>
 </main>
 
 <script>
 const API="https://api.joogle.pro";
-let state={geo:null,map:null,cluster:null,places:[]};
 
-function esc(s){return (s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;","\"":"&quot;","'":"&#039;"}[m]));}
+const home=document.getElementById("home");
+const top=document.getElementById("top");
+const page=document.getElementById("page");
+const results=document.getElementById("results");
+const geoLine=document.getElementById("geoLine");
+const panel=document.getElementById("panel");
+const panelName=document.getElementById("panelName");
+const panelImage=document.getElementById("panelImage");
+const panelMeta=document.getElementById("panelMeta");
+const panelActions=document.getElementById("panelActions");
+const qHome=document.getElementById("qHome");
+const q=document.getElementById("q");
 
-function goHome(){home.style.display="";top.style.display="none";page.style.display="none"}
-function goResults(){home.style.display="none";top.style.display="";page.style.display=""}
+let state={geo:null,map:null,cluster:null,places:[],timer:null};
+
 function toggleDark(){document.body.classList.toggle("dark")}
 
-async function api(p){return (await fetch(API+p)).json()}
+function goHome(){
+ home.style.display="";
+ top.style.display="none";
+ page.style.display="none";
+ panel.classList.remove("open");
+}
+
+function goResults(){
+ home.style.display="none";
+ top.style.display="";
+ page.style.display="";
+}
+
+async function api(path){
+ const r=await fetch(API+path);
+ return r.json();
+}
 
 function haversine(a,b,c,d){
- const R=3958.8;const toRad=x=>x*Math.PI/180;
+ const R=3958.8;
+ const toRad=x=>x*Math.PI/180;
  const dLat=toRad(c-a), dLon=toRad(d-b);
  const x=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLon/2)**2;
  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
@@ -151,37 +238,50 @@ async function loadGeo(){
  geoLine.textContent=[g.geo.city,g.geo.region].filter(Boolean).join(", ")+" (auto)";
 }
 
-async function runSearch(q){
- if(!q)return;
+function instantSearch(input){
+ clearTimeout(state.timer);
+ state.timer=setTimeout(()=>runSearch(input.value),350);
+}
+
+async function runSearch(query){
+ if(!query) return;
  goResults();
  if(!state.geo) await loadGeo();
+
  const res=await api(`/places?cat=restaurant&lat=${state.geo.latitude}&lon=${state.geo.longitude}`);
  state.places=res.items||[];
- state.places.sort((a,b)=>haversine(state.geo.latitude,state.geo.longitude,a.lat,a.lon)-haversine(state.geo.latitude,state.geo.longitude,b.lat,b.lon));
+
+ state.places.sort((a,b)=>
+  haversine(state.geo.latitude,state.geo.longitude,a.lat,a.lon) -
+  haversine(state.geo.latitude,state.geo.longitude,b.lat,b.lon)
+ );
+
  render();
 }
 
 function render(){
  results.innerHTML=`<div class="block"><b>Places near you</b><div id="map"></div></div>`;
+
  if(!state.map){
   state.map=L.map("map").setView([state.geo.latitude,state.geo.longitude],13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19}).addTo(state.map);
   state.cluster=L.markerClusterGroup();
   state.map.addLayer(state.cluster);
  }
+
  state.cluster.clearLayers();
+
  state.places.forEach((p,i)=>{
-  const m=L.marker([p.lat,p.lon]).on("click",()=>openPanel(i));
-  state.cluster.addLayer(m);
+  const marker=L.marker([p.lat,p.lon]).on("click",()=>openPanel(i));
+  state.cluster.addLayer(marker);
  });
 }
 
 function openPanel(i){
  const p=state.places[i];
- panelName.innerText=p.name;
+ panelName.textContent=p.name||"Business";
  panelImage.src=imageFor(p)||"";
- panelMeta.innerText=[p.address?.street,p.address?.city].filter(Boolean).join(", ");
- panelStatus.innerHTML="";
+ panelMeta.textContent=[p.address?.street,p.address?.city].filter(Boolean).join(", ");
  panelActions.innerHTML=`<button onclick="zoomTo(${i})">View on map</button>`;
  panel.classList.add("open");
 }
@@ -191,8 +291,8 @@ function zoomTo(i){
  state.map.flyTo([p.lat,p.lon],16);
 }
 
-qHome.addEventListener("input",e=>runSearch(e.target.value));
-q.addEventListener("input",e=>runSearch(e.target.value));
+qHome.addEventListener("input",e=>instantSearch(e.target));
+q.addEventListener("input",e=>instantSearch(e.target));
 </script>
 
 </body>
