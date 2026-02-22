@@ -477,20 +477,7 @@ async function fetchJsonViaProxy(targetUrl){
 /* =========================
    DATA SOURCES
 ========================= */
-async function searxSearch(q){
-  const base = (localStorage.getItem(LS_SEARX) || "").trim().replace(/\/$/,"");
-  if(!base) return { ok:false, reason:"SearXNG not configured" };
-
-  const target = `${base}/search?q=${encodeURIComponent(q)}&format=json&language=en-US&safesearch=0`;
-
-  try{
-    const data = await fetchJsonViaProxy(target);
-    return { ok:true, data, base };
-  }catch(e){
-    return { ok:false, reason: e?.message || "Proxy failed" };
-  }
-}
-
+async function searxSearch
 async function ddgInstantAnswer(q){
   const url = "https://api.duckduckgo.com/?q=" + encodeURIComponent(q) + "&format=json&no_html=1&skip_disambig=1";
   const r = await fetch(url);
@@ -980,4 +967,5 @@ initFromURL();
 </script>
 </body>
 </html>
+
 
