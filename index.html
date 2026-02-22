@@ -34,9 +34,13 @@ body{
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
 
-.searchContainer{
+.searchInput{
   flex:1;
   max-width:650px;
+  padding:10px 18px;
+  border-radius:24px;
+  border:1px solid #dadce0;
+  font-size:16px;
 }
 
 .home{
@@ -60,17 +64,16 @@ body{
 .homeLogo span:nth-child(5){color:#0F9D58}
 .homeLogo span:nth-child(6){color:#DB4437}
 
-.gsc-control-cse{
-  border:none !important;
-  padding:0 !important;
-}
-
-.gsc-search-button{
-  display:none !important;
+.results{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 20px;
 }
 </style>
 
+<!-- LOAD CSE BUT DO NOT AUTO RENDER SEARCH BOX -->
 <script async src="https://cse.google.com/cse.js?cx=427c85c8321db4c63"></script>
+
 </head>
 
 <body>
@@ -79,9 +82,7 @@ body{
   <div class="logo" onclick="location.href='/'">
     <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
-  <div class="searchContainer">
-    <input id="manualSearch" type="text" placeholder="Search Joogle..." style="width:100%;padding:10px 18px;border-radius:24px;border:1px solid #dadce0;font-size:16px;">
-  </div>
+  <input id="searchBox" class="searchInput" placeholder="Search Joogle...">
 </div>
 
 <div class="home" id="homeSection">
@@ -90,14 +91,14 @@ body{
   </div>
 </div>
 
-<div id="cseResults" style="max-width:900px;margin:20px auto;padding:0 20px;">
-  <div class="gcse-searchresults-only"></div>
+<div class="results">
+  <div id="cseResults" class="gcse-searchresults-only"></div>
 </div>
 
 <script>
 
 const LOCAL_KEYWORDS = [
-  "near me","near","restaurants","restaurant",
+  "near me","restaurants","restaurant",
   "coffee","gas","concert","concerts",
   "weather","directions","map","closest",
   "pizza","food","bars","library"
@@ -108,7 +109,9 @@ function shouldRedirect(query){
   return LOCAL_KEYWORDS.some(word => q.includes(word));
 }
 
-function runSearch(query){
+function performSearch(query){
+
+  if(!query) return;
 
   if(shouldRedirect(query)){
     window.location.href =
@@ -120,15 +123,15 @@ function runSearch(query){
 
   setTimeout(()=>{
     if(window.google && google.search && google.search.cse){
-      google.search.cse.element.getElement("searchresults-only0").execute(query);
+      google.search.cse.element.getElement("cseResults").execute(query);
     }
-  },400);
+  },300);
 }
 
-document.getElementById("manualSearch")
+document.getElementById("searchBox")
 .addEventListener("keydown", function(e){
   if(e.key==="Enter"){
-    runSearch(this.value.trim());
+    performSearch(this.value.trim());
   }
 });
 
