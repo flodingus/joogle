@@ -13,7 +13,6 @@ body{
   color:#202124;
 }
 
-/* HEADER */
 .header{
   display:flex;
   align-items:center;
@@ -40,7 +39,6 @@ body{
   max-width:650px;
 }
 
-/* HOME CENTER */
 .home{
   display:flex;
   flex-direction:column;
@@ -62,33 +60,12 @@ body{
 .homeLogo span:nth-child(5){color:#0F9D58}
 .homeLogo span:nth-child(6){color:#DB4437}
 
-/* RESULTS AREA */
-.results{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 20px;
-}
-
-/* CLEAN GOOGLE STYLES */
 .gsc-control-cse{
   border:none !important;
   padding:0 !important;
 }
 
-.gsc-input-box{
-  border-radius:24px !important;
-  border:1px solid #dadce0 !important;
-}
-
 .gsc-search-button{
-  display:none !important;
-}
-
-.gsc-webResult .gs-title{
-  font-size:18px !important;
-}
-
-.gsc-adBlock{
   display:none !important;
 }
 </style>
@@ -103,7 +80,7 @@ body{
     <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
   <div class="searchContainer">
-    <div class="gcse-search"></div>
+    <input id="manualSearch" type="text" placeholder="Search Joogle..." style="width:100%;padding:10px 18px;border-radius:24px;border:1px solid #dadce0;font-size:16px;">
   </div>
 </div>
 
@@ -113,15 +90,48 @@ body{
   </div>
 </div>
 
-<div class="results"></div>
+<div id="cseResults" style="max-width:900px;margin:20px auto;padding:0 20px;">
+  <div class="gcse-searchresults-only"></div>
+</div>
 
 <script>
-/* Hide big center logo once results appear */
-window.addEventListener("hashchange", function(){
-  if(location.hash.includes("gsc.q")){
-    document.getElementById("homeSection").style.display="none";
+
+const LOCAL_KEYWORDS = [
+  "near me","near","restaurants","restaurant",
+  "coffee","gas","concert","concerts",
+  "weather","directions","map","closest",
+  "pizza","food","bars","library"
+];
+
+function shouldRedirect(query){
+  const q = query.toLowerCase();
+  return LOCAL_KEYWORDS.some(word => q.includes(word));
+}
+
+function runSearch(query){
+
+  if(shouldRedirect(query)){
+    window.location.href =
+      "https://www.google.com/search?q=" + encodeURIComponent(query);
+    return;
+  }
+
+  document.getElementById("homeSection").style.display="none";
+
+  setTimeout(()=>{
+    if(window.google && google.search && google.search.cse){
+      google.search.cse.element.getElement("searchresults-only0").execute(query);
+    }
+  },400);
+}
+
+document.getElementById("manualSearch")
+.addEventListener("keydown", function(e){
+  if(e.key==="Enter"){
+    runSearch(this.value.trim());
   }
 });
+
 </script>
 
 </body>
