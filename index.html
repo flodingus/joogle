@@ -1,307 +1,134 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Joogle</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <style>
-:root{
- --border:#dadce0;
- --muted:#5f6368;
- --blue:#1a73e8;
- --bg:#ffffff;
- --panel:#ffffff;
-}
-body{
- margin:0;
- font:14px Arial,Helvetica,sans-serif;
- background:var(--bg);
- color:#202124;
-}
-.dark{
- --bg:#202124;
- --border:#3c4043;
- --muted:#9aa0a6;
- --panel:#2d2e30;
- color:#e8eaed;
-}
-.wrap{max-width:1300px;margin:0 auto;padding:0 16px}
-.logo{font-size:28px;font-weight:700;cursor:pointer}
+body{margin:0;font-family:Arial;background:#fff;color:#202124}
+.center{display:grid;place-items:center;min-height:75vh}
+.logo{font-size:70px;font-weight:bold}
 .logo span:nth-child(1){color:#4285F4}
 .logo span:nth-child(2){color:#DB4437}
 .logo span:nth-child(3){color:#F4B400}
 .logo span:nth-child(4){color:#4285F4}
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
-
-.searchbar{max-width:700px;margin:20px auto;position:relative}
-.search{
- width:100%;
- padding:12px 44px;
- border-radius:999px;
- border:1px solid var(--border);
- font-size:16px;
- background:var(--panel);
- color:inherit;
-}
-.search:focus{
- outline:none;
- border-color:var(--blue);
- box-shadow:0 0 0 2px rgba(26,115,232,.2);
-}
-
-.home{
- min-height:75vh;
- display:grid;
- place-items:center;
-}
-.home .logo{font-size:70px}
-
-.top{
- border-bottom:1px solid var(--border);
- padding:10px 0;
-}
-
-.page{padding:20px 0}
-
-.cols{
- display:grid;
- grid-template-columns:720px 1fr;
- gap:24px;
-}
-@media(max-width:1000px){
- .cols{grid-template-columns:1fr}
- #map{height:260px}
-}
-
-.block{
- border:1px solid var(--border);
- border-radius:16px;
- padding:16px;
- margin-bottom:14px;
- background:var(--panel);
-}
-
-#map{
- height:340px;
- border-radius:12px;
- margin-top:12px;
-}
-
-.panel{
- position:fixed;
- top:0;
- right:-420px;
- width:400px;
- height:100%;
- background:var(--panel);
- border-left:1px solid var(--border);
- box-shadow:-2px 0 10px rgba(0,0,0,.08);
- transition:right .25s ease;
- overflow:auto;
- z-index:1000;
-}
-.panel.open{right:0}
-.panel img{
- width:100%;
- height:220px;
- object-fit:cover;
-}
-.panel-content{padding:16px}
-
-.dark-toggle{
- position:fixed;
- bottom:20px;
- right:20px;
- padding:10px 14px;
- border-radius:999px;
- background:#1a73e8;
- color:#fff;
- cursor:pointer;
-}
+.search{width:600px;max-width:90%;padding:12px 20px;border-radius:999px;border:1px solid #dadce0;font-size:16px}
+.results{max-width:900px;margin:20px auto;padding:0 16px}
+.card{border:1px solid #dadce0;border-radius:12px;padding:12px;margin-bottom:10px}
+#map{height:300px;border-radius:12px;margin-top:12px}
+.error{color:red;font-weight:bold}
 </style>
 </head>
 
 <body>
 
-<div class="panel" id="panel">
-  <img id="panelImage"/>
-  <div class="panel-content">
-    <h2 id="panelName"></h2>
-    <div id="panelMeta"></div>
-    <div id="panelActions"></div>
+<div class="center" id="home">
+  <div>
+    <div class="logo">
+      <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+    </div>
+    <input id="searchInput" class="search" placeholder="Search Joogle...">
   </div>
 </div>
 
-<div class="dark-toggle" onclick="toggleDark()">Dark Mode</div>
-
-<section class="home" id="home">
-  <div>
-    <div class="logo" onclick="goHome()">
-      <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-    </div>
-    <div class="searchbar">
-      <input id="qHome" class="search" placeholder="Search Joogle…" autocomplete="off">
-    </div>
-  </div>
-</section>
-
-<header class="top" id="top" style="display:none">
-  <div class="wrap">
-    <div class="logo" onclick="goHome()">
-      <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-    </div>
-    <div class="searchbar">
-      <input id="q" class="search" autocomplete="off">
-    </div>
-  </div>
-</header>
-
-<main class="wrap page" id="page" style="display:none">
-  <div class="cols">
-    <section>
-      <div id="results"></div>
-    </section>
-    <aside>
-      <div class="block">
-        <b>Your area</b>
-        <div id="geoLine">Loading…</div>
-      </div>
-    </aside>
-  </div>
-</main>
+<div class="results" id="results" style="display:none"></div>
 
 <script>
-const API="https://api.joogle.pro";
+const API = "https://api.joogle.pro";
+const input = document.getElementById("searchInput");
+const resultsDiv = document.getElementById("results");
+const home = document.getElementById("home");
 
-const home=document.getElementById("home");
-const top=document.getElementById("top");
-const page=document.getElementById("page");
-const results=document.getElementById("results");
-const geoLine=document.getElementById("geoLine");
-const panel=document.getElementById("panel");
-const panelName=document.getElementById("panelName");
-const panelImage=document.getElementById("panelImage");
-const panelMeta=document.getElementById("panelMeta");
-const panelActions=document.getElementById("panelActions");
-const qHome=document.getElementById("qHome");
-const q=document.getElementById("q");
+let map = null;
 
-let state={geo:null,map:null,cluster:null,places:[],timer:null};
-
-function toggleDark(){document.body.classList.toggle("dark")}
-
-function goHome(){
- home.style.display="";
- top.style.display="none";
- page.style.display="none";
- panel.classList.remove("open");
+function showResults(){
+  home.style.display="none";
+  resultsDiv.style.display="block";
 }
 
-function goResults(){
- home.style.display="none";
- top.style.display="";
- page.style.display="";
-}
-
-async function api(path){
- const r=await fetch(API+path);
- return r.json();
-}
-
-function haversine(a,b,c,d){
- const R=3958.8;
- const toRad=x=>x*Math.PI/180;
- const dLat=toRad(c-a), dLon=toRad(d-b);
- const x=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLon/2)**2;
- return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-}
-
-function imageFor(p){
- if(p.tags?.image) return p.tags.image;
- if(p.tags?.wikimedia_commons)
-  return "https://commons.wikimedia.org/wiki/Special:FilePath/"+p.tags.wikimedia_commons;
- return "";
-}
-
-async function loadGeo(){
- const g=await api("/geo");
- state.geo=g.geo;
- geoLine.textContent=[g.geo.city,g.geo.region].filter(Boolean).join(", ")+" (auto)";
-}
-
-function instantSearch(input){
- clearTimeout(state.timer);
- state.timer=setTimeout(()=>runSearch(input.value),350);
+async function fetchJSON(url){
+  const res = await fetch(url);
+  if(!res.ok){
+    throw new Error("API returned " + res.status);
+  }
+  return res.json();
 }
 
 async function runSearch(query){
- if(!query) return;
- goResults();
- if(!state.geo) await loadGeo();
+  if(!query) return;
 
- const res=await api(`/places?cat=restaurant&lat=${state.geo.latitude}&lon=${state.geo.longitude}`);
- state.places=res.items||[];
+  showResults();
 
- state.places.sort((a,b)=>
-  haversine(state.geo.latitude,state.geo.longitude,a.lat,a.lon) -
-  haversine(state.geo.latitude,state.geo.longitude,b.lat,b.lon)
- );
+  resultsDiv.innerHTML = "Searching...";
 
- render();
+  try{
+    const geo = await fetchJSON(API + "/geo");
+    const lat = geo.geo.latitude;
+    const lon = geo.geo.longitude;
+
+    const places = await fetchJSON(
+      API + `/places?cat=restaurant&lat=${lat}&lon=${lon}`
+    );
+
+    if(!places.items || places.items.length === 0){
+      resultsDiv.innerHTML = "<div class='error'>No results found.</div>";
+      return;
+    }
+
+    let html = "";
+
+    places.items.slice(0,10).forEach(p=>{
+      html += `
+        <div class="card">
+          <b>${p.name || "Business"}</b><br>
+          ${p.address?.street || ""} ${p.address?.city || ""}
+        </div>
+      `;
+    });
+
+    html += `<div id="map"></div>`;
+
+    resultsDiv.innerHTML = html;
+
+    if(!map){
+      map = L.map("map").setView([lat,lon],13);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+        maxZoom:19
+      }).addTo(map);
+    }
+
+    places.items.slice(0,20).forEach(p=>{
+      if(p.lat && p.lon){
+        L.marker([p.lat,p.lon]).addTo(map);
+      }
+    });
+
+  }catch(err){
+    resultsDiv.innerHTML = "<div class='error'>Error: " + err.message + "</div>";
+  }
 }
 
-function render(){
- results.innerHTML=`<div class="block"><b>Places near you</b><div id="map"></div></div>`;
-
- if(!state.map){
-  state.map=L.map("map").setView([state.geo.latitude,state.geo.longitude],13);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19}).addTo(state.map);
-  state.cluster=L.markerClusterGroup();
-  state.map.addLayer(state.cluster);
- }
-
- state.cluster.clearLayers();
-
- state.places.forEach((p,i)=>{
-  const marker=L.marker([p.lat,p.lon]).on("click",()=>openPanel(i));
-  state.cluster.addLayer(marker);
- });
-}
-
-function openPanel(i){
- const p=state.places[i];
- panelName.textContent=p.name||"Business";
- panelImage.src=imageFor(p)||"";
- panelMeta.textContent=[p.address?.street,p.address?.city].filter(Boolean).join(", ");
- panelActions.innerHTML=`<button onclick="zoomTo(${i})">View on map</button>`;
- panel.classList.add("open");
-}
-
-function zoomTo(i){
- const p=state.places[i];
- state.map.flyTo([p.lat,p.lon],16);
-}
-
-// ENTER support
-qHome.addEventListener("keydown",e=>{
- if(e.key==="Enter"){runSearch(e.target.value);}
+// ENTER key
+input.addEventListener("keydown", e=>{
+  if(e.key === "Enter"){
+    runSearch(input.value);
+  }
 });
-q.addEventListener("keydown",e=>{
- if(e.key==="Enter"){runSearch(e.target.value);}
-});
 
-// instant typing
-qHome.addEventListener("input",e=>instantSearch(e.target));
-q.addEventListener("input",e=>instantSearch(e.target));
+// Instant typing
+let timer=null;
+input.addEventListener("input", e=>{
+  clearTimeout(timer);
+  timer = setTimeout(()=>{
+    runSearch(input.value);
+  }, 400);
+});
 </script>
 
 </body>
