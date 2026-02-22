@@ -5,26 +5,31 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Joogle</title>
 
-  <!-- Leaflet for OSM map (free) -->
+  <!-- Leaflet (free OSM map) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     :root{
-      --bg:#fff; --surface:#fff; --text:#202124; --muted:#5f6368;
-      --border:#dadce0; --chip:#f1f3f4; --link:#1a0dab; --visited:#681da8;
-      --ok:#137333; --shadow:0 1px 2px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.06);
-      --max:1160px;
+      --bg:#fff; --text:#202124; --muted:#5f6368; --border:#dadce0; --chip:#f1f3f4;
+      --link:#1a0dab; --visited:#681da8; --green:#137333; --blue:#1a73e8;
+      --max:1280px;
+      --leftcol: 652px; /* close to Google's results column */
     }
     *{box-sizing:border-box}
-    body{margin:0;font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    body{margin:0;font:14px/1.35 Arial, Helvetica, sans-serif;background:var(--bg);color:var(--text)}
     a{color:var(--link);text-decoration:none}
     a:hover{text-decoration:underline}
 
-    .wrap{max-width:var(--max);margin:0 auto;padding:0 16px}
-    .home{min-height:72vh;display:grid;place-items:center;padding:28px 0 70px}
-    .hero{width:min(760px,92vw);text-align:center}
-    .logo{font-size:74px;font-weight:800;letter-spacing:-.5px;user-select:none}
+    /* Header */
+    .top{
+      position:sticky; top:0; z-index:30;
+      background:var(--bg);
+      border-bottom:1px solid var(--border);
+    }
+    .top-inner{max-width:var(--max); margin:0 auto; padding:12px 20px 0; display:flex; gap:18px; align-items:flex-start}
+    .brand{display:flex; align-items:center; gap:10px; padding-top:4px; cursor:pointer; user-select:none}
+    .logo{font-size:28px; font-weight:700; letter-spacing:-.2px}
     .logo span:nth-child(1){color:#4285F4;}
     .logo span:nth-child(2){color:#DB4437;}
     .logo span:nth-child(3){color:#F4B400;}
@@ -32,463 +37,436 @@
     .logo span:nth-child(5){color:#0F9D58;}
     .logo span:nth-child(6){color:#DB4437;}
 
-    .searchwrap{margin-top:18px;position:relative}
+    .searchbar{flex:1; max-width:720px; position:relative}
     .search{
-      width:100%; border:1px solid var(--border); background:var(--surface); color:var(--text);
-      border-radius:999px; padding:12px 46px 12px 44px; outline:none; font-size:16px;
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:12px 44px 12px 44px;
+      font-size:16px;
+      outline:none;
     }
-    .icon{position:absolute;top:50%;transform:translateY(-50%);width:22px;height:22px;display:grid;place-items:center;color:var(--muted);user-select:none}
+    .search:focus{border-color:rgba(26,115,232,.35); box-shadow:0 1px 2px rgba(60,64,67,.1),0 1px 3px rgba(60,64,67,.2)}
+    .icon{position:absolute; top:50%; transform:translateY(-50%); color:var(--muted); user-select:none}
     .icon.left{left:14px}
-    .icon.right{right:14px;cursor:pointer}
+    .icon.right{right:14px; cursor:pointer}
 
-    .topbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border)}
-    .topbar-inner{display:flex;gap:14px;align-items:center;padding:10px 0}
-    .brand{min-width:140px;cursor:pointer}
-    .brand .logo{font-size:30px}
-    .meta{color:var(--muted);font-size:13px;margin:12px 0}
+    /* Tabs row */
+    .tabs{
+      max-width:var(--max);
+      margin:10px auto 0;
+      padding:0 20px 8px;
+      display:flex; gap:18px; align-items:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .tab{padding:8px 0; cursor:pointer; position:relative}
+    .tab.active{color:var(--blue)}
+    .tab.active::after{
+      content:""; position:absolute; left:0; right:0; bottom:-9px; height:3px; background:var(--blue); border-radius:3px;
+    }
+    .tabs .spacer{flex:1}
 
-    .grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;padding:10px 0 40px}
-    @media (max-width:980px){.grid{grid-template-columns:1fr}.right{display:none}}
+    /* Layout */
+    .page{max-width:var(--max); margin:0 auto; padding:12px 20px 40px}
+    .meta{color:var(--muted); font-size:13px; margin:6px 0 14px}
 
-    .card{border:1px solid var(--border);background:var(--surface);border-radius:18px;padding:14px 16px;margin:0 0 12px;box-shadow:var(--shadow)}
-    .small{color:var(--muted);font-size:12px}
-    .big{font-size:18px;font-weight:900;margin-top:2px}
-    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-    .chip{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:7px 10px;cursor:pointer}
-    .chip:hover{background:var(--chip)}
+    .cols{display:grid; grid-template-columns: var(--leftcol) 1fr; gap:36px; align-items:start}
+    @media (max-width: 1050px){ .cols{grid-template-columns:1fr} .right{display:none} }
 
-    /* Local Pack */
-    .localGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-    @media (max-width:650px){.localGrid{grid-template-columns:1fr}}
-    .place{border:1px solid var(--border);border-radius:14px;padding:12px;cursor:pointer}
-    .place:hover{background:var(--chip)}
-    .place .name{font-weight:900}
-    .place .addr{color:var(--muted);font-size:12px;margin-top:4px}
-    .place .tag{display:inline-block;margin-top:8px;font-size:12px;color:var(--muted)}
-    #map{height:300px;border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-top:12px}
+    /* Google-ish “answer blocks” */
+    .block{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px 16px;
+      margin:0 0 14px;
+    }
+    .block h2{margin:0 0 10px; font-size:16px}
+    .small{color:var(--muted); font-size:12px}
+    .row{display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-top:1px solid #f1f3f4}
+    .row:first-of-type{border-top:none}
+    .row .idx{width:18px; color:var(--muted)}
+    .row .title{font-weight:700}
+    .row .sub{color:var(--muted); font-size:12px; margin-top:3px}
 
-    /* Make Google CSE fit */
-    .gcse-searchresults-only, .gsc-control-cse, .gsc-control-cse * { font-family: inherit !important; }
-    .gsc-control-cse { border: none !important; padding: 0 !important; background: transparent !important; }
-    .gsc-webResult.gsc-result { border: none !important; padding: 10px 0 !important; }
-    .gsc-result .gs-title { font-size: 18px !important; }
-    .gsc-result .gs-snippet { color: #4d5156 !important; }
-    .gsc-url-top, .gsc-url-bottom { color: var(--ok) !important; }
+    #map{height:220px; border-radius:12px; overflow:hidden; border:1px solid var(--border); margin-top:10px}
+
+    /* Home */
+    .home{
+      min-height:72vh;
+      display:grid;
+      place-items:center;
+      padding:20px 0 60px;
+    }
+    .home-inner{width:min(720px, 92vw); text-align:center}
+    .home .logo{font-size:78px}
+    .home .searchbar{margin:18px auto 0}
+
+    /* Tweak Google CSE to blend in */
+    .gsc-control-cse{border:none !important; padding:0 !important; background:transparent !important;}
+    .gsc-webResult.gsc-result{border:none !important; padding:10px 0 !important;}
+    .gsc-result .gs-title{font-size:18px !important; line-height:1.25 !important;}
+    .gsc-result .gs-title a:visited{color:var(--visited) !important;}
+    .gsc-url-top, .gsc-url-bottom{color:var(--green) !important;}
+    .gsc-result .gs-snippet{color:#4d5156 !important;}
+    .gsc-above-wrapper-area{border-bottom:none !important;}
+    .gsc-results .gsc-cursor-box{margin-top:12px !important;}
   </style>
 </head>
 
 <body>
-  <!-- HOME -->
-  <section class="home" id="home">
-    <div class="hero">
+
+<!-- HOME VIEW -->
+<section class="home" id="home">
+  <div class="home-inner">
+    <div class="logo" aria-label="Joogle">
+      <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+    </div>
+    <div class="searchbar">
+      <div class="icon left">🔎</div>
+      <input id="qHome" class="search" placeholder="Search Joogle…" autocomplete="off">
+      <div class="icon right" onclick="runSearch(true)">⏎</div>
+    </div>
+    <div class="small" style="margin-top:14px">Not affiliated with Google.</div>
+  </div>
+</section>
+
+<!-- RESULTS VIEW -->
+<header class="top" id="top" style="display:none">
+  <div class="top-inner">
+    <div class="brand" onclick="goHome()" title="Home">
       <div class="logo" aria-label="Joogle">
         <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
       </div>
-
-      <div class="searchwrap">
-        <div class="icon left">🔎</div>
-        <input id="qHome" class="search" placeholder="Search Joogle…" autocomplete="off">
-        <div class="icon right" title="Search" onclick="runSearch(true)">⏎</div>
-      </div>
-
-      <div class="small" style="margin-top:14px">
-        Not affiliated with Google. Web results powered by Google Programmable Search.
-      </div>
     </div>
-  </section>
 
-  <!-- RESULTS TOPBAR -->
-  <div class="topbar" id="topbar" style="display:none">
-    <div class="wrap">
-      <div class="topbar-inner">
-        <div class="brand" onclick="goHome()" title="Home">
-          <div class="logo" aria-label="Joogle">
-            <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-          </div>
-        </div>
-        <div style="flex:1;position:relative">
-          <div class="icon left">🔎</div>
-          <input id="q" class="search" placeholder="Search Joogle…" autocomplete="off">
-          <div class="icon right" title="Search" onclick="runSearch(false)">⏎</div>
-        </div>
-      </div>
+    <div class="searchbar">
+      <div class="icon left">🔎</div>
+      <input id="q" class="search" autocomplete="off">
+      <div class="icon right" onclick="runSearch(false)">⏎</div>
     </div>
   </div>
 
-  <!-- RESULTS -->
-  <section class="wrap" id="resultsPage" style="display:none">
-    <div class="meta" id="meta"></div>
+  <nav class="tabs" aria-label="Search tabs">
+    <div class="tab active" data-tab="all" onclick="setTab('all')">All</div>
+    <div class="tab" data-tab="images" onclick="setTab('images')">Images</div>
+    <div class="tab" data-tab="news" onclick="setTab('news')">News</div>
+    <div class="tab" data-tab="places" onclick="setTab('places')">Places</div>
+    <div class="tab" data-tab="weather" onclick="setTab('weather')">Weather</div>
+    <div class="spacer"></div>
+    <div class="tab" data-tab="about" onclick="setTab('about')">About</div>
+  </nav>
+</header>
 
-    <div class="grid">
-      <main class="left">
-        <div id="topCards"></div>
+<main class="page" id="page" style="display:none">
+  <div class="meta" id="meta"></div>
 
-        <!-- This is where Google CSE renders results -->
-        <div class="card">
-          <div class="small">Web results</div>
-          <div id="cseResults" style="margin-top:8px">
-            <div class="gcse-searchresults-only"></div>
-          </div>
-          <div class="small" style="margin-top:10px">
-            Tip: add “near me” for local pack, or “weather” for weather.
-          </div>
-        </div>
-      </main>
+  <div class="cols">
+    <section class="left" id="left">
+      <div id="answers"></div>
 
-      <aside class="right" id="right"></aside>
-    </div>
-  </section>
+      <!-- Google CSE results render here -->
+      <div class="gcse-searchresults-only"></div>
+    </section>
 
-  <!-- Google Programmable Search (CSE) -->
-  <script>
-    // ✅ Your Engine ID (cx)
-    const JOOGLE_CX = "427c85c8321db4c63";
+    <aside class="right" id="right">
+      <div id="rightBox"></div>
+    </aside>
+  </div>
+</main>
 
-    // Load Google CSE script
-    (function() {
-      const s = document.createElement("script");
-      s.async = true;
-      s.src = "https://cse.google.com/cse.js?cx=" + encodeURIComponent(JOOGLE_CX);
-      document.head.appendChild(s);
-    })();
-  </script>
+<!-- Load Google CSE -->
+<script>
+  const JOOGLE_CX = "427c85c8321db4c63";
+  (function(){
+    const s=document.createElement("script");
+    s.async=true;
+    s.src="https://cse.google.com/cse.js?cx="+encodeURIComponent(JOOGLE_CX);
+    document.head.appendChild(s);
+  })();
+</script>
 
-  <script>
-    const $ = (id)=>document.getElementById(id);
+<script>
+  const $ = (id)=>document.getElementById(id);
+  let state = { tab:"all", q:"", map:null, markers:[], lastPOIs:[] };
 
-    // Categories for local pack (OSM)
-    const CATS = [
-      {name:"Restaurants", keys:[/restaurant|restaurants|food|pizza|taco|burger|breakfast|lunch|dinner/i], tags:[
-        ["amenity","restaurant"],["amenity","fast_food"],["amenity","cafe"],["amenity","food_court"]
-      ]},
-      {name:"Coffee", keys:[/coffee|cafe|espresso|latte/i], tags:[["amenity","cafe"],["amenity","restaurant"]]},
-      {name:"Bars", keys:[/bar|pub|brewery|cocktail/i], tags:[["amenity","bar"],["amenity","pub"],["amenity","biergarten"],["amenity","nightclub"]]},
-      {name:"Libraries", keys:[/library|libraries/i], tags:[["amenity","library"]]},
-      {name:"Gas", keys:[/gas|fuel|petrol/i], tags:[["amenity","fuel"]]},
-      {name:"Live Music", keys:[/concert|concerts|live music|music venue|show tonight|gig/i], tags:[
-        ["amenity","music_venue"],["amenity","theatre"],["amenity","arts_centre"],["amenity","nightclub"],
-        ["leisure","stadium"],["leisure","sports_centre"]
-      ]},
-    ];
+  const CATS = [
+    {name:"Restaurants", keys:[/restaurant|restaurants|food|pizza|taco|burger|breakfast|lunch|dinner/i], tags:[
+      ["amenity","restaurant"],["amenity","fast_food"],["amenity","cafe"],["amenity","food_court"]
+    ]},
+    {name:"Coffee", keys:[/coffee|cafe|espresso|latte/i], tags:[["amenity","cafe"],["amenity","restaurant"]]},
+    {name:"Bars", keys:[/bar|pub|brewery|cocktail/i], tags:[["amenity","bar"],["amenity","pub"],["amenity","biergarten"],["amenity","nightclub"]]},
+    {name:"Libraries", keys:[/library|libraries/i], tags:[["amenity","library"]]},
+    {name:"Gas", keys:[/gas|fuel|petrol/i], tags:[["amenity","fuel"]]},
+    {name:"Live Music", keys:[/concert|concerts|live music|music venue|show tonight|gig/i], tags:[
+      ["amenity","music_venue"],["amenity","theatre"],["amenity","arts_centre"],["amenity","nightclub"],
+      ["leisure","stadium"],["leisure","sports_centre"]
+    ]},
+  ];
 
-    function goHome(){
-      history.pushState({}, "", location.pathname);
-      $("home").style.display = "";
-      $("topbar").style.display = "none";
-      $("resultsPage").style.display = "none";
-      $("qHome").focus();
+  function esc(s){ return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+  function goHome(){
+    history.pushState({}, "", location.pathname);
+    $("home").style.display="";
+    $("top").style.display="none";
+    $("page").style.display="none";
+    $("qHome").focus();
+  }
+  function goResults(){
+    $("home").style.display="none";
+    $("top").style.display="";
+    $("page").style.display="";
+  }
+
+  function setTab(tab){
+    state.tab=tab;
+    document.querySelectorAll(".tab[data-tab]").forEach(t=>{
+      t.classList.toggle("active", t.getAttribute("data-tab")===tab);
+    });
+    if(state.q) runSearch(false,true);
+  }
+
+  function looksNearMe(q){ return /\bnear me\b/i.test(q); }
+  function looksWeather(q){ return /\bweather\b/i.test(q) || q.toLowerCase().startsWith("forecast "); }
+  function catFor(q){ return CATS.find(c=>c.keys.some(rx=>rx.test(q))) || null; }
+
+  async function nominatim(q){
+    const url="https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q);
+    return fetch(url).then(r=>r.json());
+  }
+  async function openMeteo(lat,lon){
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+    return fetch(url).then(r=>r.json());
+  }
+  async function overpass(lat,lon, tagPairs, radius=3500, limit=6){
+    const filter = tagPairs.map(([k,v]) => `["${k}"="${v}"]`).join("");
+    const q = `
+      [out:json][timeout:25];
+      (
+        node${filter}(around:${radius},${lat},${lon});
+        way${filter}(around:${radius},${lat},${lon});
+        relation${filter}(around:${radius},${lat},${lon});
+      );
+      out center;
+    `;
+    const r = await fetch("https://overpass-api.de/api/interpreter",{
+      method:"POST",
+      headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
+      body:"data="+encodeURIComponent(q)
+    });
+    const data = await r.json();
+    return (data?.elements||[]).slice(0,limit);
+  }
+
+  function poiLatLon(el){
+    if(el.type==="node") return {lat:el.lat, lon:el.lon};
+    if(el.center) return {lat:el.center.lat, lon:el.center.lon};
+    return null;
+  }
+  function formatAddr(tags){
+    const parts=[];
+    if(tags["addr:housenumber"]) parts.push(tags["addr:housenumber"]);
+    if(tags["addr:street"]) parts.push(tags["addr:street"]);
+    const l1=parts.join(" ");
+    const city=tags["addr:city"]||"";
+    const st=tags["addr:state"]||"";
+    const pc=tags["addr:postcode"]||"";
+    const l2=[city,st,pc].filter(Boolean).join(" ");
+    return [l1,l2].filter(Boolean).join(", ");
+  }
+
+  function clearMap(){
+    if(state.map){
+      state.markers.forEach(m=>m.remove());
+      state.markers=[];
     }
-    function goResults(){
-      $("home").style.display = "none";
-      $("topbar").style.display = "";
-      $("resultsPage").style.display = "";
+  }
+  function ensureMap(lat,lon){
+    if(!state.map){
+      state.map = L.map("map").setView([lat,lon],13);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+        maxZoom:19, attribution:"&copy; OpenStreetMap contributors"
+      }).addTo(state.map);
+    } else {
+      state.map.setView([lat,lon],13);
     }
+    clearMap();
+  }
 
-    function looksNearMe(q){ return /near me/i.test(q); }
-    function looksWeather(q){ return /\bweather\b/i.test(q) || q.toLowerCase().startsWith("forecast "); }
-
-    function chipsFor(q){
-      const base = q.replace(/\s+near me/i,"").replace(/\s+weather/i,"").trim();
-      return [
-        `${base} near me`, `weather ${base}`, `${base} hours`, `${base} reviews`, `${base} directions`
-      ];
-    }
-
-    async function nominatim(q){
-      const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(q);
-      const r = await fetch(url);
-      return r.json();
-    }
-
-    async function openMeteo(lat, lon){
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current_weather=true`;
-      const r = await fetch(url);
-      return r.json();
-    }
-
-    async function overpassPOI(lat, lon, tagPairs, radius=3500, limit=10){
-      const filter = tagPairs.map(([k,v]) => `["${k}"="${v}"]`).join("");
-      const query = `
-        [out:json][timeout:25];
-        (
-          node${filter}(around:${radius},${lat},${lon});
-          way${filter}(around:${radius},${lat},${lon});
-          relation${filter}(around:${radius},${lat},${lon});
-        );
-        out center;
-      `;
-      const r = await fetch("https://overpass-api.de/api/interpreter", {
-        method:"POST",
-        headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
-        body:"data=" + encodeURIComponent(query)
-      });
-      const data = await r.json();
-      return (data?.elements || []).slice(0, limit);
-    }
-
-    function poiLatLon(el){
-      if(el.type==="node") return {lat:el.lat, lon:el.lon};
-      if(el.center) return {lat:el.center.lat, lon:el.center.lon};
-      return null;
-    }
-
-    function formatAddr(tags){
-      const parts=[];
-      if(tags["addr:housenumber"]) parts.push(tags["addr:housenumber"]);
-      if(tags["addr:street"]) parts.push(tags["addr:street"]);
-      const l1=parts.join(" ");
-      const city=tags["addr:city"]||"";
-      const st=tags["addr:state"]||"";
-      const pc=tags["addr:postcode"]||"";
-      const l2=[city,st,pc].filter(Boolean).join(" ");
-      return [l1,l2].filter(Boolean).join(", ");
-    }
-
-    let map=null;
-    let markers=[];
-
-    function renderWeatherCard(wx, label){
-      const cw = wx?.current_weather;
-      if(!cw) return "";
+  function renderLocalPack(pois, q, label){
+    if(!pois?.length){
       return `
-        <div class="card">
-          <div class="small">Weather</div>
-          <div class="big">${label || "Current weather"}</div>
-          <div style="display:flex;gap:14px;align-items:center;margin-top:10px">
-            <div style="font-size:34px;font-weight:950">${Math.round(cw.temperature)}°C</div>
-            <div class="small">Wind ${Math.round(cw.windspeed)} km/h • Dir ${Math.round(cw.winddirection)}°</div>
-          </div>
-          <div class="small" style="margin-top:10px">Data: Open-Meteo</div>
-        </div>
-      `;
+        <div class="block">
+          <h2>Places</h2>
+          <div class="small">No places found. If you’re in Incognito, allow Location for this site. Or try “restaurants Plano TX”.</div>
+        </div>`;
     }
-
-    function renderLocalPack(pois, title, label){
-      if(!pois?.length){
-        return `
-          <div class="card">
-            <div class="small">Places</div>
-            <div class="big">${title}</div>
-            <div class="small" style="margin-top:10px">
-              No places found. If you’re in Incognito, allow location for this site.
-            </div>
-          </div>
-        `;
-      }
-
-      const cards = pois.map((p,i)=>{
-        const t=p.tags||{};
-        const name=t.name||t.brand||"Place";
-        const addr=formatAddr(t) || label || "";
-        const kind=t.amenity||t.tourism||t.leisure||"";
-        return `
-          <div class="place" onclick="focusPOI(${i})" data-i="${i}">
-            <div class="name">${escapeHtml(name)}</div>
-            <div class="addr">${escapeHtml(addr)}</div>
-            <div class="tag">${escapeHtml(kind)}</div>
-          </div>
-        `;
-      }).join("");
-
+    const rows = pois.map((p,i)=>{
+      const t=p.tags||{};
+      const name=t.name||t.brand||"Place";
+      const addr=formatAddr(t) || label || "";
       return `
-        <div class="card" id="localPack">
-          <div class="small">Places</div>
-          <div class="big">${escapeHtml(title)}</div>
-          <div class="small" style="margin-top:6px">Around: ${escapeHtml(label||"your area")} • OpenStreetMap</div>
-          <div class="localGrid" id="localGrid">${cards}</div>
-          <div id="map"></div>
+        <div class="row" onclick="focusPOI(${i})">
+          <div class="idx">${i+1}</div>
+          <div>
+            <div class="title">${esc(name)}</div>
+            <div class="sub">${esc(addr)}</div>
+          </div>
+        </div>`;
+    }).join("");
+
+    return `
+      <div class="block" id="localBlock">
+        <h2>Places</h2>
+        <div class="small">Around: ${esc(label||"your area")} • OpenStreetMap</div>
+        ${rows}
+        <div id="map"></div>
+      </div>`;
+  }
+
+  function renderWeather(wx, label){
+    const cw=wx?.current_weather;
+    if(!cw) return "";
+    return `
+      <div class="block">
+        <h2>Weather</h2>
+        <div class="small">${esc(label||"Current conditions")}</div>
+        <div style="display:flex;gap:14px;align-items:flex-end;margin-top:10px">
+          <div style="font-size:44px;font-weight:700">${Math.round(cw.temperature)}°C</div>
+          <div class="small">Wind ${Math.round(cw.windspeed)} km/h</div>
         </div>
-      `;
+        <div class="small" style="margin-top:10px">Data: Open-Meteo</div>
+      </div>`;
+  }
+
+  window.focusPOI = function(i){
+    const p=state.lastPOIs[i];
+    if(!p || !state.map) return;
+    const ll=poiLatLon(p); if(!ll) return;
+    state.map.setView([ll.lat,ll.lon],15);
+    const name=p.tags?.name||p.tags?.brand||"Place";
+    const m=L.marker([ll.lat,ll.lon]).addTo(state.map).bindPopup(esc(name)).openPopup();
+    state.markers.push(m);
+  }
+
+  function cseExecute(q){
+    // Update URL for shareability + to help CSE state
+    const u=new URL(location.href);
+    u.searchParams.set("q", q);
+    history.replaceState({}, "", u.toString());
+
+    // Execute if possible; otherwise CSE will render from URL param.
+    try{
+      const el = window.google?.search?.cse?.element?.getElement?.("searchresults-only0");
+      if(el?.execute) el.execute(q);
+    }catch{}
+  }
+
+  async function resolveGeo(q){
+    // Try geolocation only when query says near me
+    if(looksNearMe(q) && navigator.geolocation){
+      const pos = await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{
+        timeout:12000, enableHighAccuracy:false, maximumAge:300000
+      })).catch(()=>null);
+      if(pos) return {lat:pos.coords.latitude, lon:pos.coords.longitude, label:"Near you"};
     }
 
-    function escapeHtml(s){
-      return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    // Otherwise attempt to geocode leftover location text
+    const cleaned = q
+      .replace(/\bnear me\b/ig,"")
+      .replace(/\brestaurants?\b|\bcoffee\b|\bcafe\b|\bbars?\b|\bgas\b|\blibrary\b|\bweather\b|\bforecast\b|\bconcerts?\b|\blive music\b/ig,"")
+      .trim();
+
+    if(!cleaned) return null;
+    const r = await nominatim(cleaned);
+    if(r?.[0]?.lat && r?.[0]?.lon) return {lat:Number(r[0].lat), lon:Number(r[0].lon), label:r[0].display_name};
+    return null;
+  }
+
+  async function runSearch(fromHome=false, rerender=false){
+    const q = (fromHome ? $("qHome").value : $("q").value).trim();
+    if(!q) return;
+
+    if(!rerender){
+      history.pushState({}, "", `?q=${encodeURIComponent(q)}`);
+      state.q=q;
     }
 
-    let lastPOIs=[];
+    goResults();
+    $("q").value=q;
+    $("meta").textContent = `Results for “${q}”`;
 
-    window.focusPOI = function(i){
-      const p=lastPOIs[i];
-      if(!p || !map) return;
-      const ll=poiLatLon(p);
-      if(!ll) return;
-      map.setView([ll.lat,ll.lon], 15);
+    // Answer blocks
+    $("answers").innerHTML = "";
+    $("rightBox").innerHTML = "";
 
-      document.querySelectorAll(".place").forEach(el => el.style.borderColor="var(--border)");
-      const el=document.querySelector(`.place[data-i="${i}"]`);
-      if(el) el.style.borderColor="#1a73e8";
+    const tab = state.tab;
+    const wantPlaces = (tab==="places") || (tab==="all" && (looksNearMe(q) || !!catFor(q)));
+    const wantWeather = (tab==="weather") || (tab==="all" && looksWeather(q));
 
-      const name=p.tags?.name || p.tags?.brand || "Place";
-      const m=L.marker([ll.lat,ll.lon]).addTo(map).bindPopup(escapeHtml(name)).openPopup();
-      markers.push(m);
+    let geo = null;
+
+    if(wantPlaces || wantWeather){
+      geo = await resolveGeo(q);
     }
 
-    function ensureMap(lat, lon){
-      if(!map){
-        map = L.map("map").setView([lat, lon], 13);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 19, attribution:"&copy; OpenStreetMap contributors"
-        }).addTo(map);
-      } else {
-        map.setView([lat, lon], 13);
-      }
-      markers.forEach(m=>m.remove());
-      markers=[];
+    if(wantWeather && geo){
+      const wx = await openMeteo(geo.lat, geo.lon).catch(()=>null);
+      if(wx) $("answers").innerHTML += renderWeather(wx, geo.label);
     }
 
-    function setMeta(text){ $("meta").textContent = text; }
-
-    function cseSetQuery(q){
-      // The CSE script reads from URL parameter "q" if present, but it also supports JS execution:
-      // easiest reliable method: update URL + let it render.
-      // We’ll set the URL param and then trigger a re-render by calling google.search.cse.element.getElement(...).execute
-      const u = new URL(location.href);
-      u.searchParams.set("q", q);
-      history.replaceState({}, "", u.toString());
-
-      // Try to execute CSE if available
-      try{
-        if(window.google?.search?.cse?.element){
-          // get the first searchresults-only element and execute
-          const el = window.google.search.cse.element.getElement("searchresults-only0");
-          if(el && el.execute) el.execute(q);
-          else window.google.search.cse.element.render({div:"cseResults", tag:"searchresults-only"});
-        }
-      }catch{
-        // If CSE isn't ready yet, it will auto-render from URL q once loaded.
-      }
-    }
-
-    async function resolveGeo(q){
-      // If query says near me, request real location
-      if(looksNearMe(q) && navigator.geolocation){
-        const pos = await new Promise((res, rej) =>
-          navigator.geolocation.getCurrentPosition(res, rej, {
-            timeout: 12000,
-            enableHighAccuracy: false,
-            maximumAge: 300000
-          })
-        ).catch(()=>null);
-
-        if(pos){
-          return {lat:pos.coords.latitude, lon:pos.coords.longitude, label:"Near you"};
-        }
-      }
-
-      // Otherwise: try to geocode something in the query (e.g. "restaurants plano tx")
-      const cleaned = q
-        .replace(/\bnear me\b/ig,"")
-        .replace(/\brestaurants?\b|\bcoffee\b|\bcafe\b|\bbars?\b|\bgas\b|\blibrary\b|\bweather\b|\bforecast\b|\bconcerts?\b|\blive music\b/ig,"")
-        .trim();
-
-      if(!cleaned) return null;
-      const r = await nominatim(cleaned);
-      if(r?.[0]?.lat && r?.[0]?.lon){
-        return {lat:Number(r[0].lat), lon:Number(r[0].lon), label:r[0].display_name};
-      }
-      return null;
-    }
-
-    async function runSearch(fromHome=false){
-      const q = (fromHome ? $("qHome").value : $("q").value).trim();
-      if(!q) return;
-
-      // Show results page
-      goResults();
-      $("q").value = q;
-
-      // Meta
-      setMeta(`Results for “${q}”`);
-
-      // Chips
-      const chips = chipsFor(q).map(c=>`<div class="chip" onclick="chip('${escapeHtml(c)}')">${escapeHtml(c)}</div>`).join("");
-      $("topCards").innerHTML = `
-        <div class="card">
-          <div class="small">Refine</div>
-          <div class="chips">${chips}</div>
-        </div>
-      `;
-
-      // Right rail (optional weather)
-      $("right").innerHTML = "";
-
-      // Local pack + weather (only when query indicates it)
-      const wantPlaces = looksNearMe(q) || CATS.some(c=>c.keys.some(rx=>rx.test(q)));
-      const wantWeather = looksWeather(q);
-
-      let geo = null;
-
-      if(wantPlaces || wantWeather){
-        geo = await resolveGeo(q);
-      }
-
-      // Weather
-      if(wantWeather && geo){
-        try{
-          const wx = await openMeteo(geo.lat, geo.lon);
-          $("right").innerHTML = renderWeatherCard(wx, geo.label);
-        }catch{
-          // ignore
-        }
-      }
-
-      // Places
-      if(wantPlaces){
-        const cat = CATS.find(c=>c.keys.some(rx=>rx.test(q))) || CATS[0];
-        if(geo){
-          try{
-            const pois = await overpassPOI(geo.lat, geo.lon, cat.tags, 3500, 10);
-            lastPOIs = pois;
-
-            $("topCards").innerHTML += renderLocalPack(pois, q, geo.label);
-            // Map after DOM is in place
-            setTimeout(()=>{
-              if($("map")){
-                ensureMap(geo.lat, geo.lon);
-                pois.slice(0,6).forEach((p, idx)=>{
-                  const ll = poiLatLon(p); if(!ll) return;
-                  const name=p.tags?.name || p.tags?.brand || "Place";
-                  const m=L.marker([ll.lat,ll.lon]).addTo(map).bindPopup(escapeHtml(name));
-                  markers.push(m);
-                  if(idx===0) m.openPopup();
-                });
-              }
-            }, 50);
-          }catch{
-            $("topCards").innerHTML += `<div class="card"><div class="small">Places</div><div class="big">${escapeHtml(q)}</div><div class="small" style="margin-top:10px">Places lookup failed. Try again in a moment.</div></div>`;
+    if(wantPlaces){
+      const cat = catFor(q) || CATS[0];
+      if(geo){
+        const pois = await overpass(geo.lat, geo.lon, cat.tags, 3500, 6).catch(()=>[]);
+        state.lastPOIs = pois;
+        $("answers").innerHTML += renderLocalPack(pois, q, geo.label);
+        setTimeout(()=>{
+          if($("map") && geo){
+            ensureMap(geo.lat, geo.lon);
+            (pois||[]).slice(0,6).forEach((p,idx)=>{
+              const ll=poiLatLon(p); if(!ll) return;
+              const name=p.tags?.name||p.tags?.brand||"Place";
+              const m=L.marker([ll.lat,ll.lon]).addTo(state.map).bindPopup(esc(name));
+              state.markers.push(m);
+              if(idx===0) m.openPopup();
+            });
           }
-        }else{
-          $("topCards").innerHTML += `<div class="card"><div class="small">Places</div><div class="big">${escapeHtml(q)}</div><div class="small" style="margin-top:10px">Couldn’t find a location. Add a city (e.g., “restaurants Plano TX”) or allow location access.</div></div>`;
-        }
-      }
-
-      // Kick CSE query
-      cseSetQuery(q);
-    }
-
-    window.chip = (text)=>{
-      $("q").value = text;
-      runSearch(false);
-    };
-
-    // Enter key wiring
-    $("qHome").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearch(true); });
-    $("q").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearch(false); });
-
-    // Init from URL
-    function init(){
-      const p = new URLSearchParams(location.search);
-      const q = p.get("q");
-      if(q){
-        $("qHome").value = q;
-        $("q").value = q;
-        runSearch(true);
+        }, 50);
       } else {
-        goHome();
+        $("answers").innerHTML += `
+          <div class="block">
+            <h2>Places</h2>
+            <div class="small">Couldn’t find a location. Try “restaurants Plano TX” or allow location access.</div>
+          </div>`;
       }
     }
-    window.addEventListener("popstate", init);
-    init();
-  </script>
+
+    // If user is on Images/News/About, we still show web results (CSE) to keep it “Google-like”
+    cseExecute(q);
+  }
+
+  // Enter keys
+  $("qHome").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearch(true); });
+  $("q").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearch(false); });
+
+  // Initialize from URL
+  function init(){
+    const p=new URLSearchParams(location.search);
+    const q=p.get("q");
+    if(q){
+      $("qHome").value=q;
+      $("q").value=q;
+      state.q=q;
+      goResults();
+      runSearch(true,true);
+    } else {
+      goHome();
+    }
+  }
+  window.addEventListener("popstate", init);
+  init();
+</script>
+
 </body>
 </html>
