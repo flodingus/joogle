@@ -8,21 +8,22 @@
 <style>
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;
+  font-family:Arial, Helvetica, sans-serif;
   background:#fff;
   color:#202124;
 }
 
+/* HEADER */
 .header{
   display:flex;
   align-items:center;
   gap:20px;
-  padding:15px 20px;
+  padding:12px 24px;
   border-bottom:1px solid #dadce0;
 }
 
 .logo{
-  font-size:28px;
+  font-size:26px;
   font-weight:bold;
   cursor:pointer;
 }
@@ -34,6 +35,7 @@ body{
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
 
+/* HOME CENTER */
 .home{
   display:flex;
   flex-direction:column;
@@ -43,9 +45,9 @@ body{
 }
 
 .homeLogo{
-  font-size:80px;
+  font-size:90px;
   font-weight:bold;
-  margin-bottom:20px;
+  margin-bottom:30px;
 }
 
 .homeLogo span:nth-child(1){color:#4285F4}
@@ -55,15 +57,61 @@ body{
 .homeLogo span:nth-child(5){color:#0F9D58}
 .homeLogo span:nth-child(6){color:#DB4437}
 
-.gcse-search{
-  width:600px;
-  max-width:90%;
+/* FORCE SEARCH WIDTH */
+.gcse-search,
+.gsc-control-cse {
+  width:100%;
+  max-width:700px;
+  margin:0 auto;
 }
+
+/* RESULT CONTAINER */
+#resultsContainer{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 20px;
+}
+
+/* CLEAN UP GOOGLE DEFAULT STYLING */
+.gsc-control-cse {
+  border:none !important;
+  padding:0 !important;
+}
+
+.gsc-search-box-tools {
+  margin-bottom:20px !important;
+}
+
+.gsc-input-box {
+  border-radius:24px !important;
+  border:1px solid #dadce0 !important;
+}
+
+.gsc-input {
+  padding:8px !important;
+}
+
+.gsc-search-button {
+  display:none !important;
+}
+
+/* RESULT TITLES */
+.gsc-webResult .gs-title {
+  font-size:18px !important;
+}
+
+.gsc-webResult .gs-snippet {
+  font-size:14px !important;
+}
+
+/* REMOVE ADS */
+.gsc-adBlock {
+  display:none !important;
+}
+
 </style>
 
-<!-- IMPORTANT: Replace cx below with your real one if different -->
 <script async src="https://cse.google.com/cse.js?cx=427c85c8321db4c63"></script>
-
 </head>
 
 <body>
@@ -78,10 +126,7 @@ body{
   <div class="homeLogo">
     <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
-
-  <!-- This renders BOTH search box and results inline -->
   <div class="gcse-search"></div>
-
 </div>
 
 </body>
