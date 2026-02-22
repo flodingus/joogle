@@ -34,17 +34,7 @@ body{
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
 
-.search{
-  flex:1;
-  max-width:600px;
-  padding:10px 20px;
-  font-size:15px;
-  border:1px solid #dadce0;
-  border-radius:999px;
-  outline:none;
-}
-
-.center{
+.home{
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -65,66 +55,34 @@ body{
 .homeLogo span:nth-child(5){color:#0F9D58}
 .homeLogo span:nth-child(6){color:#DB4437}
 
-#results{
-  padding:20px;
+.gcse-search{
+  width:600px;
+  max-width:90%;
 }
 </style>
+
+<!-- IMPORTANT: Replace cx below with your real one if different -->
+<script async src="https://cse.google.com/cse.js?cx=427c85c8321db4c63"></script>
+
 </head>
 
 <body>
 
-<div class="header" id="header" style="display:none;">
-  <div class="logo" onclick="goHome()">
+<div class="header">
+  <div class="logo" onclick="location.href='/'">
     <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
-  <input id="topSearch" class="search" placeholder="Search Joogle...">
 </div>
 
-<div class="center" id="home">
+<div class="home">
   <div class="homeLogo">
     <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
-  <input id="homeSearch" class="search" placeholder="Search Joogle...">
+
+  <!-- This renders BOTH search box and results inline -->
+  <div class="gcse-search"></div>
+
 </div>
-
-<div id="results"></div>
-
-<script async src="https://cse.google.com/cse.js?cx=427c85c8321db4c63"></script>
-
-<script>
-function goHome(){
-  document.getElementById("results").innerHTML="";
-  document.getElementById("home").style.display="flex";
-  document.getElementById("header").style.display="none";
-}
-
-function showResults(query){
-  document.getElementById("home").style.display="none";
-  document.getElementById("header").style.display="flex";
-  document.getElementById("results").innerHTML = `
-    <div class="gcse-searchresults-only"></div>
-  `;
-  document.getElementById("topSearch").value = query;
-
-  setTimeout(()=>{
-    if(window.google && google.search && google.search.cse){
-      google.search.cse.element.getElement("searchresults-only0").execute(query);
-    }
-  },500);
-}
-
-document.getElementById("homeSearch").addEventListener("keydown",function(e){
-  if(e.key==="Enter"){
-    showResults(this.value);
-  }
-});
-
-document.getElementById("topSearch").addEventListener("keydown",function(e){
-  if(e.key==="Enter"){
-    showResults(this.value);
-  }
-});
-</script>
 
 </body>
 </html>
