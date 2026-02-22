@@ -640,16 +640,22 @@ async function searxSearch(q){
   const base = (localStorage.getItem("joogle_searx") || "").trim().replace(/\/$/,"");
   if(!base) return { ok:false, reason:"SearXNG not configured" };
 
-  // Many instances use /search with format=json
-  // Example: https://searxng.example/search?q=test&format=json
-  const url = `${base}/search?q=${encodeURIComponent(q)}&format=json&language=en-US&safesearch=0`;
+  // SearXNG endpoint
+  const target = `${base}/search?q=${encodeURIComponent(q)}&format=json&language=en-US&safesearch=0`;
+
+  // ✅ Your Cloudflare Worker proxy (from your screenshot)
+  const WORKER = "https://black-meadow-7cb7.flodinus.workers.dev";
+
+  // Proxy URL (Worker fetches SearXNG server-side, avoiding browser CORS)
+  const proxied = `${WORKER}/?target=${encodeURIComponent(target)}`;
+
   try{
-    const r = await fetch(url);
-    if(!r.ok) return { ok:false, reason:`SearXNG HTTP ${r.status}` };
+    const r = await fetch(proxied);
+    if(!r.ok) return { ok:false, reason:`Proxy HTTP ${r.status}` };
     const data = await r.json();
     return { ok:true, data, base };
-  }catch(e){
-    return { ok:false, reason:`SearXNG blocked (CORS) or unreachable` };
+  }catch{
+    return { ok:false, reason:"Proxy unreachable" };
   }
 }
 
@@ -1258,3 +1264,4 @@ initFromURL();
 </script>
 </body>
 </html>
+
