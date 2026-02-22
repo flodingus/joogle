@@ -291,6 +291,15 @@ function zoomTo(i){
  state.map.flyTo([p.lat,p.lon],16);
 }
 
+// ENTER support
+qHome.addEventListener("keydown",e=>{
+ if(e.key==="Enter"){runSearch(e.target.value);}
+});
+q.addEventListener("keydown",e=>{
+ if(e.key==="Enter"){runSearch(e.target.value);}
+});
+
+// instant typing
 qHome.addEventListener("input",e=>instantSearch(e.target));
 q.addEventListener("input",e=>instantSearch(e.target));
 </script>
