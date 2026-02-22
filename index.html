@@ -400,6 +400,7 @@
     $("answers").innerHTML = "";
     $("rightBox").innerHTML = "";
 
+    const API_BASE = "https://api.joogle.pro";
     const tab = state.tab;
     const wantPlaces = (tab==="places") || (tab==="all" && (looksNearMe(q) || !!catFor(q)));
     const wantWeather = (tab==="weather") || (tab==="all" && looksWeather(q));
@@ -470,3 +471,4 @@
 
 </body>
 </html>
+
