@@ -4,168 +4,166 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Joogle</title>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#fff;color:#202124}
-.center{display:grid;place-items:center;min-height:75vh}
-.logo{font-size:70px;font-weight:bold;cursor:pointer}
+.header{
+  border-bottom:1px solid #dadce0;
+  padding:12px 20px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+.logo{
+  font-size:24px;
+  font-weight:bold;
+  cursor:pointer;
+}
 .logo span:nth-child(1){color:#4285F4}
 .logo span:nth-child(2){color:#DB4437}
 .logo span:nth-child(3){color:#F4B400}
 .logo span:nth-child(4){color:#4285F4}
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
-.search{width:600px;max-width:90%;padding:12px 20px;border-radius:999px;border:1px solid #dadce0;font-size:16px}
-.results{max-width:1000px;margin:20px auto;padding:0 16px}
-.card{border:1px solid #dadce0;border-radius:12px;padding:12px;margin-bottom:10px;cursor:pointer}
-.card:hover{background:#f8f9fa}
-.meta{font-size:12px;color:#5f6368}
-#map{height:320px;border-radius:12px;margin-top:12px}
-.error{color:red;font-weight:bold}
+
+.search{
+  flex:1;
+  max-width:600px;
+  padding:10px 20px;
+  border-radius:999px;
+  border:1px solid #dadce0;
+  font-size:15px;
+}
+
+.container{
+  display:flex;
+  gap:20px;
+  padding:20px;
+}
+
+.results{
+  flex:1;
+  max-width:700px;
+}
+
+.card{
+  padding:14px 0;
+  border-bottom:1px solid #eee;
+}
+
+.card b{
+  font-size:16px;
+  color:#1a0dab;
+}
+
+.meta{
+  font-size:13px;
+  color:#5f6368;
+}
+
+#map{
+  width:400px;
+  height:500px;
+  border-radius:12px;
+}
+
+@media(max-width:1000px){
+  .container{flex-direction:column}
+  #map{width:100%;height:300px}
+}
 </style>
 </head>
 
 <body>
 
-<div class="center" id="home">
-  <div>
-    <div class="logo" onclick="goHome()">
-      <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-    </div>
-    <input id="searchInput" class="search" placeholder="Search Joogle...">
+<div class="header">
+  <div class="logo" onclick="location.reload()">
+    <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
+  <input id="searchInput" class="search" placeholder="Search Joogle...">
 </div>
 
-<div class="results" id="results" style="display:none"></div>
+<div class="container">
+  <div class="results" id="results"></div>
+  <div id="map"></div>
+</div>
 
 <script>
-const API = "https://api.joogle.pro";
+const API="https://api.joogle.pro";
+const input=document.getElementById("searchInput");
+const resultsDiv=document.getElementById("results");
 
-const input = document.getElementById("searchInput");
-const resultsDiv = document.getElementById("results");
-const home = document.getElementById("home");
+let userLat=null;
+let userLon=null;
+let map=L.map("map").setView([32.84402,-97.14307],13);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19}).addTo(map);
 
-let map = null;
-let userLat = null;
-let userLon = null;
-let timer = null;
-
-function goHome(){
-  resultsDiv.style.display="none";
-  home.style.display="grid";
-}
-
-function showResults(){
-  home.style.display="none";
-  resultsDiv.style.display="block";
+function haversine(a,b,c,d){
+ const R=3958.8;
+ const toRad=x=>x*Math.PI/180;
+ const dLat=toRad(c-a), dLon=toRad(d-b);
+ const x=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLon/2)**2;
+ return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
 async function fetchJSON(url){
-  const res = await fetch(url);
-  if(!res.ok){
-    throw new Error("API returned " + res.status);
-  }
-  return res.json();
-}
-
-function haversine(a,b,c,d){
-  const R=3958.8;
-  const toRad=x=>x*Math.PI/180;
-  const dLat=toRad(c-a), dLon=toRad(d-b);
-  const x=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+ const r=await fetch(url);
+ return r.json();
 }
 
 async function runSearch(query){
-  if(!query) return;
+ if(!query) return;
 
-  showResults();
-  resultsDiv.innerHTML = "Searching...";
+ resultsDiv.innerHTML="Searching...";
 
-  try{
-    if(!userLat || !userLon){
-      const geo = await fetchJSON(API + "/geo");
-      userLat = geo.geo.latitude;
-      userLon = geo.geo.longitude;
-    }
+ if(!userLat||!userLon){
+   const geo=await fetchJSON(API+"/geo");
+   userLat=geo.geo.latitude;
+   userLon=geo.geo.longitude;
+   map.setView([userLat,userLon],13);
+ }
 
-    const places = await fetchJSON(
-      API + `/places?query=${encodeURIComponent(query)}&lat=${userLat}&lon=${userLon}`
-    );
+ const data=await fetchJSON(
+   API+`/places?query=${encodeURIComponent(query)}&lat=${userLat}&lon=${userLon}`
+ );
 
-    if(!places.items || places.items.length === 0){
-      resultsDiv.innerHTML = "<div class='error'>No results found.</div>";
-      return;
-    }
+ if(!data.items||data.items.length===0){
+   resultsDiv.innerHTML="No results found.";
+   return;
+ }
 
-    // Sort by distance
-    places.items.sort((a,b)=>{
-      return haversine(userLat,userLon,a.lat,a.lon) -
-             haversine(userLat,userLon,b.lat,b.lon);
-    });
+ map.eachLayer(layer=>{
+   if(layer instanceof L.Marker) map.removeLayer(layer);
+ });
 
-    let html = "";
+ let html="";
+ data.items.sort((a,b)=>{
+   return haversine(userLat,userLon,a.lat,a.lon) -
+          haversine(userLat,userLon,b.lat,b.lon);
+ });
 
-    places.items.slice(0,15).forEach(p=>{
-      const distance = haversine(userLat,userLon,p.lat,p.lon).toFixed(1);
-      html += `
-        <div class="card">
-          <b>${p.name || "Business"}</b><br>
-          <span class="meta">${p.address?.street || ""} ${p.address?.city || ""}</span><br>
-          <span class="meta">${distance} mi away</span>
-        </div>
-      `;
-    });
+ data.items.forEach(p=>{
+   const dist=haversine(userLat,userLon,p.lat,p.lon).toFixed(1);
+   html+=`
+     <div class="card">
+       <b>${p.name||"Business"}</b><br>
+       <span class="meta">${p.type||""}</span><br>
+       <span class="meta">${p.address?.street||""} ${p.address?.city||""}</span><br>
+       <span class="meta">${dist} mi away</span>
+     </div>
+   `;
 
-    html += `<div id="map"></div>`;
+   if(p.lat&&p.lon)
+     L.marker([p.lat,p.lon]).addTo(map);
+ });
 
-    resultsDiv.innerHTML = html;
-
-    if(!map){
-      map = L.map("map").setView([userLat,userLon],13);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-        maxZoom:19
-      }).addTo(map);
-    } else {
-      map.setView([userLat,userLon],13);
-    }
-
-    // Clear old markers
-    map.eachLayer(layer=>{
-      if(layer instanceof L.Marker) map.removeLayer(layer);
-    });
-
-    // User marker
-    L.marker([userLat,userLon]).addTo(map);
-
-    // Place markers
-    places.items.slice(0,20).forEach(p=>{
-      if(p.lat && p.lon){
-        L.marker([p.lat,p.lon]).addTo(map);
-      }
-    });
-
-  }catch(err){
-    resultsDiv.innerHTML = "<div class='error'>Error: " + err.message + "</div>";
-  }
+ resultsDiv.innerHTML=html;
 }
 
-// ENTER support
-input.addEventListener("keydown", e=>{
-  if(e.key === "Enter"){
-    runSearch(input.value);
-  }
-});
-
-// Instant typing search
-input.addEventListener("input", e=>{
-  clearTimeout(timer);
-  timer = setTimeout(()=>{
-    runSearch(input.value);
-  }, 400);
+input.addEventListener("keydown",e=>{
+ if(e.key==="Enter") runSearch(input.value);
 });
 </script>
 
