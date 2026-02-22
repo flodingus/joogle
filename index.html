@@ -5,944 +5,978 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Joogle</title>
 
-  <!-- Performance -->
-  <link rel="preconnect" href="https://cse.google.com" />
-  <link rel="preconnect" href="https://www.google.com" />
-  <link rel="preconnect" href="https://suggestqueries.google.com" />
-  <link rel="preconnect" href="https://nominatim.openstreetmap.org" />
-  <link rel="preconnect" href="https://api.open-meteo.com" />
-  <link rel="preconnect" href="https://overpass-api.de" />
-  <link rel="preconnect" href="https://tile.openstreetmap.org" />
-
-  <!-- Leaflet (open-source map library) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     :root{
-      --bg:#fff; --text:#202124; --muted:#5f6368; --card:#fff; --border:#dfe1e5;
-      --shadow:0 1px 6px rgba(32,33,36,.28);
-      --btn:#f8f9fa; --btnText:#3c4043; --btnBorder:#dadce0;
-      --hover:rgba(60,64,67,.08);
-      --link:#1a0dab; --visited:#681da8;
+      --bg:#fff; --surface:#fff; --text:#202124; --muted:#5f6368;
+      --border:#dadce0; --chip:#f1f3f4; --link:#1a0dab; --visited:#681da8;
+      --green:#137333; --shadow:0 1px 2px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.06);
+      --radius:18px; --max:1160px; --accent:#1a73e8;
     }
-    body.dark{
-      --bg:#202124; --text:#e8eaed; --muted:#9aa0a6; --card:#303134; --border:#5f6368;
-      --shadow:0 1px 10px rgba(0,0,0,.6);
-      --btn:#303134; --btnText:#e8eaed; --btnBorder:#5f6368;
-      --hover:rgba(232,234,237,.08);
-      --link:#8ab4f8; --visited:#c58af9;
+    [data-theme="dark"]{
+      --bg:#0f1115; --surface:#151922; --text:#e8eaed; --muted:#a1a7b0;
+      --border:#2a2f3a; --chip:#1c2230; --link:#8ab4f8; --visited:#c58af9;
+      --green:#81c995; --shadow:0 1px 2px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.35);
+      --accent:#8ab4f8;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
-    .topbar{height:56px;display:flex;justify-content:flex-end;align-items:center;padding:0 16px}
-    .icon-btn{width:38px;height:38px;border-radius:999px;border:0;background:transparent;color:var(--text);cursor:pointer}
-    .icon-btn:hover{background:var(--hover)}
-    .wrap{max-width:980px;margin:0 auto;padding:0 16px 40px}
+    body{margin:0;font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg)}
+    a{color:var(--link);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:var(--max);margin:0 auto;padding:0 16px}
+    .topbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);backdrop-filter:saturate(180%) blur(8px)}
+    .topbar-inner{display:flex;align-items:center;gap:14px;padding:10px 0}
+    .brand{display:flex;align-items:center;gap:10px;min-width:130px;cursor:pointer}
+    .logo{font-size:30px;font-weight:800;letter-spacing:-.5px;user-select:none}
+    .logo span:nth-child(1){color:#4285F4;}
+    .logo span:nth-child(2){color:#DB4437;}
+    .logo span:nth-child(3){color:#F4B400;}
+    .logo span:nth-child(4){color:#4285F4;}
+    .logo span:nth-child(5){color:#0F9D58;}
+    .logo span:nth-child(6){color:#DB4437;}
+    .searchwrap{flex:1;position:relative}
+    .search{
+      width:100%; border:1px solid var(--border); background:var(--surface); color:var(--text);
+      border-radius:999px; padding:12px 108px 12px 44px; outline:none; font-size:16px;
+    }
+    .search:focus{box-shadow:var(--shadow);border-color:color-mix(in oklab, var(--border), var(--accent) 30%)}
+    .icon{position:absolute;top:50%;transform:translateY(-50%);width:22px;height:22px;color:var(--muted);display:grid;place-items:center;font-size:16px;user-select:none}
+    .icon.left{left:14px}
+    .icon.r1{right:78px;cursor:pointer}
+    .icon.r2{right:46px;cursor:pointer}
+    .icon.r3{right:14px;cursor:pointer}
+    .suggest{position:absolute;left:0;right:0;top:46px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;display:none}
+    .suggest .row{padding:10px 14px;cursor:pointer;display:flex;gap:10px;align-items:center}
+    .suggest .row:hover{background:color-mix(in oklab, var(--surface), var(--text) 6%)}
+    .suggest .hint{color:var(--muted);font-size:12px}
 
-    .logo{text-align:center;font-size:84px;font-weight:700;letter-spacing:-1px;margin-top:56px;user-select:none}
-    .logo span:nth-child(1){color:#4285f4}
-    .logo span:nth-child(2){color:#ea4335}
-    .logo span:nth-child(3){color:#fbbc05}
-    .logo span:nth-child(4){color:#4285f4}
-    .logo span:nth-child(5){color:#34a853}
-    .logo span:nth-child(6){color:#ea4335}
+    .tabs{display:flex;gap:8px;align-items:center;padding:0 0 10px 0;flex-wrap:wrap}
+    .tab{padding:8px 10px;border-radius:999px;color:var(--muted);cursor:pointer;user-select:none}
+    .tab.active{background:var(--chip);color:var(--text)}
+    .spacer{flex:1}
 
-    form.search-area{margin-top:22px;position:relative}
-    .searchbar{
-      display:flex;align-items:center;gap:10px;width:100%;
-      padding:12px 14px;border-radius:999px;border:1px solid var(--border);
-      background:var(--card);transition:.15s;
-    }
-    .searchbar:hover,.searchbar:focus-within{box-shadow:var(--shadow);border-color:transparent}
-    input[type="search"]{
-      flex:1;border:0;outline:0;font-size:16px;background:transparent;color:var(--text);min-width:0
-    }
+    .home{min-height:62vh;display:grid;place-items:center;padding:30px 0 60px}
+    .home .hero{width:min(720px, 92vw);text-align:center}
+    .home .logo{font-size:74px}
+    .home .searchwrap{margin-top:18px;margin-inline:auto}
 
-    #suggestions{
-      position:absolute;left:0;right:0;top:54px;
-      background:var(--card);border:1px solid var(--border);border-top:none;
-      border-radius:0 0 20px 20px;overflow:hidden;box-shadow:var(--shadow);
-      z-index:50;display:none;
-    }
-    .sugg{padding:10px 16px;cursor:pointer}
-    .sugg:hover{background:var(--hover)}
+    .meta{color:var(--muted);font-size:13px;margin:10px 0 12px}
+    .grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;padding:18px 0 40px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}.right{display:none}}
 
-    .actions{margin-top:16px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
-    .btn{
-      padding:10px 16px;border-radius:4px;border:1px solid var(--btnBorder);
-      background:var(--btn);color:var(--btnText);cursor:pointer;font-size:14px
-    }
-    .btn:hover{box-shadow:0 1px 1px rgba(0,0,0,.1)}
+    .card{border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin:0 0 12px}
+    .card.soft{background:color-mix(in oklab, var(--surface), var(--text) 4%)}
+    .small{color:var(--muted);font-size:12px}
+    .panelTitle{font-weight:800;margin:0 0 10px}
+    .result{padding:10px 0}
+    .cite{color:var(--green);font-size:12px;margin:2px 0;word-break:break-all}
+    .title{font-size:18px;line-height:1.25;margin:0}
+    .title a:visited{color:var(--visited)}
+    .snippet{color:color-mix(in oklab, var(--text), var(--muted) 30%);margin:6px 0 0}
 
-    .module{
-      margin-top:18px;
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:14px;
-      box-shadow:0 1px 2px rgba(0,0,0,.06);
-      padding:14px;
-      display:none;
-    }
-    .module.show{display:block}
-    .module h2{margin:0 0 8px;font-size:16px}
-    .statusline{margin-top:8px;color:var(--muted);font-size:13px;min-height:18px}
+    .chiprow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+    .chip{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:13px;user-select:none}
+    .chip:hover{background:color-mix(in oklab, var(--surface), var(--text) 6%)}
 
-    .pill-link{
-      display:inline-block;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid var(--btnBorder);
-      background:var(--btn);
-      color:var(--btnText);
-      text-decoration:none;
-      font-size:14px;
-      cursor:pointer;
-    }
-    .pill-link:hover{box-shadow:0 1px 1px rgba(0,0,0,.1)}
+    .localPackHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .localGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+    @media (max-width:650px){.localGrid{grid-template-columns:1fr}}
+    .place{border:1px solid var(--border);border-radius:14px;padding:12px;cursor:pointer;background:var(--surface)}
+    .place:hover{background:color-mix(in oklab, var(--surface), var(--text) 6%)}
+    .place .name{font-weight:800}
+    .place .addr{color:var(--muted);font-size:12px;margin-top:4px}
+    .place .tag{display:inline-block;margin-top:8px;font-size:12px;color:var(--muted)}
+    #map{height:300px;border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-top:12px}
 
-    /* Weather */
-    .weather-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
-    @media (min-width: 720px){ .weather-grid{grid-template-columns: 1.1fr .9fr;} }
-    .weather-main{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
-      padding:10px;border:1px solid var(--border);border-radius:12px;
-    }
-    .weather-loc{font-weight:700;font-size:14px;margin-bottom:2px}
-    .weather-desc{color:var(--muted);font-size:13px}
-    .weather-temp{font-size:36px;font-weight:700;white-space:nowrap}
-    .weather-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;color:var(--muted);font-size:13px}
-    .wxchip{border:1px solid var(--border);border-radius:999px;padding:4px 10px}
+    .imgGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    @media (max-width:860px){.imgGrid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.imgGrid{grid-template-columns:1fr}}
+    .imgTile{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)}
+    .imgTile img{display:block;width:100%;height:190px;object-fit:cover}
+    .imgTile .cap{padding:10px}
+    .imgTile .cap .t{font-weight:800;font-size:13px}
+    .imgTile .cap .s{color:var(--muted);font-size:12px;margin-top:4px}
 
-    .forecast{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px;
+    dialog{width:min(760px,92vw);border:1px solid var(--border);border-radius:18px;padding:0;background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+    dialog::backdrop{background:rgba(0,0,0,.35)}
+    .dlgHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+    .dlgBody{padding:14px 16px}
+    .row2{display:grid;grid-template-columns:220px 1fr;gap:12px;align-items:center;margin:10px 0}
+    @media (max-width:720px){.row2{grid-template-columns:1fr}}
+    label{color:var(--muted);font-size:12px}
+    input[type="text"], select{
+      width:100%; border:1px solid var(--border); background:var(--surface); color:var(--text);
+      padding:10px 12px; border-radius:12px; outline:none;
     }
-    .forecast-title{font-weight:700;font-size:14px;margin:0 0 8px}
-    .forecast-row{
-      display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--border);
-      font-size:13px;color:var(--text);
-    }
-    .forecast-row:first-of-type{border-top:0}
-    .fmuted{color:var(--muted)}
+    .btn{border:1px solid var(--border);background:var(--surface);color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer;user-select:none}
+    .btn.primary{border-color:color-mix(in oklab, var(--border), var(--accent) 35%);background:color-mix(in oklab, var(--surface), var(--accent) 12%)}
+    .btn:hover{background:color-mix(in oklab, var(--surface), var(--text) 6%)}
+    .foot{color:var(--muted);font-size:12px;margin-top:14px}
 
-    .hourly{
-      margin-top:10px;border:1px solid var(--border);border-radius:12px;padding:10px;overflow:auto
-    }
-    .hourly-title{font-weight:700;font-size:14px;margin:0 0 8px}
-    .hourly-strip{display:flex;gap:10px;min-width:max-content;padding-bottom:4px}
-    .hour{border:1px solid var(--border);border-radius:12px;padding:8px 10px;min-width:92px;text-align:center}
-    .hour .t{font-size:12px;color:var(--muted);margin-bottom:6px;white-space:nowrap}
-    .hour .icon{font-size:18px;margin-bottom:4px}
-    .hour .temp{font-weight:700;font-size:14px}
-    .hour .pop{font-size:12px;color:var(--muted);margin-top:4px}
-
-    /* Local (Map + List) */
-    .local-grid{display:grid;grid-template-columns: 1fr; gap:10px; margin-top:10px}
-    @media (min-width: 900px){ .local-grid{grid-template-columns: 1.2fr .8fr;} }
-    #localMap{height:420px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
-    @media (min-width: 900px){ #localMap{height:520px;} }
-    .placesPanel{border:1px solid var(--border);border-radius:12px;padding:10px;max-height:520px;overflow:auto}
-    .placeCard{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px;
-      cursor:pointer;
-      margin-bottom:10px;
-    }
-    .placeCard:hover{background:var(--hover)}
-    .placeName{font-weight:700;margin-bottom:4px}
-    .placeMeta{color:var(--muted);font-size:13px;line-height:1.35}
-    .badge{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:2px 8px;font-size:12px;color:var(--muted);margin-right:6px;margin-top:6px}
-
-    /* CSE polish */
-    #resultsWrap{margin-top:18px}
-    .gsc-search-box{display:none !important;}
-    .gsc-control-cse{padding:0 !important;border:0 !important;background:transparent !important}
-    .gsc-webResult.gsc-result{
-      background:var(--card) !important;border:1px solid var(--border) !important;border-radius:14px !important;
-      padding:14px 16px !important;margin-bottom:12px !important;transition:.18s;
-    }
-    .gsc-webResult.gsc-result:hover{box-shadow:var(--shadow) !important}
-    a.gs-title, a.gs-title:link{color:var(--link) !important;text-decoration:none !important}
-    a.gs-title:visited{color:var(--visited) !important}
-    .gs-snippet{color:var(--text) !important;opacity:.92}
-    .gs-visibleUrl{color:var(--muted) !important}
-
-    @media (max-width:480px){
-      .logo{font-size:64px;margin-top:40px}
-      #suggestions{top:52px}
-      .weather-temp{font-size:32px}
-      .hour{min-width:86px}
-    }
+    .loader{width:18px;height:18px;border:2px solid color-mix(in oklab, var(--border), var(--text) 10%);border-top-color:var(--muted);border-radius:999px;display:inline-block;animation:spin .8s linear infinite;vertical-align:-3px}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 
 <body>
-  <div class="topbar">
-    <button class="icon-btn" id="darkToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
-  </div>
+  <div class="topbar" id="topbar" style="display:none">
+    <div class="wrap">
+      <div class="topbar-inner">
+        <div class="brand" onclick="goHome()" title="Home">
+          <div class="logo" aria-label="Joogle">
+            <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+          </div>
+        </div>
 
-  <div class="wrap">
-    <div class="logo" aria-label="Joogle">
-      <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+        <div class="searchwrap">
+          <div class="icon left">🔎</div>
+          <input id="q" class="search" autocomplete="off" placeholder="Search Joogle…">
+          <div class="icon r1" title="Settings" onclick="openSettings()">⚙️</div>
+          <div class="icon r2" title="Toggle dark mode" onclick="toggleTheme()">🌓</div>
+          <div class="icon r3" title="Search" onclick="runSearch()">⏎</div>
+          <div id="suggest" class="suggest" role="listbox" aria-label="Suggestions"></div>
+        </div>
+      </div>
+
+      <div class="tabs wrap" style="padding-left:0;padding-right:0">
+        <div class="tab active" data-tab="all" onclick="setTab('all')">All</div>
+        <div class="tab" data-tab="images" onclick="setTab('images')">Images</div>
+        <div class="tab" data-tab="news" onclick="setTab('news')">News</div>
+        <div class="tab" data-tab="places" onclick="setTab('places')">Places</div>
+        <div class="tab" data-tab="weather" onclick="setTab('weather')">Weather</div>
+        <div class="tab" data-tab="about" onclick="setTab('about')">About</div>
+        <div class="spacer"></div>
+        <div class="tab" onclick="openSettings()">Settings</div>
+      </div>
     </div>
-
-    <!-- Bulletproof core search -->
-    <form class="search-area" id="searchForm" method="GET" action="/">
-      <div class="searchbar">
-        <input id="q" name="q" type="search" placeholder="Search the web" autocomplete="off" spellcheck="false" />
-      </div>
-
-      <div id="suggestions" role="listbox" aria-label="Suggestions"></div>
-
-      <div class="actions">
-        <button class="btn" type="submit">Joogle Search</button>
-        <button class="btn" type="button" id="luckyBtn">I’m Feeling Joogly</button>
-      </div>
-
-      <!-- WEATHER -->
-      <div class="module" id="weatherModule">
-        <h2>Weather</h2>
-
-        <div class="weather-grid">
-          <div>
-            <div class="weather-main">
-              <div style="min-width:0">
-                <div class="weather-loc" id="wxLoc">—</div>
-                <div class="weather-desc" id="wxDesc">—</div>
-                <div class="weather-meta" id="wxMeta"></div>
-              </div>
-              <div class="weather-temp" id="wxTemp">—</div>
-            </div>
-
-            <div class="statusline" id="wxStatus"></div>
-
-            <div class="hourly">
-              <div class="hourly-title">Next 12 hours</div>
-              <div class="hourly-strip" id="wxHourly"></div>
-            </div>
-          </div>
-
-          <div class="forecast">
-            <div class="forecast-title">Next 3 days</div>
-            <div id="wxForecast"></div>
-          </div>
-        </div>
-
-        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="pill-link" id="wxOpen" target="_blank" rel="noopener">Open full forecast</a>
-        </div>
-      </div>
-
-      <!-- LOCAL MAP + PLACES (OpenStreetMap/Overpass) -->
-      <div class="module" id="localModule">
-        <h2 id="localTitle">Nearby</h2>
-
-        <div class="local-grid">
-          <div id="localMap"></div>
-          <div class="placesPanel">
-            <div class="statusline" id="localStatus">—</div>
-            <div id="placesList"></div>
-            <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-              <button class="btn" type="button" id="useMyLocationBtn">Use my location</button>
-              <a class="pill-link" id="openMapsBtn" target="_blank" rel="noopener">Open in OSM</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Web results -->
-      <div id="resultsWrap">
-        <div id="cse-results"></div>
-      </div>
-    </form>
   </div>
 
-  <script>
-    /*****************
-     * CONFIG
-     *****************/
-    const CX = "427c85c8321db4c63";
+  <div class="home" id="home">
+    <div class="hero">
+      <div class="logo" aria-label="Joogle">
+        <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+      </div>
 
-    // Hide junk domains from web results
-    const BLOCKED_DOMAINS = ["pinterest.","quora.","brainly.","answers.com","chegg.","coursehero.","scribd.com"];
+      <div class="searchwrap">
+        <div class="icon left">🔎</div>
+        <input id="qHome" class="search" autocomplete="off" placeholder="Search Joogle…">
+        <div class="icon r1" title="Settings" onclick="openSettings()">⚙️</div>
+        <div class="icon r2" title="Toggle dark mode" onclick="toggleTheme()">🌓</div>
+        <div class="icon r3" title="Search" onclick="runSearch(true)">⏎</div>
+        <div id="suggestHome" class="suggest" role="listbox" aria-label="Suggestions"></div>
+      </div>
 
-    // Overpass endpoints (fallback if one is slow/busy)
-    const OVERPASS_ENDPOINTS = [
-      "https://overpass-api.de/api/interpreter",
-      "https://lz4.overpass-api.de/api/interpreter",
-      "https://z.overpass-api.de/api/interpreter"
-    ];
+      <div class="foot">Open data sources • Not affiliated with Google.</div>
+    </div>
+  </div>
 
-    // OSM tile layer (fine for light use; if you grow, switch to a hosted tile provider)
-    const OSM_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  <div class="wrap" id="resultsPage" style="display:none">
+    <div class="meta" id="meta"></div>
+    <div class="grid">
+      <main class="left" id="left"></main>
+      <aside class="right" id="right"></aside>
+    </div>
+  </div>
 
-    /*****************
-     * DARK MODE
-     *****************/
-    const darkToggle = document.getElementById("darkToggle");
-    function setDark(on){
-      document.body.classList.toggle("dark", !!on);
-      localStorage.setItem("joogle_dark", on ? "1" : "0");
-      darkToggle.textContent = on ? "☀️" : "🌙";
-    }
-    setDark(localStorage.getItem("joogle_dark") === "1");
-    darkToggle.addEventListener("click", ()=>setDark(!document.body.classList.contains("dark")));
+  <dialog id="settingsDlg">
+    <div class="dlgHead">
+      <div style="font-weight:900">Joogle Settings</div>
+      <button class="btn" onclick="closeSettings()">Close</button>
+    </div>
+    <div class="dlgBody">
+      <div class="row2">
+        <div>
+          <div style="font-weight:850">Web results</div>
+          <div class="small">SearXNG gives “real” web results. Your Cloudflare Worker proxy avoids CORS.</div>
+        </div>
+        <div>
+          <label for="searxUrl">SearXNG base URL (no trailing slash)</label>
+          <input id="searxUrl" type="text" placeholder="https://searx.tiekoetter.com">
+          <div class="small" style="margin-top:6px">If a public instance blocks you, try a different one.</div>
+        </div>
+      </div>
 
-    /*****************
-     * QUERY HYDRATE
-     *****************/
-    const qEl = document.getElementById("q");
-    const params = new URLSearchParams(location.search);
-    const queryFromUrl = (params.get("q") || "").trim();
-    if(queryFromUrl) qEl.value = queryFromUrl;
+      <div class="row2">
+        <div>
+          <div style="font-weight:850">Quick presets</div>
+          <div class="small">Pick one, then close.</div>
+        </div>
+        <div>
+          <label for="preset">Preset</label>
+          <select id="preset" onchange="applyPreset()">
+            <option value="">— choose —</option>
+            <option value="https://searx.tiekoetter.com">searx.tiekoetter.com</option>
+            <option value="https://searx.be">searx.be</option>
+            <option value="https://search.bus-hit.me">search.bus-hit.me</option>
+            <option value="https://searxng.world">searxng.world</option>
+          </select>
+        </div>
+      </div>
 
-    /*****************
-     * LUCKY
-     *****************/
-    document.getElementById("luckyBtn").addEventListener("click", ()=>{
-      const q = qEl.value.trim();
-      if(!q){ qEl.focus(); return; }
-      location.href = "https://www.google.com/search?q=" + encodeURIComponent(q) + "&btnI=1";
+      <div class="row2">
+        <div>
+          <div style="font-weight:850">Near me</div>
+          <div class="small">Only used when your query includes “near me”.</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn primary" onclick="testGeo()">Test location permission</button>
+          <button class="btn" onclick="clearPrefs()">Reset saved settings</button>
+        </div>
+      </div>
+
+      <div class="foot">
+        Proxy: <span id="proxyLabel"></span><br>
+        Sources: SearXNG (web), OpenStreetMap (Overpass), Open-Meteo (weather), Wikimedia Commons (images), GDELT (news), Wikipedia (about).
+      </div>
+    </div>
+  </dialog>
+
+<script>
+/* =========================
+   CONFIG (edit these)
+========================= */
+
+// ✅ Your Cloudflare Worker proxy (from your screenshot)
+const JOOGLE_PROXY = "https://black-meadow-7cb7.flodinus.workers.dev";
+
+// LocalStorage keys
+const LS_SEARX = "joogle_searx";
+const LS_THEME = "joogle_theme";
+
+/* =========================
+   STATE
+========================= */
+const state = {
+  tab: "all",
+  lastQuery: "",
+  map: null,
+  mapMarkers: [],
+  lastPlaces: [],
+  lastGeo: null,
+  theme: "light"
+};
+
+const LOCAL_KEYWORDS = [
+  "restaurant","coffee","cafe","bar","library","gas","pizza","food","breakfast","lunch","dinner",
+  "hotel","motel","pharmacy","hospital","urgent care","clinic","gym","bank","atm","park","museum","theater",
+  "near me","nearby","closest","open now","hours","directions","reviews",
+  "concert","concerts","live music","music venue","show tonight"
+];
+
+// Overpass category detection (includes “Concerts” -> venues)
+const CATS = [
+  {name:"Live Music", keys:[/concert|concerts|live music|music venue|show tonight|gig/i], tags:[
+    ["amenity","music_venue"], ["amenity","theatre"], ["amenity","arts_centre"], ["amenity","nightclub"],
+    ["leisure","stadium"], ["leisure","sports_centre"]
+  ]},
+  {name:"Restaurant", keys:[/restaurant|food|dinner|lunch|breakfast|brunch|pizza|taco|burger/i], tags:[
+    ["amenity","restaurant"], ["amenity","fast_food"], ["amenity","cafe"], ["amenity","food_court"]
+  ]},
+  {name:"Coffee", keys:[/coffee|cafe|espresso|latte/i], tags:[
+    ["amenity","cafe"], ["amenity","restaurant"]
+  ]},
+  {name:"Bar", keys:[/bar|pub|brewery|cocktail/i], tags:[
+    ["amenity","bar"], ["amenity","pub"], ["amenity","biergarten"], ["amenity","nightclub"]
+  ]},
+  {name:"Library", keys:[/library/i], tags:[ ["amenity","library"] ]},
+  {name:"Gas", keys:[/gas|fuel|petrol/i], tags:[ ["amenity","fuel"] ]},
+  {name:"Hotel", keys:[/hotel|motel/i], tags:[ ["tourism","hotel"], ["tourism","motel"] ]},
+  {name:"Pharmacy", keys:[/pharmacy|drugstore/i], tags:[ ["amenity","pharmacy"] ]},
+  {name:"Hospital/Clinic", keys:[/hospital|urgent care|clinic|doctor/i], tags:[
+    ["amenity","hospital"], ["amenity","clinic"], ["amenity","doctors"]
+  ]},
+  {name:"Gym", keys:[/gym|fitness/i], tags:[ ["leisure","fitness_centre"], ["leisure","sports_centre"] ]},
+  {name:"ATM/Bank", keys:[/atm|bank/i], tags:[ ["amenity","atm"], ["amenity","bank"] ]},
+  {name:"Park", keys:[/park|playground/i], tags:[ ["leisure","park"], ["leisure","playground"] ]}
+];
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+function looksLocal(q){
+  const qq = q.toLowerCase();
+  return LOCAL_KEYWORDS.some(k => qq.includes(k));
+}
+function looksWeather(q){
+  const qq = q.toLowerCase();
+  return qq.includes("weather") || qq.startsWith("forecast ");
+}
+function buildChips(q){
+  return [
+    `what is ${q}`,
+    `${q} near me`,
+    `${q} hours`,
+    `${q} reviews`,
+    `${q} directions`,
+    `weather ${q}`,
+    `${q} menu`,
+    `${q} price`
+  ].slice(0,8);
+}
+
+/* =========================
+   THEME
+========================= */
+function loadTheme(){
+  const t = localStorage.getItem(LS_THEME);
+  if(t==="dark" || t==="light") state.theme = t;
+  document.documentElement.setAttribute("data-theme", state.theme);
+}
+function toggleTheme(){
+  state.theme = (state.theme==="dark") ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", state.theme);
+  localStorage.setItem(LS_THEME, state.theme);
+}
+
+/* =========================
+   SETTINGS
+========================= */
+function openSettings(){
+  $("proxyLabel").textContent = JOOGLE_PROXY;
+  $("searxUrl").value = (localStorage.getItem(LS_SEARX) || "");
+  $("settingsDlg").showModal();
+}
+function closeSettings(){ $("settingsDlg").close(); }
+function applyPreset(){
+  const val = $("preset").value;
+  if(val) $("searxUrl").value = val.replace(/\/$/,"");
+}
+function clearPrefs(){
+  localStorage.removeItem(LS_SEARX);
+  localStorage.removeItem(LS_THEME);
+  alert("Saved settings cleared. Refresh the page.");
+}
+function saveSettings(){
+  const v = ($("searxUrl").value||"").trim().replace(/\/$/,"");
+  if(v) localStorage.setItem(LS_SEARX, v);
+  else localStorage.removeItem(LS_SEARX);
+}
+$("settingsDlg").addEventListener("close", saveSettings);
+
+async function testGeo(){
+  if(!navigator.geolocation){
+    alert("Geolocation not supported in this browser.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos)=> alert(`Location OK: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`),
+    (err)=> alert(`Location blocked/unavailable: ${err.message}`)
+  );
+}
+
+/* =========================
+   SUGGESTIONS (Wikipedia + chips)
+========================= */
+async function getSuggestions(q){
+  const qq = q.trim();
+  if(!qq) return [];
+  const smart = buildChips(qq).map(t => ({text:t, hint:"Suggested"}));
+  try{
+    const url = "https://en.wikipedia.org/w/api.php?action=opensearch&search=" +
+      encodeURIComponent(qq) + "&limit=6&namespace=0&format=json&origin=*";
+    const r = await fetch(url);
+    const data = await r.json();
+    const w = (data?.[1] || []).map(t => ({text:t, hint:"Wikipedia"}));
+    const seen = new Set();
+    return [...w, ...smart].filter(x=>{
+      const k = x.text.toLowerCase();
+      if(seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    }).slice(0,8);
+  }catch{
+    return smart.slice(0,8);
+  }
+}
+function renderSuggestions(list, boxEl, panelEl){
+  if(!list.length){ panelEl.style.display="none"; return; }
+  panelEl.innerHTML = list.map((s,i)=>(
+    `<div class="row" role="option" data-i="${i}">
+      <div>🔎</div>
+      <div>
+        <div>${esc(s.text)}</div>
+        <div class="hint">${esc(s.hint||"")}</div>
+      </div>
+    </div>`
+  )).join("");
+  panelEl.style.display="block";
+  panelEl.querySelectorAll(".row").forEach(row=>{
+    row.addEventListener("mousedown",(e)=>{
+      e.preventDefault();
+      const i = Number(row.getAttribute("data-i"));
+      boxEl.value = list[i].text;
+      panelEl.style.display="none";
+      runSearch(boxEl.id==="qHome");
     });
+  });
+}
+function wireSuggest(inputId, panelId){
+  const box = $(inputId);
+  const panel = $(panelId);
+  let t=null;
+  box.addEventListener("input", ()=>{
+    clearTimeout(t);
+    t=setTimeout(async ()=>{
+      const list = await getSuggestions(box.value);
+      renderSuggestions(list, box, panel);
+    }, 120);
+  });
+  box.addEventListener("blur", ()=> setTimeout(()=>panel.style.display="none", 120));
+  box.addEventListener("focus", async ()=>{
+    if(box.value.trim()){
+      const list = await getSuggestions(box.value);
+      renderSuggestions(list, box, panel);
+    }
+  });
+  box.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter"){ panel.style.display="none"; runSearch(inputId==="qHome"); }
+    if(e.key==="Escape"){ panel.style.display="none"; }
+  });
+}
 
-    /*****************
-     * SUGGESTIONS
-     *****************/
-    const suggestions = document.getElementById("suggestions");
-    let suggAbort = null, suggTimer = null;
+/* =========================
+   TABS
+========================= */
+function setTab(tab){
+  state.tab = tab;
+  document.querySelectorAll(".tab[data-tab]").forEach(t=>{
+    t.classList.toggle("active", t.getAttribute("data-tab")===tab);
+  });
+  if(state.lastQuery) runSearch(false, true);
+}
 
-    function closeSuggestions(){ suggestions.style.display="none"; suggestions.innerHTML=""; }
-    function openSuggestions(){ if(suggestions.children.length) suggestions.style.display="block"; }
+/* =========================
+   ROUTING
+========================= */
+function goHome(){
+  history.pushState({}, "", location.pathname);
+  $("home").style.display = "";
+  $("topbar").style.display = "none";
+  $("resultsPage").style.display = "none";
+  $("qHome").focus();
+}
+function goResults(){
+  $("home").style.display = "none";
+  $("topbar").style.display = "";
+  $("resultsPage").style.display = "";
+}
 
-    qEl.addEventListener("input", ()=>{
-      const q = qEl.value.trim();
-      clearTimeout(suggTimer);
-      if(!q){ closeSuggestions(); return; }
+/* =========================
+   NETWORK HELPERS
+========================= */
+async function fetchJsonViaProxy(targetUrl){
+  const proxied = `${JOOGLE_PROXY}/?target=${encodeURIComponent(targetUrl)}`;
+  const r = await fetch(proxied, { cache:"no-store" });
+  if(!r.ok) throw new Error(`Proxy HTTP ${r.status}`);
+  return r.json();
+}
 
-      suggTimer = setTimeout(async ()=>{
-        try{
-          if(suggAbort) suggAbort.abort();
-          suggAbort = new AbortController();
-          const url = "https://suggestqueries.google.com/complete/search?client=firefox&q=" + encodeURIComponent(q);
-          const res = await fetch(url, { signal: suggAbort.signal });
-          const data = await res.json();
-          const list = (data && data[1]) ? data[1].slice(0,8) : [];
+/* =========================
+   DATA SOURCES
+========================= */
+async function searxSearch(q){
+  const base = (localStorage.getItem(LS_SEARX) || "").trim().replace(/\/$/,"");
+  if(!base) return { ok:false, reason:"SearXNG not configured" };
 
-          suggestions.innerHTML="";
-          list.forEach(text=>{
-            const div = document.createElement("div");
-            div.className="sugg";
-            div.textContent=text;
-            div.addEventListener("mousedown",(e)=>e.preventDefault());
-            div.addEventListener("click", ()=>{
-              qEl.value = text;
-              closeSuggestions();
-              document.getElementById("searchForm").requestSubmit();
-            });
-            suggestions.appendChild(div);
-          });
-          openSuggestions();
-        }catch(e){}
-      }, 120);
+  const target = `${base}/search?q=${encodeURIComponent(q)}&format=json&language=en-US&safesearch=0`;
+
+  try{
+    const data = await fetchJsonViaProxy(target);
+    return { ok:true, data, base };
+  }catch(e){
+    return { ok:false, reason: e?.message || "Proxy failed" };
+  }
+}
+
+async function ddgInstantAnswer(q){
+  const url = "https://api.duckduckgo.com/?q=" + encodeURIComponent(q) + "&format=json&no_html=1&skip_disambig=1";
+  const r = await fetch(url);
+  return r.json();
+}
+
+async function wikiSummary(q){
+  try{
+    const searchUrl = "https://en.wikipedia.org/w/api.php?action=opensearch&search=" +
+      encodeURIComponent(q) + "&limit=1&namespace=0&format=json&origin=*";
+    const s = await fetch(searchUrl).then(r=>r.json());
+    const title = s?.[1]?.[0];
+    if(!title) return null;
+    const sumUrl = "https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(title);
+    const sum = await fetch(sumUrl).then(r=>r.json());
+    if(sum?.type === "disambiguation") return null;
+    return { title: sum?.title, extract: sum?.extract, url: sum?.content_urls?.desktop?.page };
+  }catch{ return null; }
+}
+
+async function nominatimSearch(q, limit=1){
+  const url = "https://nominatim.openstreetmap.org/search?format=json&limit=" + limit + "&q=" + encodeURIComponent(q);
+  const r = await fetch(url);
+  return r.json();
+}
+
+async function openMeteo(lat, lon){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current_weather=true`;
+  const r = await fetch(url);
+  return r.json();
+}
+
+async function overpassPOI(lat, lon, tagPairs, radiusMeters=3500, limit=24){
+  const filter = tagPairs.map(([k,v]) => `["${k}"="${v}"]`).join("");
+  const query = `
+    [out:json][timeout:25];
+    (
+      node${filter}(around:${radiusMeters},${lat},${lon});
+      way${filter}(around:${radiusMeters},${lat},${lon});
+      relation${filter}(around:${radiusMeters},${lat},${lon});
+    );
+    out center;
+  `;
+  const r = await fetch("https://overpass-api.de/api/interpreter", {
+    method:"POST",
+    headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
+    body:"data=" + encodeURIComponent(query)
+  });
+  const data = await r.json();
+  return (data?.elements || []).slice(0, limit);
+}
+
+async function gdeltNews(q){
+  const url = "https://api.gdeltproject.org/api/v2/doc/doc?mode=ArtList&format=json&maxrecords=20&query=" + encodeURIComponent(q);
+  const r = await fetch(url);
+  return r.json();
+}
+
+async function commonsImages(q){
+  const url =
+    "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=imageinfo&iiprop=url|extmetadata&generator=search&gsrnamespace=6&gsrlimit=18&gsrsearch=" +
+    encodeURIComponent(q + " filetype:bitmap");
+  const r = await fetch(url);
+  const data = await r.json();
+  const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+  return pages.map(p=>{
+    const ii = p.imageinfo?.[0];
+    return { title:(p.title||"").replace(/^File:/,"") || "Image", url: ii?.url };
+  }).filter(x=>x.url).slice(0,18);
+}
+
+/* =========================
+   RENDERERS
+========================= */
+function renderChips(q){
+  const chips = buildChips(q);
+  return `
+    <div class="card">
+      <div class="small">Refine this search</div>
+      <div class="chiprow">
+        ${chips.map(c => `<div class="chip" onclick="searchChip('${esc(c).replace(/'/g,"&#039;")}')">${esc(c)}</div>`).join("")}
+      </div>
+    </div>
+  `;
+}
+function searchChip(text){
+  $("q").value = text;
+  runSearch(false);
+}
+
+function renderAboutPanel(wiki, q){
+  if(!wiki) return `
+    <div class="card">
+      <div class="panelTitle">About</div>
+      <div class="small">No summary found for “${esc(q)}”. Try a more specific query.</div>
+    </div>`;
+  return `
+    <div class="card">
+      <div class="panelTitle">About</div>
+      <div style="font-weight:900;font-size:18px;margin-bottom:8px">${esc(wiki.title)}</div>
+      <div class="small">${esc(wiki.extract || "")}</div>
+      ${wiki.url ? `<div class="cite" style="margin-top:10px"><a href="${esc(wiki.url)}" target="_blank" rel="noopener">Wikipedia</a></div>` : ""}
+    </div>`;
+}
+
+function renderWeatherCard(weather, label){
+  const cw = weather?.current_weather;
+  if(!cw) return "";
+  return `
+    <div class="card">
+      <div class="small">Weather</div>
+      <div style="display:flex;gap:16px;align-items:center;margin-top:8px">
+        <div style="font-size:34px;font-weight:950">${Math.round(cw.temperature)}°C</div>
+        <div>
+          <div style="font-weight:900">${esc(label || "Current conditions")}</div>
+          <div class="small">Wind: ${Math.round(cw.windspeed)} km/h • Dir: ${Math.round(cw.winddirection)}°</div>
+        </div>
+      </div>
+      <div class="foot">Data: Open-Meteo</div>
+    </div>`;
+}
+
+function renderWebFromSearx(data, base){
+  const results = (data?.results || []).slice(0, 10);
+  if(!results.length){
+    return `<div class="card"><div class="small">Web</div><div class="snippet">No results returned.</div></div>`;
+  }
+  const list = results.map(r=>{
+    const url = r.url || "";
+    const title = r.title || url;
+    const content = (r.content || "").replace(/<[^>]*>/g,"");
+    const domain = (()=>{ try{ return (new URL(url)).hostname; }catch{return "";} })();
+    return `
+      <div class="result">
+        <div class="cite">${esc(domain ? domain + " • " + url : url)}</div>
+        <h3 class="title"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(title)}</a></h3>
+        <div class="snippet">${esc(content)}</div>
+      </div>`;
+  }).join("");
+  return `
+    <div class="card">
+      <div class="small">Web results • via SearXNG</div>
+      ${list}
+      <div class="foot">Provider: ${esc(base)}</div>
+    </div>`;
+}
+
+function renderWebFallback(ddg, reason){
+  const topics = (ddg?.RelatedTopics || [])
+    .flatMap(x => x.Topics ? x.Topics : [x])
+    .filter(x => x && (x.Text || x.FirstURL))
+    .slice(0, 8);
+
+  const abstract = ddg?.AbstractText ? `
+    <div class="card soft">
+      <div class="small">Quick answer</div>
+      <div style="font-size:16px;margin-top:6px">${esc(ddg.AbstractText)}</div>
+      ${ddg?.AbstractURL ? `<div class="cite"><a href="${esc(ddg.AbstractURL)}" target="_blank" rel="noopener">${esc(ddg.AbstractURL)}</a></div>` : ""}
+    </div>` : "";
+
+  const list = topics.map(t=>{
+    const url = t.FirstURL || "";
+    const title = (t.Text || "").split(" - ")[0] || t.Text || url;
+    const snip = t.Text || "";
+    return `
+      <div class="result">
+        <div class="cite">${esc(url)}</div>
+        <h3 class="title"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(title)}</a></h3>
+        <div class="snippet">${esc(snip)}</div>
+      </div>`;
+  }).join("");
+
+  return `
+    ${abstract}
+    <div class="card">
+      <div class="small">Web results • fallback</div>
+      ${list || `<div class="snippet">No quick results found.</div>`}
+      <div class="foot">Web status: ${esc(reason || "fallback")}. Open Settings (⚙️) to set SearXNG.</div>
+    </div>`;
+}
+
+function renderNews(data, q){
+  const arts = data?.articles || [];
+  if(!arts.length){
+    return `<div class="card"><div class="small">News</div><div class="snippet">No news found for “${esc(q)}”.</div></div>`;
+  }
+  const list = arts.slice(0, 12).map(a=>{
+    const url = a.url || "";
+    const title = a.title || url;
+    const date = a.seendate ? new Date(a.seendate).toLocaleString() : "";
+    const dom = a.domain || "";
+    return `
+      <div class="result">
+        <div class="cite">${esc(dom)}${date ? " • " + esc(date) : ""}</div>
+        <h3 class="title"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(title)}</a></h3>
+        <div class="snippet">via GDELT</div>
+      </div>`;
+  }).join("");
+  return `<div class="card"><div class="small">News • via GDELT</div>${list}</div>`;
+}
+
+function renderImages(imgs, q){
+  if(!imgs?.length){
+    return `<div class="card"><div class="small">Images</div><div class="snippet">No images found for “${esc(q)}”.</div></div>`;
+  }
+  const tiles = imgs.map(img=>`
+    <div class="imgTile">
+      <a href="${esc(img.url)}" target="_blank" rel="noopener">
+        <img src="${esc(img.url)}" alt="${esc(img.title)}">
+      </a>
+      <div class="cap">
+        <div class="t">${esc(img.title)}</div>
+        <div class="s">Wikimedia Commons</div>
+      </div>
+    </div>
+  `).join("");
+  return `<div class="card"><div class="small">Images • via Wikimedia Commons</div><div class="imgGrid">${tiles}</div></div>`;
+}
+
+/* =========================
+   MAP + PLACES
+========================= */
+function clearMap(){
+  if(state.map){
+    state.mapMarkers.forEach(m => m.remove());
+    state.mapMarkers = [];
+  }
+}
+function ensureMap(lat, lon){
+  const mapEl = $("map");
+  if(!mapEl) return;
+  if(!state.map){
+    state.map = L.map(mapEl, { zoomControl:true }).setView([lat, lon], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom:19, attribution:"&copy; OpenStreetMap contributors"
+    }).addTo(state.map);
+  } else {
+    state.map.setView([lat, lon], 13);
+  }
+  clearMap();
+}
+function poiToLatLon(el){
+  if(el.type==="node") return {lat:el.lat, lon:el.lon};
+  if(el.center) return {lat:el.center.lat, lon:el.center.lon};
+  return null;
+}
+function formatAddr(tags){
+  const parts=[];
+  if(tags["addr:housenumber"]) parts.push(tags["addr:housenumber"]);
+  if(tags["addr:street"]) parts.push(tags["addr:street"]);
+  const l1=parts.join(" ");
+  const city=tags["addr:city"]||"";
+  const st=tags["addr:state"]||"";
+  const pc=tags["addr:postcode"]||"";
+  const l2=[city,st,pc].filter(Boolean).join(" ");
+  return [l1,l2].filter(Boolean).join(", ");
+}
+function renderPlacesCard(pois, q, catName, geoLabel){
+  if(!pois?.length){
+    return `
+      <div class="card">
+        <div class="small">Places</div>
+        <div style="font-size:18px;font-weight:950;margin-top:2px">${esc(q)}</div>
+        <div class="snippet" style="margin-top:10px">No places found. Try adding a city or “near me”.</div>
+      </div>`;
+  }
+  const top = pois.slice(0, 6);
+  state.lastPlaces = top;
+
+  const items = top.map((p, idx)=>{
+    const t = p.tags || {};
+    const name = t.name || t.brand || "Place";
+    const addr = formatAddr(t) || geoLabel || "";
+    const kind = catName || t.amenity || t.tourism || t.leisure || "poi";
+    return `
+      <div class="place" onclick="focusPOI(${idx})" data-idx="${idx}">
+        <div class="name">${esc(name)}</div>
+        <div class="addr">${esc(addr)}</div>
+        <div class="tag">${esc(kind)}</div>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="card">
+      <div class="localPackHead">
+        <div>
+          <div class="small">Places</div>
+          <div style="font-size:18px;font-weight:950;margin-top:2px">${esc(q)}</div>
+          <div class="small" style="margin-top:6px">Showing: ${esc(catName || "nearby places")} • Around: ${esc(geoLabel || "your area")}</div>
+        </div>
+        <div class="small">OpenStreetMap</div>
+      </div>
+      <div class="localGrid">${items}</div>
+      <div id="map"></div>
+      <div class="foot">Tip: “coffee near me”, “gas near me”, “concerts near me”, or add a city.</div>
+    </div>`;
+}
+function focusPOI(i){
+  const p = state.lastPlaces?.[i];
+  if(!p || !state.map) return;
+  const ll = poiToLatLon(p);
+  if(!ll) return;
+  state.map.setView([ll.lat, ll.lon], 15);
+
+  document.querySelectorAll(".place").forEach(el => el.style.borderColor = "var(--border)");
+  const el = document.querySelector(`.place[data-idx="${i}"]`);
+  if(el) el.style.borderColor = "color-mix(in oklab, var(--border), var(--accent) 35%)";
+
+  const name = p.tags?.name || p.tags?.brand || "Place";
+  const m = L.marker([ll.lat, ll.lon]).addTo(state.map).bindPopup(esc(name)).openPopup();
+  state.mapMarkers.push(m);
+}
+
+/* =========================
+   SEARCH
+========================= */
+async function resolveGeo(q){
+  const nearMe = /near me/i.test(q);
+  if(nearMe && navigator.geolocation){
+    try{
+      const pos = await new Promise((res, rej)=>navigator.geolocation.getCurrentPosition(res, rej, {timeout:5000}));
+      return { lat: pos.coords.latitude, lon: pos.coords.longitude, label: "Near you" };
+    }catch{
+      // fall through
+    }
+  }
+  const guess = q
+    .replace(/near me/ig,"")
+    .replace(/restaurants?|coffee|cafe|bars?|gas|library|weather|forecast|concerts?|live music/ig,"")
+    .trim() || q;
+
+  const found = await nominatimSearch(guess, 1);
+  const p0 = found?.[0];
+  if(p0?.lat && p0?.lon){
+    return { lat:Number(p0.lat), lon:Number(p0.lon), label:p0.display_name };
+  }
+  return null;
+}
+
+async function runSearch(fromHome=false, justRerender=false){
+  const box = fromHome ? $("qHome") : $("q");
+  const q = (box.value || "").trim();
+  if(!q) return;
+
+  if(!justRerender){
+    history.pushState({}, "", `?q=${encodeURIComponent(q)}`);
+    state.lastQuery = q;
+  }
+
+  goResults();
+  $("q").value = q;
+
+  $("left").innerHTML = `<div class="card"><span class="loader"></span> Loading…</div>`;
+  $("right").innerHTML = "";
+
+  const started = performance.now();
+  const tab = state.tab;
+
+  const intentLocal = (tab==="places") || (tab==="all" && looksLocal(q));
+  const intentWeather = (tab==="weather") || (tab==="all" && looksWeather(q));
+  const intentImages = (tab==="images");
+  const intentNews = (tab==="news");
+  const intentAbout = (tab==="about");
+
+  // Always fetch these (fast + helps right rail)
+  const jobs = [ wikiSummary(q), ddgInstantAnswer(q) ];
+
+  // Web results only for tabs that show web
+  const webWanted = (tab==="all" || tab==="about" || tab==="weather" || tab==="places");
+  const searxJob = webWanted ? searxSearch(q) : Promise.resolve({ok:false, reason:"Web not shown on this tab"});
+  jobs.push(searxJob);
+
+  const imgsJob = intentImages ? commonsImages(q) : Promise.resolve(null);
+  const newsJob = intentNews ? gdeltNews(q) : Promise.resolve(null);
+  jobs.push(imgsJob, newsJob);
+
+  let [wiki, ddg, searxRes, imgs, news] = await Promise.all(jobs);
+
+  // Geo-dependent
+  let geo = null;
+  let weather = null;
+  let pois = null;
+  let cat = CATS.find(c => c.keys.some(rx => rx.test(q))) || null;
+
+  if(intentLocal || intentWeather){
+    geo = await resolveGeo(q);
+    if(geo) state.lastGeo = geo;
+  }
+
+  if(intentWeather){
+    const g = geo || state.lastGeo;
+    if(g) weather = await openMeteo(g.lat, g.lon);
+  }
+
+  if(intentLocal){
+    const g = geo || state.lastGeo;
+    if(g){
+      const tags = cat ? cat.tags : [["amenity","restaurant"],["amenity","cafe"],["amenity","bar"],["amenity","library"]];
+      pois = await overpassPOI(g.lat, g.lon, tags, 3500, 24);
+    }
+  }
+
+  const ms = Math.round(performance.now() - started);
+  const webStatus = searxRes?.ok ? "ON" : (searxRes?.reason || "OFF");
+  $("meta").textContent = `Results for “${q}” • ${ms} ms • Web: ${webStatus}`;
+
+  // Right rail
+  let rightHTML = "";
+  if((tab==="all" || tab==="weather") && weather) rightHTML += renderWeatherCard(weather, geo?.label || "Current weather");
+  rightHTML += renderAboutPanel(wiki, q);
+  $("right").innerHTML = rightHTML;
+
+  // Left
+  let leftHTML = "";
+  if(tab==="images"){
+    leftHTML = renderImages(imgs, q);
+  } else if(tab==="news"){
+    leftHTML = renderNews(news, q);
+  } else if(tab==="places"){
+    if(geo) leftHTML = renderPlacesCard(pois, q, cat?.name || "Places", geo.label);
+    else leftHTML = `<div class="card"><div class="small">Places</div><div class="snippet">Could not find a location. Try adding a city or “near me”.</div></div>`;
+  } else if(tab==="weather"){
+    leftHTML = (weather ? renderWeatherCard(weather, geo?.label || "Current weather")
+                        : `<div class="card"><div class="small">Weather</div><div class="snippet">No weather location found. Try “weather Dallas”.</div></div>`);
+    leftHTML += renderChips(q);
+    leftHTML += (searxRes.ok ? renderWebFromSearx(searxRes.data, searxRes.base) : renderWebFallback(ddg, searxRes.reason));
+  } else if(tab==="about"){
+    leftHTML = `<div class="card soft"><div class="small">About</div><div class="snippet">See the panel on the right. Use Images/News for more.</div></div>`;
+    leftHTML += (searxRes.ok ? renderWebFromSearx(searxRes.data, searxRes.base) : renderWebFallback(ddg, searxRes.reason));
+  } else {
+    // All
+    leftHTML += renderChips(q);
+    if(intentLocal && geo) leftHTML += renderPlacesCard(pois, q, cat?.name || "Places", geo.label);
+    leftHTML += (searxRes.ok ? renderWebFromSearx(searxRes.data, searxRes.base) : renderWebFallback(ddg, searxRes.reason));
+    if(intentWeather && weather) leftHTML = renderWeatherCard(weather, geo?.label || "Current weather") + leftHTML;
+  }
+
+  $("left").innerHTML = leftHTML;
+
+  // Map init
+  if((intentLocal || tab==="places") && geo && $("map")){
+    ensureMap(geo.lat, geo.lon);
+    (state.lastPlaces || []).slice(0,8).forEach((p, idx)=>{
+      const ll = poiToLatLon(p);
+      if(!ll) return;
+      const name = p.tags?.name || p.tags?.brand || "Place";
+      const m = L.marker([ll.lat, ll.lon]).addTo(state.map).bindPopup(esc(name));
+      state.mapMarkers.push(m);
+      if(idx===0) m.openPopup();
     });
-
-    document.addEventListener("click",(e)=>{
-      if(!document.querySelector(".search-area").contains(e.target)) closeSuggestions();
-    });
-    qEl.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSuggestions(); });
-
-    /*****************
-     * CSE RENDER
-     *****************/
-    window.__gcse = {
-      callback: function(){
-        try{
-          google.search.cse.element.render({
-            div: "cse-results",
-            tag: "searchresults-only",
-            attributes: { queryParameterName: "q" }
-          });
-        }catch(e){}
-      }
-    };
-    (function loadCSE(){
-      const s = document.createElement("script");
-      s.async = true;
-      s.src = "https://cse.google.com/cse.js?cx=" + encodeURIComponent(CX);
-      document.head.appendChild(s);
-    })();
-
-    /*****************
-     * SPAM FILTER (web results)
-     *****************/
-    function filterResults(){
-      document.querySelectorAll(".gsc-webResult.gsc-result, .gsc-result").forEach(el=>{
-        const a = el.querySelector("a");
-        if(!a || !a.href) return;
-        const href = a.href.toLowerCase();
-        if(BLOCKED_DOMAINS.some(d => href.includes(d))) el.style.display="none";
-      });
-    }
-    new MutationObserver(()=>filterResults()).observe(document.documentElement,{childList:true,subtree:true});
-
-    /*****************
-     * CLEAN #gsc HASH
-     *****************/
-    (function cleanGscHash(){
-      const strip = () => {
-        if (location.hash && location.hash.startsWith("#gsc.")) {
-          history.replaceState({}, "", location.pathname + location.search);
-        }
-      };
-      window.addEventListener("hashchange", strip);
-      strip();
-    })();
-
-    /*****************
-     * WEATHER (Open-Meteo + Nominatim) + hourly + humidity + precip prob
-     *****************/
-    const weatherModule = document.getElementById("weatherModule");
-    const wxLoc = document.getElementById("wxLoc");
-    const wxDesc = document.getElementById("wxDesc");
-    const wxTemp = document.getElementById("wxTemp");
-    const wxMeta = document.getElementById("wxMeta");
-    const wxForecast = document.getElementById("wxForecast");
-    const wxStatus = document.getElementById("wxStatus");
-    const wxOpen = document.getElementById("wxOpen");
-    const wxHourly = document.getElementById("wxHourly");
-
-    function isWeatherQuery(q){
-      return /\b(weather|forecast)\b/i.test(q);
-    }
-    function parseWeatherPlace(q){
-      let s = q.trim();
-      s = s.replace(/^\s*(weather|forecast)\s*/i, "");
-      s = s.replace(/^\s*(in|for|at)\s+/i, "");
-      return s.trim();
-    }
-
-    function wxCodeToText(code){
-      const map = new Map([
-        [0,"Clear sky"],[1,"Mainly clear"],[2,"Partly cloudy"],[3,"Overcast"],
-        [45,"Fog"],[48,"Rime fog"],
-        [51,"Light drizzle"],[53,"Moderate drizzle"],[55,"Dense drizzle"],
-        [56,"Freezing drizzle"],[57,"Dense freezing drizzle"],
-        [61,"Slight rain"],[63,"Moderate rain"],[65,"Heavy rain"],
-        [66,"Freezing rain"],[67,"Heavy freezing rain"],
-        [71,"Slight snow"],[73,"Moderate snow"],[75,"Heavy snow"],
-        [77,"Snow grains"],
-        [80,"Rain showers"],[81,"Heavy showers"],[82,"Violent showers"],
-        [85,"Snow showers"],[86,"Heavy snow showers"],
-        [95,"Thunderstorm"],[96,"Thunderstorm w/ hail"],[99,"Thunderstorm w/ heavy hail"]
-      ]);
-      return map.get(code) || "Weather";
-    }
-    function codeToEmoji(code){
-      if(code === 0) return "☀️";
-      if(code >= 1 && code <= 3) return "⛅";
-      if(code === 45 || code === 48) return "🌫️";
-      if((code >= 51 && code <= 57) || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "🌧️";
-      if((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "🌨️";
-      if(code >= 95) return "⛈️";
-      return "🌡️";
-    }
-    function chip(label, value){
-      const span = document.createElement("span");
-      span.className = "wxchip";
-      span.textContent = `${label}: ${value}`;
-      return span;
-    }
-    function fmtDay(isoDate){
-      try{
-        const d = new Date(isoDate + "T00:00:00");
-        return d.toLocaleDateString(undefined, { weekday: "short" });
-      }catch{ return isoDate; }
-    }
-    function fmtHour(isoDT){
-      try{
-        const d = new Date(isoDT);
-        return d.toLocaleTimeString(undefined, { hour: "numeric" });
-      }catch{ return isoDT; }
-    }
-    async function geocodePlace(place){
-      const url = new URL("https://nominatim.openstreetmap.org/search");
-      url.searchParams.set("q", place);
-      url.searchParams.set("format", "json");
-      url.searchParams.set("limit", "1");
-      url.searchParams.set("addressdetails", "1");
-      const res = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
-      if(!res.ok) throw new Error("Geocode failed");
-      const data = await res.json();
-      if(!Array.isArray(data) || !data.length) throw new Error("No geocode results");
-      return { lat: Number(data[0].lat), lon: Number(data[0].lon), label: data[0].display_name };
-    }
-    async function getBrowserLocation(){
-      return new Promise((resolve, reject)=>{
-        if(!navigator.geolocation) return reject(new Error("No geolocation"));
-        navigator.geolocation.getCurrentPosition(
-          (pos)=>resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, label: "Your location" }),
-          (err)=>reject(err),
-          { enableHighAccuracy:false, timeout:8000 }
-        );
-      });
-    }
-    async function fetchWeather(lat, lon){
-      const url = new URL("https://api.open-meteo.com/v1/forecast");
-      url.searchParams.set("latitude", lat);
-      url.searchParams.set("longitude", lon);
-      url.searchParams.set("current", "temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m");
-      url.searchParams.set("hourly", "temperature_2m,weather_code,precipitation_probability");
-      url.searchParams.set("daily", "weather_code,temperature_2m_max,temperature_2m_min");
-      url.searchParams.set("temperature_unit", "fahrenheit");
-      url.searchParams.set("wind_speed_unit", "mph");
-      url.searchParams.set("timezone", "auto");
-      url.searchParams.set("forecast_days", "3");
-      const res = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
-      if(!res.ok) throw new Error("Weather fetch failed");
-      return await res.json();
-    }
-
-    async function renderWeatherForQuery(fullQuery){
-      if(!isWeatherQuery(fullQuery)) { weatherModule.classList.remove("show"); return; }
-
-      weatherModule.classList.add("show");
-      wxStatus.textContent = "Loading weather…";
-      wxForecast.innerHTML = "";
-      wxMeta.innerHTML = "";
-      wxHourly.innerHTML = "";
-      wxTemp.textContent = "—";
-      wxDesc.textContent = "—";
-      wxLoc.textContent = "—";
-      wxOpen.href = "https://www.google.com/search?q=" + encodeURIComponent(fullQuery);
-
-      const placeRaw = parseWeatherPlace(fullQuery);
-      let loc;
-
-      try{
-        if(/\bnear me\b/i.test(fullQuery) || !placeRaw || placeRaw.toLowerCase()==="near me" || placeRaw.toLowerCase()==="nearby"){
-          loc = await getBrowserLocation();
-        } else {
-          loc = await geocodePlace(placeRaw);
-        }
-      }catch{
-        wxStatus.textContent = "Couldn’t determine location for this weather search.";
-        return;
-      }
-
-      wxLoc.textContent = loc.label;
-
-      try{
-        const wx = await fetchWeather(loc.lat, loc.lon);
-
-        const cur = wx.current || {};
-        wxDesc.textContent = `${codeToEmoji(cur.weather_code)} ${wxCodeToText(cur.weather_code)}`;
-        wxTemp.textContent = (typeof cur.temperature_2m === "number") ? `${Math.round(cur.temperature_2m)}°F` : "—";
-
-        if(typeof cur.apparent_temperature === "number") wxMeta.appendChild(chip("Feels like", `${Math.round(cur.apparent_temperature)}°F`));
-        if(typeof cur.wind_speed_10m === "number") wxMeta.appendChild(chip("Wind", `${Math.round(cur.wind_speed_10m)} mph`));
-        if(typeof cur.relative_humidity_2m === "number") wxMeta.appendChild(chip("Humidity", `${Math.round(cur.relative_humidity_2m)}%`));
-
-        // Hourly strip
-        const h = wx.hourly || {};
-        const times = h.time || [];
-        const temps = h.temperature_2m || [];
-        const codes = h.weather_code || [];
-        const pops  = h.precipitation_probability || [];
-
-        const now = new Date();
-        let startIdx = 0;
-        for(let i=0;i<times.length;i++){
-          const dt = new Date(times[i]);
-          if(dt >= now){ startIdx = i; break; }
-        }
-        if(typeof pops[startIdx] === "number"){
-          wxMeta.appendChild(chip("Precip", `${Math.round(pops[startIdx])}%`));
-        }
-
-        for(let i=startIdx;i<Math.min(times.length, startIdx + 12);i++){
-          const box = document.createElement("div");
-          box.className = "hour";
-          const t = fmtHour(times[i]);
-          const temp = (typeof temps[i] === "number") ? `${Math.round(temps[i])}°` : "—";
-          const ico = codeToEmoji(codes[i]);
-          const pop = (typeof pops[i] === "number") ? `${Math.round(pops[i])}%` : "—";
-          box.innerHTML = `
-            <div class="t">${t}</div>
-            <div class="icon">${ico}</div>
-            <div class="temp">${temp}</div>
-            <div class="pop">💧 ${pop}</div>
-          `;
-          wxHourly.appendChild(box);
-        }
-
-        // Daily forecast
-        const daily = wx.daily || {};
-        const days = daily.time || [];
-        const maxs = daily.temperature_2m_max || [];
-        const mins = daily.temperature_2m_min || [];
-        const dcodes = daily.weather_code || [];
-
-        for(let i=0;i<Math.min(3, days.length);i++){
-          const row = document.createElement("div");
-          row.className = "forecast-row";
-          const emo = codeToEmoji(dcodes[i]);
-          const hi = (typeof maxs[i] === "number") ? `${Math.round(maxs[i])}°` : "—";
-          const lo = (typeof mins[i] === "number") ? `${Math.round(mins[i])}°` : "—";
-          row.innerHTML = `
-            <div class="fmuted">${fmtDay(days[i])}</div>
-            <div>${emo} <span class="fmuted">${wxCodeToText(dcodes[i])}</span></div>
-            <div><strong>${hi}</strong> <span class="fmuted">/ ${lo}</span></div>
-          `;
-          wxForecast.appendChild(row);
-        }
-
-        wxStatus.textContent = "";
-      }catch{
-        wxStatus.textContent = "Couldn’t load weather right now.";
-      }
-    }
-
-    /*****************
-     * LOCAL SEARCH (Leaflet + Overpass) keyword detection
-     *****************/
-    const localModule = document.getElementById("localModule");
-    const localTitle = document.getElementById("localTitle");
-    const localStatus = document.getElementById("localStatus");
-    const placesList = document.getElementById("placesList");
-    const useMyLocationBtn = document.getElementById("useMyLocationBtn");
-    const openMapsBtn = document.getElementById("openMapsBtn");
-
-    let leafletMap = null;
-    let markersLayer = null;
-
-    function isNearMeQuery(q){
-      return /\bnear me\b/i.test(q) || /\bnearby\b/i.test(q);
-    }
-
-    // Detect what the user is trying to find (extend whenever you want)
-    function detectLocalIntent(q){
-      const s = q.toLowerCase();
-
-      // Order matters (more specific first)
-      const rules = [
-        { key: "gas", label: "Gas stations", tags: ['amenity=fuel'] },
-        { key: "grocery", label: "Grocery stores", tags: ['shop=supermarket'] },
-        { key: "pharmacy", label: "Pharmacies", tags: ['amenity=pharmacy'] },
-        { key: "hotel", label: "Hotels", tags: ['tourism=hotel'] },
-        { key: "bar", label: "Bars", tags: ['amenity=bar'] },
-        { key: "coffee", label: "Coffee", tags: ['amenity=cafe'] },
-        { key: "cafe", label: "Cafes", tags: ['amenity=cafe'] },
-        { key: "library", label: "Libraries", tags: ['amenity=library'] },
-        { key: "restaurant", label: "Restaurants", tags: ['amenity=restaurant'] },
-        { key: "pizza", label: "Pizza", tags: ['amenity=restaurant','cuisine=pizza'] },
-        { key: "burger", label: "Burgers", tags: ['amenity=restaurant','cuisine=burger'] },
-        { key: "tacos", label: "Tacos", tags: ['amenity=restaurant','cuisine=mexican'] },
-        { key: "food", label: "Food", tags: ['amenity=restaurant'] },
-      ];
-
-      // Trigger local pack if query contains any local intent keyword
-      for(const r of rules){
-        if(s.includes(r.key)) return r;
-      }
-      return null;
-    }
-
-    function stripIntentAndLocationWords(q, intentKey){
-      // Try to leave a place name for geocoding when NOT "near me"
-      // Examples:
-      // "restaurants in chicago" -> "chicago"
-      // "coffee dallas tx" -> "dallas tx"
-      let s = q.toLowerCase();
-
-      // remove "near me/nearby"
-      s = s.replace(/\bnear me\b/g, "").replace(/\bnearby\b/g, "");
-
-      // remove intent keyword(s)
-      if(intentKey) s = s.replace(new RegExp("\\b" + intentKey + "s?\\b","g"), "");
-
-      // remove generic words
-      s = s.replace(/\b(best|top|good|open|now|closest|cheap|near|around|find|show|places|place)\b/g, "");
-      s = s.replace(/\b(in|at|for|by)\b/g, " ");
-
-      // collapse
-      s = s.replace(/\s+/g, " ").trim();
-      return s;
-    }
-
-    function ensureLeafletReady(){
-      return !!window.L;
-    }
-
-    function resetMap(){
-      const el = document.getElementById("localMap");
-      el.innerHTML = ""; // hard reset container
-      leafletMap = null;
-      markersLayer = null;
-    }
-
-    function initMap(lat, lon, zoom=14){
-      if(!ensureLeafletReady()){
-        localStatus.textContent = "Map library failed to load.";
-        return null;
-      }
-
-      resetMap();
-      leafletMap = L.map("localMap").setView([lat, lon], zoom);
-
-      L.tileLayer(OSM_TILES, {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(leafletMap);
-
-      markersLayer = L.layerGroup().addTo(leafletMap);
-      return leafletMap;
-    }
-
-    function setLocalVisible(on){
-      localModule.classList.toggle("show", !!on);
-    }
-
-    function osmLink(lat, lon, zoom=16){
-      return `https://www.openstreetmap.org/#map=${zoom}/${lat}/${lon}`;
-    }
-
-    async function tryOverpassFetch(postBody){
-      for(const endpoint of OVERPASS_ENDPOINTS){
-        try{
-          const res = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-            body: "data=" + encodeURIComponent(postBody)
-          });
-          if(!res.ok) throw new Error("Overpass HTTP " + res.status);
-          return await res.json();
-        }catch(e){
-          // try next endpoint
-        }
-      }
-      throw new Error("All Overpass endpoints failed");
-    }
-
-    function elementLatLon(el){
-      if(typeof el.lat === "number" && typeof el.lon === "number") return { lat: el.lat, lon: el.lon };
-      if(el.center && typeof el.center.lat === "number" && typeof el.center.lon === "number") return { lat: el.center.lat, lon: el.center.lon };
-      return null;
-    }
-
-    function tag(el, key){
-      return (el.tags && el.tags[key]) ? el.tags[key] : "";
-    }
-
-    function formatAddress(el){
-      const hn = tag(el, "addr:housenumber");
-      const st = tag(el, "addr:street");
-      const city = tag(el, "addr:city");
-      const parts = [];
-      const line1 = [hn, st].filter(Boolean).join(" ");
-      if(line1) parts.push(line1);
-      if(city) parts.push(city);
-      return parts.join(", ");
-    }
-
-    function badgesFor(el){
-      const out = [];
-      const cuisine = tag(el, "cuisine");
-      const brand = tag(el, "brand");
-      const fuel = tag(el, "fuel");
-      const shop = tag(el, "shop");
-      const amenity = tag(el, "amenity");
-      if(cuisine) out.push("Cuisine: " + cuisine);
-      if(brand) out.push(brand);
-      if(fuel) out.push("Fuel: " + fuel);
-      if(shop) out.push("Shop: " + shop);
-      if(amenity) out.push("Amenity: " + amenity);
-      return out.slice(0, 3);
-    }
-
-    async function renderLocalPack({ query, intent, center, centerLabel }){
-      setLocalVisible(true);
-      localTitle.textContent = `${intent.label}${centerLabel ? " — " + centerLabel : ""}`;
-      localStatus.textContent = "Loading nearby results from OpenStreetMap…";
-      placesList.innerHTML = "";
-
-      const map = initMap(center.lat, center.lon, 14);
-      if(!map) return;
-
-      openMapsBtn.href = osmLink(center.lat, center.lon, 15);
-
-      // You marker (if this is "my location")
-      if(centerLabel === "Your location"){
-        L.marker([center.lat, center.lon]).addTo(map).bindPopup("You are here").openPopup();
-      }
-
-      // Overpass query:
-      // Use nwr (node/way/relation) with around radius
-      const R = 3000;
-      const filters = intent.tags
-        .map(kv => {
-          const [k,v] = kv.split("=");
-          return `["${k}"="${v}"]`;
-        })
-        .join("");
-
-      const ql = `
-        [out:json][timeout:25];
-        (
-          node${filters}(around:${R},${center.lat},${center.lon});
-          way${filters}(around:${R},${center.lat},${center.lon});
-          relation${filters}(around:${R},${center.lat},${center.lon});
-        );
-        out center tags 30;
-      `.trim();
-
-      let data;
-      try{
-        data = await tryOverpassFetch(ql);
-      }catch(e){
-        localStatus.textContent = "Overpass is busy right now — try again in a minute.";
-        return;
-      }
-
-      const items = (data.elements || [])
-        .map(el => ({ el, ll: elementLatLon(el) }))
-        .filter(x => x.ll && tag(x.el,"name"))
-        .slice(0, 30);
-
-      if(!items.length){
-        localStatus.textContent = "No nearby results found in OpenStreetMap data for that query.";
-        return;
-      }
-
-      localStatus.textContent = `Showing ${items.length} results nearby`;
-
-      // Markers + list
-      const bounds = [];
-      items.forEach((item, idx) => {
-        const name = tag(item.el, "name");
-        const addr = formatAddress(item.el);
-        const website = tag(item.el, "website") || tag(item.el,"contact:website");
-
-        const m = L.marker([item.ll.lat, item.ll.lon]).addTo(markersLayer);
-        m.bindPopup(`
-          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;max-width:260px">
-            <div style="font-weight:700;margin-bottom:4px">${name}</div>
-            <div style="color:#5f6368">${addr || ""}</div>
-            ${website ? `<div style="margin-top:6px"><a href="${website}" target="_blank" rel="noopener">Website</a></div>` : ""}
-          </div>
-        `);
-
-        bounds.push([item.ll.lat, item.ll.lon]);
-
-        const card = document.createElement("div");
-        card.className = "placeCard";
-        const badgeHtml = badgesFor(item.el).map(b => `<span class="badge">${b}</span>`).join("");
-        card.innerHTML = `
-          <div class="placeName">${idx+1}. ${name}</div>
-          <div class="placeMeta">${addr || "—"}</div>
-          <div>${badgeHtml}</div>
-        `;
-        card.addEventListener("click", ()=>{
-          map.setView([item.ll.lat, item.ll.lon], 16);
-          m.openPopup();
-        });
-        placesList.appendChild(card);
-      });
-
-      // Fit view
-      try{
-        if(bounds.length){
-          map.fitBounds(bounds, { padding: [30,30] });
-        }
-      }catch{}
-    }
-
-    async function resolveLocalCenter(query, intent){
-      // If near me/nearby => use geolocation
-      if(isNearMeQuery(query)){
-        const loc = await getBrowserLocation();
-        return { center: { lat: loc.lat, lon: loc.lon }, label: "Your location" };
-      }
-
-      // Otherwise attempt to geocode a place in the query
-      const maybePlace = stripIntentAndLocationWords(query, intent.key);
-      if(maybePlace){
-        try{
-          const g = await geocodePlace(maybePlace);
-          return { center: { lat: g.lat, lon: g.lon }, label: maybePlace };
-        }catch{}
-      }
-
-      // If no place parsed, we’ll require location permission
-      const loc = await getBrowserLocation();
-      return { center: { lat: loc.lat, lon: loc.lon }, label: "Your location" };
-    }
-
-    async function maybeShowLocalPack(query){
-      const intent = detectLocalIntent(query);
-      if(!intent){ setLocalVisible(false); return; }
-
-      // stash key so we can retry via the button
-      maybeShowLocalPack.lastIntent = intent;
-      maybeShowLocalPack.lastQuery = query;
-
-      setLocalVisible(true);
-      localTitle.textContent = intent.label;
-      localStatus.textContent = "Preparing map…";
-      placesList.innerHTML = "";
-
-      // Handle missing Leaflet (rare)
-      if(!ensureLeafletReady()){
-        localStatus.textContent = "Map library failed to load.";
-        return;
-      }
-
-      try{
-        const resolved = await resolveLocalCenter(query, intent);
-        await renderLocalPack({
-          query,
-          intent,
-          center: resolved.center,
-          centerLabel: resolved.label
-        });
-      }catch(e){
-        localStatus.textContent = "Location permission denied — click “Use my location” to try again.";
-      }
-    }
-
-    useMyLocationBtn.addEventListener("click", async ()=>{
-      const q = maybeShowLocalPack.lastQuery || queryFromUrl || "";
-      const intent = maybeShowLocalPack.lastIntent || detectLocalIntent(q);
-      if(!intent){ localStatus.textContent = "No local query detected."; return; }
-      try{
-        const loc = await getBrowserLocation();
-        await renderLocalPack({
-          query: q,
-          intent,
-          center: { lat: loc.lat, lon: loc.lon },
-          centerLabel: "Your location"
-        });
-      }catch{
-        localStatus.textContent = "Location permission denied.";
-      }
-    });
-
-    /*****************
-     * INIT: run modules for current query
-     *****************/
-    (function init(){
-      if(!queryFromUrl) return;
-
-      // Weather module only if query includes "weather"/"forecast"
-      renderWeatherForQuery(queryFromUrl);
-
-      // Local module only if local intent detected
-      // (restaurants/coffee/gas/library/etc.)
-      // Wait a tick for Leaflet (defer) to be ready on slower devices
-      setTimeout(()=>maybeShowLocalPack(queryFromUrl), 0);
-    })();
-  </script>
+  } else {
+    state.map = null;
+    state.mapMarkers = [];
+  }
+}
+
+/* =========================
+   INIT
+========================= */
+function initFromURL(){
+  const params = new URLSearchParams(location.search);
+  const q = params.get("q");
+  if(q){
+    $("q").value = q;
+    $("qHome").value = q;
+    goResults();
+    runSearch(true);
+  }else{
+    goHome();
+  }
+}
+window.addEventListener("popstate", initFromURL);
+
+// Suggestions + enter key
+wireSuggest("qHome", "suggestHome");
+wireSuggest("q", "suggest");
+$("qHome").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearch(true); });
+$("q").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearch(false); });
+
+// Load theme + default searx (optional)
+loadTheme();
+if(!localStorage.getItem(LS_SEARX)){
+  // You can remove this line if you prefer it blank by default.
+  localStorage.setItem(LS_SEARX, "https://searx.tiekoetter.com");
+}
+initFromURL();
+</script>
 </body>
 </html>
