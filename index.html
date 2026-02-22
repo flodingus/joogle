@@ -11,7 +11,7 @@
 <style>
 body{margin:0;font-family:Arial;background:#fff;color:#202124}
 .center{display:grid;place-items:center;min-height:75vh}
-.logo{font-size:70px;font-weight:bold}
+.logo{font-size:70px;font-weight:bold;cursor:pointer}
 .logo span:nth-child(1){color:#4285F4}
 .logo span:nth-child(2){color:#DB4437}
 .logo span:nth-child(3){color:#F4B400}
@@ -19,9 +19,11 @@ body{margin:0;font-family:Arial;background:#fff;color:#202124}
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
 .search{width:600px;max-width:90%;padding:12px 20px;border-radius:999px;border:1px solid #dadce0;font-size:16px}
-.results{max-width:900px;margin:20px auto;padding:0 16px}
-.card{border:1px solid #dadce0;border-radius:12px;padding:12px;margin-bottom:10px}
-#map{height:300px;border-radius:12px;margin-top:12px}
+.results{max-width:1000px;margin:20px auto;padding:0 16px}
+.card{border:1px solid #dadce0;border-radius:12px;padding:12px;margin-bottom:10px;cursor:pointer}
+.card:hover{background:#f8f9fa}
+.meta{font-size:12px;color:#5f6368}
+#map{height:320px;border-radius:12px;margin-top:12px}
 .error{color:red;font-weight:bold}
 </style>
 </head>
@@ -30,7 +32,7 @@ body{margin:0;font-family:Arial;background:#fff;color:#202124}
 
 <div class="center" id="home">
   <div>
-    <div class="logo">
+    <div class="logo" onclick="goHome()">
       <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
     </div>
     <input id="searchInput" class="search" placeholder="Search Joogle...">
@@ -41,11 +43,20 @@ body{margin:0;font-family:Arial;background:#fff;color:#202124}
 
 <script>
 const API = "https://api.joogle.pro";
+
 const input = document.getElementById("searchInput");
 const resultsDiv = document.getElementById("results");
 const home = document.getElementById("home");
 
 let map = null;
+let userLat = null;
+let userLon = null;
+let timer = null;
+
+function goHome(){
+  resultsDiv.style.display="none";
+  home.style.display="grid";
+}
 
 function showResults(){
   home.style.display="none";
@@ -60,20 +71,29 @@ async function fetchJSON(url){
   return res.json();
 }
 
+function haversine(a,b,c,d){
+  const R=3958.8;
+  const toRad=x=>x*Math.PI/180;
+  const dLat=toRad(c-a), dLon=toRad(d-b);
+  const x=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
 async function runSearch(query){
   if(!query) return;
 
   showResults();
-
   resultsDiv.innerHTML = "Searching...";
 
   try{
-    const geo = await fetchJSON(API + "/geo");
-    const lat = geo.geo.latitude;
-    const lon = geo.geo.longitude;
+    if(!userLat || !userLon){
+      const geo = await fetchJSON(API + "/geo");
+      userLat = geo.geo.latitude;
+      userLon = geo.geo.longitude;
+    }
 
     const places = await fetchJSON(
-      API + `/places?cat=restaurant&lat=${lat}&lon=${lon}`
+      API + `/places?query=${encodeURIComponent(query)}&lat=${userLat}&lon=${userLon}`
     );
 
     if(!places.items || places.items.length === 0){
@@ -81,13 +101,21 @@ async function runSearch(query){
       return;
     }
 
+    // Sort by distance
+    places.items.sort((a,b)=>{
+      return haversine(userLat,userLon,a.lat,a.lon) -
+             haversine(userLat,userLon,b.lat,b.lon);
+    });
+
     let html = "";
 
-    places.items.slice(0,10).forEach(p=>{
+    places.items.slice(0,15).forEach(p=>{
+      const distance = haversine(userLat,userLon,p.lat,p.lon).toFixed(1);
       html += `
         <div class="card">
           <b>${p.name || "Business"}</b><br>
-          ${p.address?.street || ""} ${p.address?.city || ""}
+          <span class="meta">${p.address?.street || ""} ${p.address?.city || ""}</span><br>
+          <span class="meta">${distance} mi away</span>
         </div>
       `;
     });
@@ -97,12 +125,23 @@ async function runSearch(query){
     resultsDiv.innerHTML = html;
 
     if(!map){
-      map = L.map("map").setView([lat,lon],13);
+      map = L.map("map").setView([userLat,userLon],13);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
         maxZoom:19
       }).addTo(map);
+    } else {
+      map.setView([userLat,userLon],13);
     }
 
+    // Clear old markers
+    map.eachLayer(layer=>{
+      if(layer instanceof L.Marker) map.removeLayer(layer);
+    });
+
+    // User marker
+    L.marker([userLat,userLon]).addTo(map);
+
+    // Place markers
     places.items.slice(0,20).forEach(p=>{
       if(p.lat && p.lon){
         L.marker([p.lat,p.lon]).addTo(map);
@@ -114,15 +153,14 @@ async function runSearch(query){
   }
 }
 
-// ENTER key
+// ENTER support
 input.addEventListener("keydown", e=>{
   if(e.key === "Enter"){
     runSearch(input.value);
   }
 });
 
-// Instant typing
-let timer=null;
+// Instant typing search
 input.addEventListener("input", e=>{
   clearTimeout(timer);
   timer = setTimeout(()=>{
