@@ -11,23 +11,20 @@ body{
   font-family:Arial,Helvetica,sans-serif;
   background:#fff;
   color:#202124;
-  display:flex;
-  flex-direction:column;
-  min-height:100vh;
 }
 
-.center{
+.header{
   display:flex;
-  flex-direction:column;
   align-items:center;
-  justify-content:center;
-  flex:1;
+  gap:20px;
+  padding:15px 20px;
+  border-bottom:1px solid #dadce0;
 }
 
 .logo{
-  font-size:80px;
+  font-size:28px;
   font-weight:bold;
-  margin-bottom:20px;
+  cursor:pointer;
 }
 
 .logo span:nth-child(1){color:#4285F4}
@@ -38,82 +35,94 @@ body{
 .logo span:nth-child(6){color:#DB4437}
 
 .search{
-  width:600px;
-  max-width:90%;
-  padding:14px 20px;
-  font-size:16px;
+  flex:1;
+  max-width:600px;
+  padding:10px 20px;
+  font-size:15px;
   border:1px solid #dadce0;
   border-radius:999px;
   outline:none;
 }
 
-.search:focus{
-  box-shadow:0 0 0 2px rgba(66,133,244,.3);
+.center{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  height:70vh;
 }
 
-.buttons{
-  margin-top:20px;
+.homeLogo{
+  font-size:80px;
+  font-weight:bold;
+  margin-bottom:20px;
 }
 
-button{
-  margin:0 6px;
-  padding:10px 18px;
-  border:1px solid #dadce0;
-  background:#f8f9fa;
-  border-radius:4px;
-  cursor:pointer;
-}
+.homeLogo span:nth-child(1){color:#4285F4}
+.homeLogo span:nth-child(2){color:#DB4437}
+.homeLogo span:nth-child(3){color:#F4B400}
+.homeLogo span:nth-child(4){color:#4285F4}
+.homeLogo span:nth-child(5){color:#0F9D58}
+.homeLogo span:nth-child(6){color:#DB4437}
 
-button:hover{
-  background:#f1f3f4;
-}
-footer{
-  text-align:center;
+#results{
   padding:20px;
-  font-size:12px;
-  color:#5f6368;
 }
 </style>
 </head>
 
 <body>
 
-<div class="center">
-
-  <div class="logo">
+<div class="header" id="header" style="display:none;">
+  <div class="logo" onclick="goHome()">
     <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
-
-  <form id="searchForm">
-    <input id="searchInput" class="search" type="text" placeholder="Search Joogle..." autocomplete="off">
-  </form>
-
-  <div class="buttons">
-    <button onclick="doSearch()">Joogle Search</button>
-    <button onclick="doSearch(true)">I'm Feeling Lucky</button>
-  </div>
-
+  <input id="topSearch" class="search" placeholder="Search Joogle...">
 </div>
 
-<footer>
-  Joogle is a parody search engine. Results powered by Google.
-</footer>
+<div class="center" id="home">
+  <div class="homeLogo">
+    <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+  </div>
+  <input id="homeSearch" class="search" placeholder="Search Joogle...">
+</div>
+
+<div id="results"></div>
+
+<script async src="https://cse.google.com/cse.js?cx=427c85c8321db4c63"></script>
 
 <script>
-function doSearch(lucky=false){
-  const query = document.getElementById("searchInput").value.trim();
-  if(!query) return;
-
-  if(lucky){
-    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query) + "&btnI=1";
-  }else{
-    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
-  }
+function goHome(){
+  document.getElementById("results").innerHTML="";
+  document.getElementById("home").style.display="flex";
+  document.getElementById("header").style.display="none";
 }
 
-document.getElementById("searchForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  doSearch();
+function showResults(query){
+  document.getElementById("home").style.display="none";
+  document.getElementById("header").style.display="flex";
+  document.getElementById("results").innerHTML = `
+    <div class="gcse-searchresults-only"></div>
+  `;
+  document.getElementById("topSearch").value = query;
+
+  setTimeout(()=>{
+    if(window.google && google.search && google.search.cse){
+      google.search.cse.element.getElement("searchresults-only0").execute(query);
+    }
+  },500);
+}
+
+document.getElementById("homeSearch").addEventListener("keydown",function(e){
+  if(e.key==="Enter"){
+    showResults(this.value);
+  }
+});
+
+document.getElementById("topSearch").addEventListener("keydown",function(e){
+  if(e.key==="Enter"){
+    showResults(this.value);
+  }
 });
 </script>
 
