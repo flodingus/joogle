@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Joogle</title>
 
 <style>
@@ -41,6 +41,7 @@ body{
   border-radius:24px;
   border:1px solid #dadce0;
   font-size:16px;
+  outline:none;
 }
 
 .home{
@@ -71,7 +72,7 @@ body{
 }
 </style>
 
-<!-- LOAD CSE BUT DO NOT AUTO RENDER SEARCH BOX -->
+<!-- Google CSE -->
 <script async src="https://cse.google.com/cse.js?cx=427c85c8321db4c63"></script>
 
 </head>
@@ -92,16 +93,16 @@ body{
 </div>
 
 <div class="results">
-  <div id="cseResults" class="gcse-searchresults-only"></div>
+  <div class="gcse-search"></div>
 </div>
 
 <script>
-
 const LOCAL_KEYWORDS = [
   "near me","restaurants","restaurant",
   "coffee","gas","concert","concerts",
   "weather","directions","map","closest",
-  "pizza","food","bars","library"
+  "pizza","food","bars","library",
+  "tickets","flight","flights"
 ];
 
 function shouldRedirect(query){
@@ -109,52 +110,31 @@ function shouldRedirect(query){
   return LOCAL_KEYWORDS.some(word => q.includes(word));
 }
 
-function waitForCSE(callback){
-  const interval = setInterval(() => {
-    if (window.google &&
-        google.search &&
-        google.search.cse &&
-        google.search.cse.element &&
-        google.search.cse.element.getElement("cseResults")) {
-
-      clearInterval(interval);
-      callback();
-    }
-  }, 100);
-}
-
-function performSearch(query){
-
-  if(!query) return;
-
-  if(shouldRedirect(query)){
-    window.location.href =
-      "https://www.google.com/search?q=" + encodeURIComponent(query);
-    return;
-  }
-
-  document.getElementById("homeSection").style.display="none";
-
-  waitForCSE(() => {
-    google.search.cse.element
-      .getElement("cseResults")
-      .execute(query);
-  });
-}
-
 document.addEventListener("DOMContentLoaded", function(){
 
   const input = document.getElementById("searchBox");
 
+  function handleSearch(){
+    const query = input.value.trim();
+    if(!query) return;
+
+    if(shouldRedirect(query)){
+      window.location.href =
+        "https://www.google.com/search?q=" + encodeURIComponent(query);
+      return;
+    }
+
+    window.location.href = "/?q=" + encodeURIComponent(query);
+  }
+
   input.addEventListener("keydown", function(e){
     if(e.key === "Enter"){
-      performSearch(this.value.trim());
+      handleSearch();
     }
   });
 
 });
-
 </script>
+
 </body>
 </html>
-
