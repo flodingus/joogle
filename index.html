@@ -109,6 +109,20 @@ function shouldRedirect(query){
   return LOCAL_KEYWORDS.some(word => q.includes(word));
 }
 
+function waitForCSE(callback){
+  const interval = setInterval(() => {
+    if (window.google &&
+        google.search &&
+        google.search.cse &&
+        google.search.cse.element &&
+        google.search.cse.element.getElement("cseResults")) {
+
+      clearInterval(interval);
+      callback();
+    }
+  }, 100);
+}
+
 function performSearch(query){
 
   if(!query) return;
@@ -121,21 +135,26 @@ function performSearch(query){
 
   document.getElementById("homeSection").style.display="none";
 
-  setTimeout(()=>{
-    if(window.google && google.search && google.search.cse){
-      google.search.cse.element.getElement("cseResults").execute(query);
-    }
-  },300);
+  waitForCSE(() => {
+    google.search.cse.element
+      .getElement("cseResults")
+      .execute(query);
+  });
 }
 
-document.getElementById("searchBox")
-.addEventListener("keydown", function(e){
-  if(e.key==="Enter"){
-    performSearch(this.value.trim());
-  }
+document.addEventListener("DOMContentLoaded", function(){
+
+  const input = document.getElementById("searchBox");
+
+  input.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      performSearch(this.value.trim());
+    }
+  });
+
 });
 
 </script>
-
 </body>
 </html>
+
