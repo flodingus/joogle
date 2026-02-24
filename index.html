@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Joogle</title>
+<title>Joogle Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
 :root {
@@ -71,22 +73,18 @@ body{
   background:var(--bg);
   border:1px solid var(--border);
   border-radius:12px;
-  max-height:250px;
-  overflow:auto;
   display:none;
   z-index:999;
 }
 
 .suggestionItem{
-  padding:10px 15px;
+  padding:10px;
   cursor:pointer;
 }
 
 .suggestionItem:hover{
   background:var(--card);
 }
-
-button{cursor:pointer;}
 
 .home{
   display:flex;
@@ -113,7 +111,37 @@ button{cursor:pointer;}
 .resultItem{margin-bottom:25px;}
 .resultItem h3{color:var(--link);margin:0;}
 
-.error{color:red;font-weight:bold;}
+.trending{
+  margin-top:10px;
+  font-size:14px;
+}
+
+.trending span{
+  margin-right:10px;
+  cursor:pointer;
+  color:var(--link);
+}
+
+#palette{
+  position:fixed;
+  top:20%;
+  left:50%;
+  transform:translateX(-50%);
+  width:400px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:15px;
+  display:none;
+  z-index:2000;
+}
+
+.weatherCard{
+  background:linear-gradient(135deg,#4facfe,#00f2fe);
+  color:white;
+  padding:20px;
+  border-radius:16px;
+}
 </style>
 </head>
 
@@ -124,29 +152,23 @@ button{cursor:pointer;}
     <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
   <input id="searchBox" class="searchInput" placeholder="Search Joogle...">
+  <button id="voiceBtn">🎙</button>
   <button id="darkToggle">🌙</button>
   <div id="suggestions" class="suggestions"></div>
 </div>
 
-<div class="home" id="homeSection">
-  <div>
-    <span style="color:#4285F4">J</span>
-    <span style="color:#DB4437">o</span>
-    <span style="color:#F4B400">o</span>
-    <span style="color:#4285F4">g</span>
-    <span style="color:#0F9D58">l</span>
-    <span style="color:#DB4437">e</span>
-  </div>
-</div>
-
+<div class="home" id="homeSection">Joogle</div>
 <div class="results" id="results"></div>
 
-<script>
+<div id="palette">
+  <input id="paletteInput" placeholder="Command..." style="width:100%;padding:8px;">
+</div>
 
+<script>
 const PROXY_URL = "https://joogle-proxy.flodingus.workers.dev";
 
 /* DARK MODE */
-document.getElementById("darkToggle").onclick = () => {
+document.getElementById("darkToggle").onclick = ()=>{
   document.body.classList.toggle("dark");
   localStorage.setItem("darkMode",
     document.body.classList.contains("dark"));
@@ -155,118 +177,149 @@ if(localStorage.getItem("darkMode")==="true"){
   document.body.classList.add("dark");
 }
 
-/* UI HELPERS */
-
-function showResults(html){
-  document.getElementById("homeSection").style.display="none";
-  document.getElementById("results").innerHTML=html;
+/* TRENDING */
+const trendingTerms=["Weather","News","Restaurants near me","Sports","Stock market"];
+function showTrending(){
+  const home=document.getElementById("homeSection");
+  home.innerHTML="Joogle<br><div class='trending'>Trending: "+
+    trendingTerms.map(t=>`<span onclick="performSearch('${t}')">${t}</span>`).join("")
+    +"</div>";
 }
+showTrending();
 
-function showError(msg){
-  showResults(`<div class="error">${msg}</div>`);
-}
+/* VOICE SEARCH */
+document.getElementById("voiceBtn").onclick=()=>{
+  const rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+  rec.onresult=e=>{
+    const text=e.results[0][0].transcript;
+    document.getElementById("searchBox").value=text;
+    performSearch(text);
+  };
+  rec.start();
+};
 
-/* AUTOCOMPLETE (using Serper suggestions endpoint) */
-
-const input = document.getElementById("searchBox");
-const suggestionsBox = document.getElementById("suggestions");
-
-input.addEventListener("input", async e=>{
-  const q = e.target.value.trim();
-  if(q.length < 2){
-    suggestionsBox.style.display="none";
-    return;
-  }
-
-  try{
-    const res = await fetch(PROXY_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({q})
-    });
-
-    const data = await res.json();
-    if(!data.relatedSearches){
-      suggestionsBox.style.display="none";
-      return;
-    }
-
-    suggestionsBox.innerHTML="";
-    data.relatedSearches.slice(0,5).forEach(s=>{
-      const div=document.createElement("div");
-      div.className="suggestionItem";
-      div.innerText=s.query;
-      div.onclick=()=>{
-        input.value=s.query;
-        suggestionsBox.style.display="none";
-        performSearch(s.query);
-      };
-      suggestionsBox.appendChild(div);
-    });
-
-    suggestionsBox.style.display="block";
-
-  }catch{
-    suggestionsBox.style.display="none";
+/* COMMAND PALETTE */
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==="k"){
+    document.getElementById("palette").style.display="block";
+    document.getElementById("paletteInput").focus();
   }
 });
 
+/* AUTOCOMPLETE */
+const input=document.getElementById("searchBox");
+const suggestions=document.getElementById("suggestions");
+
+input.addEventListener("input",async e=>{
+  const q=e.target.value;
+  if(q.length<2){ suggestions.style.display="none"; return; }
+
+  const res=await fetch(PROXY_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({q})
+  });
+  const data=await res.json();
+
+  if(!data.relatedSearches){ suggestions.style.display="none"; return; }
+
+  suggestions.innerHTML="";
+  data.relatedSearches.slice(0,5).forEach(s=>{
+    const div=document.createElement("div");
+    div.className="suggestionItem";
+    div.innerText=s.query;
+    div.onclick=()=>performSearch(s.query);
+    suggestions.appendChild(div);
+  });
+
+  suggestions.style.display="block";
+});
+
 /* SEARCH */
-
 async function performSearch(query){
+  suggestions.style.display="none";
+  document.getElementById("homeSection").style.display="none";
+  document.getElementById("results").innerHTML="Loading...";
 
-  if(!query) return;
+  if(query.toLowerCase().includes("weather")){
+    return showWeather();
+  }
 
-  suggestionsBox.style.display="none";
-  showResults("Loading...");
+  if(query.toLowerCase().includes("near me")){
+    return showNearby(query);
+  }
 
-  try{
-    const res=await fetch(PROXY_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({q:query})
+  const res=await fetch(PROXY_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({q:query})
+  });
+  const data=await res.json();
+
+  let html="";
+  if(data.organic && data.organic.length>0){
+    html+=`<div class="summaryCard">${data.organic[0].snippet}</div>`;
+    data.organic.forEach(r=>{
+      html+=`<div class="resultItem">
+        <a href="${r.link}" target="_blank">
+        <h3>${r.title}</h3></a>
+        <p>${r.snippet}</p>
+      </div>`;
     });
+  }
+  document.getElementById("results").innerHTML=html;
+}
 
+/* WEATHER WITH HOURLY CHART */
+async function showWeather(){
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude,longitude}=pos.coords;
+    const res=await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m&temperature_unit=fahrenheit&timezone=auto`
+    );
     const data=await res.json();
 
-    if(!data.organic){
-      showError("Search error");
-      return;
-    }
+    document.getElementById("results").innerHTML=
+      `<div class="weatherCard">
+        <h2>Weather</h2>
+        <canvas id="weatherChart"></canvas>
+      </div>`;
 
-    let html="";
-
-    // AI-style summary (first result snippet)
-    if(data.organic.length > 0){
-      html+=`
-        <div class="summaryCard">
-          <strong>Summary</strong><br><br>
-          ${data.organic[0].snippet}
-        </div>
-      `;
-    }
-
-    data.organic.forEach(r=>{
-      html+=`
-        <div class="resultItem">
-          <a href="${r.link}" target="_blank">
-            <h3>${r.title}</h3>
-          </a>
-          <p>${r.snippet}</p>
-        </div>`;
+    new Chart(document.getElementById("weatherChart"),{
+      type:"line",
+      data:{
+        labels:data.hourly.time.slice(0,12),
+        datasets:[{
+          label:"Temp °F",
+          data:data.hourly.temperature_2m.slice(0,12)
+        }]
+      }
     });
+  });
+}
 
-    showResults(html);
+/* NEAR ME MAP */
+async function showNearby(query){
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude,longitude}=pos.coords;
+    const mapHTML=`<div id="map" style="height:400px"></div>`;
+    document.getElementById("results").innerHTML=mapHTML;
 
-  }catch(e){
-    showError("Search failed");
-  }
+    const map=L.map('map').setView([latitude,longitude],14);
+
+    L.tileLayer(
+      document.body.classList.contains("dark") ?
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' :
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+    ).addTo(map);
+
+    L.marker([latitude,longitude]).addTo(map)
+      .bindPopup("You are here").openPopup();
+  });
 }
 
 input.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    performSearch(input.value.trim());
-  }
+  if(e.key==="Enter") performSearch(input.value);
 });
 </script>
 
