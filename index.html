@@ -59,6 +59,10 @@ body{
   color:var(--text);
 }
 
+button{
+  cursor:pointer;
+}
+
 .home{
   display:flex;
   flex-direction:column;
@@ -112,7 +116,7 @@ pre{
 .weatherRow{
   display:flex;
   justify-content:space-between;
-  margin-top:10px;
+  margin-top:8px;
 }
 </style>
 </head>
@@ -171,32 +175,13 @@ function tryCalculator(query){
   return false;
 }
 
-/* NETWORK TOOLS */
-async function networkCommand(cmd, target){
-  const endpoints = {
-    ping:`https://api.hackertarget.com/nping/?q=${target}`,
-    dig:`https://api.hackertarget.com/dnslookup/?q=${target}`,
-    traceroute:`https://api.hackertarget.com/mtr/?q=${target}`,
-    whois:`https://api.hackertarget.com/whois/?q=${target}`,
-    ip:`https://api.hackertarget.com/iplookup/?q=${target}`
-  };
-
-  if(endpoints[cmd]){
-    const res = await fetch(endpoints[cmd]);
-    const text = await res.text();
-    showResults(`<pre>${text}</pre>`);
-    return true;
-  }
-  return false;
-}
-
 /* WEATHER */
 async function showWeather(){
   navigator.geolocation.getCurrentPosition(async pos=>{
     const {latitude,longitude} = pos.coords;
 
     const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&temperature_unit=fahrenheit&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`
     );
 
     const data = await res.json();
@@ -239,7 +224,21 @@ async function performSearch(query){
   if(tryCalculator(query)) return;
 
   const parts = query.split(" ");
-  if(await networkCommand(parts[0].toLowerCase(), parts[1])) return;
+  if(parts.length > 1 &&
+     ["ping","dig","whois","ip"].includes(parts[0].toLowerCase())){
+    
+    showResults("Loading...");
+
+    const res = await fetch(PROXY_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ q: query })
+    });
+
+    const data = await res.json();
+    showResults(`<pre>${JSON.stringify(data,null,2)}</pre>`);
+    return;
+  }
 
   if(query.toLowerCase().includes("weather")){
     showWeather();
