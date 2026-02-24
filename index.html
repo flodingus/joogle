@@ -6,48 +6,43 @@
 <title>Joogle Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root {
+:root{
   --bg:#ffffff;
   --text:#202124;
   --border:#dadce0;
   --link:#1a0dab;
   --card:#f8f9fa;
 }
-
-body.dark {
+body.dark{
   --bg:#121212;
   --text:#e8e8e8;
   --border:#333;
   --link:#8ab4f8;
   --card:#1e1e1e;
 }
-
 body{
   margin:0;
-  font-family:Arial, Helvetica, sans-serif;
+  font-family:Arial,Helvetica,sans-serif;
   background:var(--bg);
   color:var(--text);
 }
-
 .header{
   display:flex;
   align-items:center;
   padding:15px 24px;
   border-bottom:1px solid var(--border);
-  gap:15px;
+  gap:10px;
   position:relative;
 }
-
 .logo{
   font-size:26px;
   font-weight:bold;
   cursor:pointer;
 }
-
 .logo span:nth-child(1){color:#4285F4}
 .logo span:nth-child(2){color:#DB4437}
 .logo span:nth-child(3){color:#F4B400}
@@ -64,78 +59,62 @@ body{
   background:var(--bg);
   color:var(--text);
 }
-
-.suggestions{
-  position:absolute;
-  top:60px;
-  left:120px;
-  right:120px;
-  background:var(--bg);
-  border:1px solid var(--border);
-  border-radius:12px;
-  display:none;
-  z-index:999;
+.tabs{
+  display:flex;
+  gap:20px;
+  padding:10px 24px;
+  border-bottom:1px solid var(--border);
 }
-
-.suggestionItem{
-  padding:10px;
+.tab{
   cursor:pointer;
 }
-
-.suggestionItem:hover{
-  background:var(--card);
-}
-
-.home{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:70vh;
-  font-size:90px;
+.tab.active{
   font-weight:bold;
+  border-bottom:2px solid var(--link);
 }
-
 .results{
-  max-width:900px;
+  max-width:1000px;
   margin:20px auto;
   padding:0 20px;
+  display:flex;
+  gap:30px;
 }
-
+.main{
+  flex:3;
+}
+.side{
+  flex:1;
+}
 .summaryCard{
   background:var(--card);
-  padding:20px;
-  border-radius:12px;
-  margin-bottom:25px;
-}
-
-.resultItem{margin-bottom:25px;}
-.resultItem h3{color:var(--link);margin:0;}
-
-.trending{
-  margin-top:10px;
-  font-size:14px;
-}
-
-.trending span{
-  margin-right:10px;
-  cursor:pointer;
-  color:var(--link);
-}
-
-#palette{
-  position:fixed;
-  top:20%;
-  left:50%;
-  transform:translateX(-50%);
-  width:400px;
-  background:var(--bg);
-  border:1px solid var(--border);
-  border-radius:12px;
   padding:15px;
-  display:none;
-  z-index:2000;
+  border-radius:12px;
+  margin-bottom:20px;
 }
-
+.resultItem{
+  margin-bottom:20px;
+}
+.resultItem h3{
+  color:var(--link);
+  margin:0;
+}
+.knowledgeCard{
+  background:var(--card);
+  padding:15px;
+  border-radius:12px;
+}
+.imageGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:10px;
+}
+.imageGrid img{
+  width:100%;
+  border-radius:8px;
+}
+#map{
+  height:400px;
+}
 .weatherCard{
   background:linear-gradient(135deg,#4facfe,#00f2fe);
   color:white;
@@ -148,46 +127,51 @@ body{
 <body>
 
 <div class="header">
-  <div class="logo" onclick="location.href='/'">
+  <div class="logo" onclick="location.reload()">
     <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
   <input id="searchBox" class="searchInput" placeholder="Search Joogle...">
   <button id="voiceBtn">🎙</button>
   <button id="darkToggle">🌙</button>
-  <div id="suggestions" class="suggestions"></div>
 </div>
 
-<div class="home" id="homeSection">Joogle</div>
-<div class="results" id="results"></div>
+<div class="tabs">
+  <div class="tab active" data-tab="all">All</div>
+  <div class="tab" data-tab="images">Images</div>
+  <div class="tab" data-tab="news">News</div>
+  <div class="tab" data-tab="maps">Maps</div>
+  <div class="tab" data-tab="tools">Tools</div>
+</div>
 
-<div id="palette">
-  <input id="paletteInput" placeholder="Command..." style="width:100%;padding:8px;">
+<div class="results">
+  <div class="main" id="main"></div>
+  <div class="side" id="side"></div>
 </div>
 
 <script>
-const PROXY_URL = "https://joogle-proxy.flodingus.workers.dev";
+const PROXY_URL="https://joogle-proxy.flodingus.workers.dev";
+let currentTab="all";
 
 /* DARK MODE */
-document.getElementById("darkToggle").onclick = ()=>{
+document.getElementById("darkToggle").onclick=()=>{
   document.body.classList.toggle("dark");
-  localStorage.setItem("darkMode",
-    document.body.classList.contains("dark"));
+  localStorage.setItem("darkMode",document.body.classList.contains("dark"));
 };
 if(localStorage.getItem("darkMode")==="true"){
   document.body.classList.add("dark");
 }
 
-/* TRENDING */
-const trendingTerms=["Weather","News","Restaurants near me","Sports","Stock market"];
-function showTrending(){
-  const home=document.getElementById("homeSection");
-  home.innerHTML="Joogle<br><div class='trending'>Trending: "+
-    trendingTerms.map(t=>`<span onclick="performSearch('${t}')">${t}</span>`).join("")
-    +"</div>";
-}
-showTrending();
+/* TABS */
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.onclick=()=>{
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    currentTab=tab.dataset.tab;
+    performSearch(document.getElementById("searchBox").value);
+  };
+});
 
-/* VOICE SEARCH */
+/* VOICE */
 document.getElementById("voiceBtn").onclick=()=>{
   const rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
   rec.onresult=e=>{
@@ -198,55 +182,32 @@ document.getElementById("voiceBtn").onclick=()=>{
   rec.start();
 };
 
-/* COMMAND PALETTE */
-document.addEventListener("keydown",e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key==="k"){
-    document.getElementById("palette").style.display="block";
-    document.getElementById("paletteInput").focus();
-  }
-});
-
-/* AUTOCOMPLETE */
-const input=document.getElementById("searchBox");
-const suggestions=document.getElementById("suggestions");
-
-input.addEventListener("input",async e=>{
-  const q=e.target.value;
-  if(q.length<2){ suggestions.style.display="none"; return; }
-
-  const res=await fetch(PROXY_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({q})
-  });
-  const data=await res.json();
-
-  if(!data.relatedSearches){ suggestions.style.display="none"; return; }
-
-  suggestions.innerHTML="";
-  data.relatedSearches.slice(0,5).forEach(s=>{
-    const div=document.createElement("div");
-    div.className="suggestionItem";
-    div.innerText=s.query;
-    div.onclick=()=>performSearch(s.query);
-    suggestions.appendChild(div);
-  });
-
-  suggestions.style.display="block";
-});
-
 /* SEARCH */
 async function performSearch(query){
-  suggestions.style.display="none";
-  document.getElementById("homeSection").style.display="none";
-  document.getElementById("results").innerHTML="Loading...";
+  if(!query) return;
+
+  if(query.startsWith("=")){
+    document.getElementById("main").innerHTML="<h2>"+eval(query.substring(1))+"</h2>";
+    return;
+  }
+
+  document.getElementById("main").innerHTML="Loading...";
+  document.getElementById("side").innerHTML="";
 
   if(query.toLowerCase().includes("weather")){
     return showWeather();
   }
 
-  if(query.toLowerCase().includes("near me")){
-    return showNearby(query);
+  if(currentTab==="images"){
+    return showImages(query);
+  }
+
+  if(currentTab==="news"){
+    return showNews(query);
+  }
+
+  if(currentTab==="maps"){
+    return showMap();
   }
 
   const res=await fetch(PROXY_URL,{
@@ -254,10 +215,15 @@ async function performSearch(query){
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({q:query})
   });
-  const data=await res.json();
 
+  const data=await res.json();
+  renderAll(query,data);
+}
+
+/* ALL TAB */
+async function renderAll(query,data){
   let html="";
-  if(data.organic && data.organic.length>0){
+  if(data.organic){
     html+=`<div class="summaryCard">${data.organic[0].snippet}</div>`;
     data.organic.forEach(r=>{
       html+=`<div class="resultItem">
@@ -267,10 +233,63 @@ async function performSearch(query){
       </div>`;
     });
   }
-  document.getElementById("results").innerHTML=html;
+  document.getElementById("main").innerHTML=html;
+  loadKnowledge(query);
 }
 
-/* WEATHER WITH HOURLY CHART */
+/* KNOWLEDGE PANEL */
+async function loadKnowledge(query){
+  const wiki=await fetch(
+    `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`
+  );
+  if(wiki.ok){
+    const data=await wiki.json();
+    document.getElementById("side").innerHTML=`
+      <div class="knowledgeCard">
+        <h3>${data.title}</h3>
+        <p>${data.extract||""}</p>
+      </div>`;
+  }
+}
+
+/* IMAGES */
+async function showImages(query){
+  const res=await fetch(`https://source.unsplash.com/featured/?${query}`);
+  let html="<div class='imageGrid'>";
+  for(let i=0;i<12;i++){
+    html+=`<img src="https://source.unsplash.com/300x300/?${query}&sig=${i}">`;
+  }
+  html+="</div>";
+  document.getElementById("main").innerHTML=html;
+}
+
+/* NEWS */
+async function showNews(query){
+  const rss=`https://api.rss2json.com/v1/api.json?rss_url=https://news.google.com/rss/search?q=${encodeURIComponent(query)}`;
+  const res=await fetch(rss);
+  const data=await res.json();
+  let html="";
+  data.items.slice(0,10).forEach(n=>{
+    html+=`<div class="resultItem">
+      <a href="${n.link}" target="_blank">
+      <h3>${n.title}</h3></a>
+    </div>`;
+  });
+  document.getElementById("main").innerHTML=html;
+}
+
+/* MAP */
+function showMap(){
+  document.getElementById("main").innerHTML="<div id='map'></div>";
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude,longitude}=pos.coords;
+    const map=L.map('map').setView([latitude,longitude],14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.marker([latitude,longitude]).addTo(map);
+  });
+}
+
+/* WEATHER */
 async function showWeather(){
   navigator.geolocation.getCurrentPosition(async pos=>{
     const {latitude,longitude}=pos.coords;
@@ -279,7 +298,7 @@ async function showWeather(){
     );
     const data=await res.json();
 
-    document.getElementById("results").innerHTML=
+    document.getElementById("main").innerHTML=
       `<div class="weatherCard">
         <h2>Weather</h2>
         <canvas id="weatherChart"></canvas>
@@ -298,28 +317,11 @@ async function showWeather(){
   });
 }
 
-/* NEAR ME MAP */
-async function showNearby(query){
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    const {latitude,longitude}=pos.coords;
-    const mapHTML=`<div id="map" style="height:400px"></div>`;
-    document.getElementById("results").innerHTML=mapHTML;
-
-    const map=L.map('map').setView([latitude,longitude],14);
-
-    L.tileLayer(
-      document.body.classList.contains("dark") ?
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' :
-      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-    ).addTo(map);
-
-    L.marker([latitude,longitude]).addTo(map)
-      .bindPopup("You are here").openPopup();
-  });
-}
-
-input.addEventListener("keydown",e=>{
-  if(e.key==="Enter") performSearch(input.value);
+document.getElementById("searchBox")
+.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    performSearch(e.target.value);
+  }
 });
 </script>
 
