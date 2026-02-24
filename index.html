@@ -72,6 +72,7 @@ body{
 .heroLogo{
   font-size:100px;
   font-weight:bold;
+  letter-spacing:-7px;
   cursor:pointer;
   transition:transform .2s ease;
   animation:glowPulse 3s infinite ease-in-out;
@@ -84,22 +85,27 @@ body{
 .heroLogo span:nth-child(5){color:#0F9D58}
 .heroLogo span:nth-child(6){color:#DB4437}
 
+/* Premium Bounce */
 .bounce{
   display:inline-block;
-  animation:bounceAnim 1.4s infinite ease-in-out;
-}
-.bounce.delay{animation-delay:.2s;}
-
-@keyframes bounceAnim{
-  0%,100%{ transform:translateY(0) scale(1); }
-  25%{ transform:translateY(-20px) scale(1.1,0.9); }
-  50%{ transform:translateY(0) scale(0.9,1.1); }
-  75%{ transform:translateY(-8px) scale(1.05,0.95); }
+  animation:premiumBounce 2s infinite cubic-bezier(.28,.84,.42,1);
+  transform-origin:bottom center;
 }
 
+@keyframes premiumBounce{
+  0%{transform:translateY(0) scale(1,1);}
+  15%{transform:translateY(-14px) scale(1.02,.98);}
+  30%{transform:translateY(0) scale(.92,1.08);}
+  40%{transform:translateY(-6px) scale(1.01,.99);}
+  55%{transform:translateY(0) scale(.97,1.03);}
+  70%{transform:translateY(-2px) scale(1,.995);}
+  100%{transform:translateY(0) scale(1,1);}
+}
+
+/* Glow */
 @keyframes glowPulse{
   0%,100%{filter:drop-shadow(0 0 0px rgba(66,133,244,0));}
-  50%{filter:drop-shadow(0 0 15px rgba(66,133,244,0.4));}
+  50%{filter:drop-shadow(0 0 15px rgba(66,133,244,0.35));}
 }
 
 .heroLogo:hover{transform:scale(1.05);}
@@ -160,7 +166,7 @@ body{
   padding:20px;
   border-radius:16px;
 }
-#map,#radarMap{height:400px;border-radius:12px;}
+#map{height:400px;border-radius:12px;}
 </style>
 </head>
 
@@ -179,7 +185,7 @@ body{
   <div class="heroLogo">
     <span>J</span>
     <span class="bounce">o</span>
-    <span class="bounce delay">o</span>
+    <span class="bounce">o</span>
     <span>g</span>
     <span>l</span>
     <span>e</span>
@@ -259,7 +265,6 @@ async function performSearch(query){
   if(currentTab==="images") return showImages(query);
   if(currentTab==="news") return showNews(query);
   if(currentTab==="maps") return showMap();
-  if(currentTab==="tools") return showTools(query);
 
   const res=await fetch(PROXY_URL,{
     method:"POST",
@@ -271,7 +276,6 @@ async function performSearch(query){
   renderAll(query,data);
 }
 
-/* ALL TAB */
 async function renderAll(query,data){
   let html="";
   if(data.organic){
@@ -288,7 +292,6 @@ async function renderAll(query,data){
   loadKnowledge(query);
 }
 
-/* KNOWLEDGE */
 async function loadKnowledge(query){
   const wiki=await fetch(
     `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`
@@ -303,7 +306,6 @@ async function loadKnowledge(query){
   }
 }
 
-/* IMAGES */
 function showImages(query){
   let html="<div class='imageGrid'>";
   for(let i=0;i<12;i++){
@@ -313,7 +315,6 @@ function showImages(query){
   document.getElementById("main").innerHTML=html;
 }
 
-/* NEWS */
 async function showNews(query){
   const rss=`https://api.rss2json.com/v1/api.json?rss_url=https://news.google.com/rss/search?q=${encodeURIComponent(query)}`;
   const res=await fetch(rss);
@@ -328,7 +329,6 @@ async function showNews(query){
   document.getElementById("main").innerHTML=html;
 }
 
-/* MAP */
 function showMap(){
   document.getElementById("main").innerHTML="<div id='map'></div>";
   navigator.geolocation.getCurrentPosition(pos=>{
@@ -339,22 +339,11 @@ function showMap(){
   });
 }
 
-/* TOOLS */
-function showTools(query){
-  document.getElementById("main").innerHTML=
-    `<div class="summaryCard">Tool result for: ${query}</div>`;
-}
-
-/* WEATHER */
 async function showWeather(){
   navigator.geolocation.getCurrentPosition(async pos=>{
     const {latitude,longitude}=pos.coords;
     const res=await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}
-      &current_weather=true
-      &hourly=temperature_2m
-      &temperature_unit=fahrenheit
-      &timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m&temperature_unit=fahrenheit&timezone=auto`
     );
     const data=await res.json();
     document.getElementById("main").innerHTML=
