@@ -16,7 +16,7 @@ body{
   font-family:Arial,Helvetica,sans-serif;
   background:#fff;
   color:#202124;
-  transition:background 0.6s ease;
+  transition:all .6s ease;
 }
 
 .header{
@@ -101,18 +101,6 @@ body{
   padding:0 20px;
 }
 
-.card{
-  background:#f8f9fa;
-  padding:24px;
-  border-radius:14px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.05);
-}
-
-.error{
-  background:#ffecec;
-  color:#900;
-}
-
 .resultItem{
   margin-bottom:24px;
 }
@@ -122,51 +110,65 @@ body{
   color:#1a0dab;
 }
 
-footer{
-  text-align:center;
-  font-size:12px;
-  color:gray;
-  padding:30px;
-  opacity:.6;
+/* JULIE CINEMATIC MODE */
+
+.julieMode{
+  background:linear-gradient(135deg,#ffdde1,#ee9ca7);
+  overflow:hidden;
 }
 
-/* JULIE MODE */
-
-.loveScreen{
-  height:70vh;
+.loveContainer{
+  height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:linear-gradient(135deg,#fdfbfb,#ebedee);
+  flex-direction:column;
   animation:fadeIn 1.5s ease;
-}
-
-.loveCard{
-  background:white;
-  padding:50px;
-  border-radius:20px;
-  box-shadow:0 10px 40px rgba(0,0,0,0.15);
   text-align:center;
-  max-width:500px;
 }
 
-.loveCard h1{
-  font-size:40px;
+.loveMessage{
+  font-size:48px;
+  font-weight:bold;
+  color:white;
+  text-shadow:0 0 20px rgba(255,255,255,0.8);
+  animation:glow 2s infinite alternate;
 }
 
-.loveText{
-  font-size:20px;
-  margin:25px 0;
+.loveNote{
+  font-size:22px;
+  margin-top:25px;
+  color:white;
 }
 
 .signature{
   margin-top:30px;
-  opacity:.6;
+  opacity:.8;
+  color:white;
+}
+
+@keyframes glow{
+  from{ text-shadow:0 0 10px rgba(255,255,255,0.6);}
+  to{ text-shadow:0 0 30px rgba(255,255,255,1);}
 }
 
 @keyframes fadeIn{
-  from{opacity:0;transform:translateY(20px);}
-  to{opacity:1;transform:translateY(0);}
+  from{opacity:0;transform:scale(0.95);}
+  to{opacity:1;transform:scale(1);}
+}
+
+/* floating hearts */
+
+.heart{
+  position:absolute;
+  bottom:-50px;
+  font-size:24px;
+  animation:floatUp 6s linear infinite;
+}
+
+@keyframes floatUp{
+  0%{transform:translateY(0);opacity:1;}
+  100%{transform:translateY(-110vh);opacity:0;}
 }
 </style>
 </head>
@@ -198,22 +200,7 @@ footer{
 
 <div id="main" class="results"></div>
 
-<footer>
-Joogle is a private parody made with love and is not affiliated with Google LLC.
-</footer>
-
 <script>
-
-const PROXY_URL="https://joogle-proxy.flodingus.workers.dev";
-
-function timeoutFetch(resource, options = {}, timeout = 8000) {
-  return Promise.race([
-    fetch(resource, options),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Timeout")), timeout)
-    )
-  ]);
-}
 
 document.getElementById("searchForm").addEventListener("submit",e=>{
   e.preventDefault();
@@ -225,71 +212,52 @@ function feelingJoogly(){
   if(val) window.open("https://www.google.com/search?q="+encodeURIComponent(val));
 }
 
-async function performSearch(query){
-  if(!query) return;
+function spawnHeart(){
+  const heart=document.createElement("div");
+  heart.className="heart";
+  heart.style.left=Math.random()*100+"vw";
+  heart.style.animationDuration=(4+Math.random()*4)+"s";
+  heart.innerHTML="💙";
+  document.body.appendChild(heart);
+  setTimeout(()=>heart.remove(),8000);
+}
 
+async function performSearch(query){
+
+  if(!query) return;
   const q=query.toLowerCase();
 
-  /* JULIE EASTER EGG */
-
   if(q.includes("julie")){
+
+    document.body.classList.add("julieMode");
+    hero.style.display="none";
 
     const notes=[
       "You are my favorite thing to Joogle.",
       "If loving you was a search, I'd never hit enter.",
       "You are my homepage.",
-      "I don't need Google when I have you.",
       "You are my favorite result.",
       "Every search ends with you."
     ];
 
     const randomNote=notes[Math.floor(Math.random()*notes.length)];
 
-    hero.style.display="none";
-
     main.innerHTML=`
-      <div class="loveScreen">
-        <div class="loveCard">
-          <h1>💙 Julie 💙</h1>
-          <p class="loveText">${randomNote}</p>
-          <div class="signature">— Love, always.</div>
-        </div>
+      <div class="loveContainer">
+        <div class="loveMessage">💙 Julie 💙</div>
+        <div class="loveNote">${randomNote}</div>
+        <div class="signature">— Love, always.</div>
         <audio autoplay loop>
           <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b63c9b2a.mp3?filename=romantic-piano-110624.mp3" type="audio/mpeg">
         </audio>
       </div>
     `;
+
+    setInterval(spawnHeart,500);
     return;
   }
 
-  hero.style.display="none";
-  main.innerHTML="<div class='card'>Loading...</div>";
-
-  try{
-    const res=await timeoutFetch(PROXY_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({q:query})
-    });
-
-    const data=await res.json();
-    let html="";
-    if(data.organic){
-      data.organic.forEach(r=>{
-        html+=`
-          <div class="resultItem">
-            <a href="${r.link}" target="_blank">
-              <h3>${r.title}</h3>
-            </a>
-            <p>${r.snippet}</p>
-          </div>
-        `;
-      });
-    }
-    main.innerHTML=html || "<div class='card'>No results.</div>";
-  }catch(err){
-    main.innerHTML="<div class='card error'>Search failed.</div>";
-  }
+  main.innerHTML="Search disabled in this demo build.";
 }
 
 </script>
