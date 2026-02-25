@@ -5,40 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Joogle</title>
 
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
-<text x='50%' y='60%' text-anchor='middle' font-size='80' font-family='Arial' fill='%234285F4'>J</text>
-<text x='70%' y='30%' font-size='25' fill='red'>♥</text>
-</svg>">
-
 <style>
-:root{
-  --bg:#ffffff;
-  --text:#202124;
-  --border:#dadce0;
-  --card:#f8f9fa;
-  --link:#1a0dab;
-}
-body.dark{
-  --bg:#121212;
-  --text:#e8e8e8;
-  --border:#333;
-  --card:#1e1e1e;
-  --link:#8ab4f8;
-}
 body{
   margin:0;
   font-family:Arial,Helvetica,sans-serif;
-  background:var(--bg);
-  color:var(--text);
+  background:#fff;
+  color:#202124;
 }
-
-/* HEADER */
 .header{
   display:flex;
   align-items:center;
   padding:15px 24px;
-  border-bottom:1px solid var(--border);
+  border-bottom:1px solid #dadce0;
   gap:10px;
 }
 .logo{
@@ -57,63 +35,40 @@ body{
   flex:1;
   padding:10px 18px;
   border-radius:24px;
-  border:1px solid var(--border);
+  border:1px solid #dadce0;
   font-size:16px;
-  background:var(--bg);
-  color:var(--text);
 }
 
 .button{
   padding:8px 14px;
   border-radius:20px;
-  border:1px solid var(--border);
-  background:var(--card);
+  border:1px solid #dadce0;
+  background:#f8f9fa;
   cursor:pointer;
-  transition:.2s;
 }
-.button:hover{transform:translateY(-1px);}
 
-/* HERO */
-.homeHero{
+.hero{
   height:60vh;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  transition:opacity .4s ease, transform .4s ease;
 }
+
 .heroLogo{
   font-size:100px;
   font-weight:bold;
-  letter-spacing:-7px;
-  animation:glowPulse 3s infinite ease-in-out;
+  letter-spacing:-6px;
 }
-.heroLogo span:nth-child(1){color:#4285F4}
-.heroLogo span:nth-child(2){color:#DB4437}
-.heroLogo span:nth-child(3){color:#F4B400}
-.heroLogo span:nth-child(4){color:#4285F4}
-.heroLogo span:nth-child(5){color:#0F9D58}
-.heroLogo span:nth-child(6){color:#DB4437}
 
 .bounce{
   display:inline-block;
-  animation:premiumBounce 2s infinite cubic-bezier(.28,.84,.42,1);
-  transform-origin:bottom center;
+  animation:bounce 2s infinite cubic-bezier(.28,.84,.42,1);
 }
-
-@keyframes premiumBounce{
-  0%{transform:translateY(0) scale(1,1);}
-  15%{transform:translateY(-14px) scale(1.02,.98);}
-  30%{transform:translateY(0) scale(.92,1.08);}
-  40%{transform:translateY(-6px) scale(1.01,.99);}
-  55%{transform:translateY(0) scale(.97,1.03);}
-  70%{transform:translateY(-2px) scale(1,.995);}
-  100%{transform:translateY(0) scale(1,1);}
-}
-
-@keyframes glowPulse{
-  0%,100%{filter:drop-shadow(0 0 0px rgba(66,133,244,0));}
-  50%{filter:drop-shadow(0 0 15px rgba(66,133,244,0.35));}
+@keyframes bounce{
+  0%,100%{transform:translateY(0)}
+  30%{transform:translateY(-12px)}
+  50%{transform:translateY(0)}
 }
 
 .results{
@@ -122,14 +77,17 @@ body{
   padding:0 20px;
 }
 
-.summaryCard{
-  background:var(--card);
-  padding:15px;
+.weatherCard{
+  background:#f8f9fa;
+  padding:20px;
   border-radius:12px;
   margin-bottom:20px;
 }
-.resultItem{margin-bottom:20px;}
-.resultItem h3{color:var(--link);margin:0;}
+.weatherDay{
+  display:flex;
+  justify-content:space-between;
+  padding:6px 0;
+}
 
 footer{
   text-align:center;
@@ -137,10 +95,6 @@ footer{
   color:gray;
   padding:20px;
   opacity:.7;
-}
-
-@keyframes fall{
-  to{transform:translateY(110vh);opacity:0;}
 }
 </style>
 </head>
@@ -156,11 +110,9 @@ footer{
     <input id="searchBox" class="searchInput" placeholder="Search Joogle...">
     <button class="button" type="submit">Search</button>
   </form>
-
-  <button id="darkToggle" class="button">🌙</button>
 </div>
 
-<div id="homeHero" class="homeHero">
+<div id="hero" class="hero">
   <div class="heroLogo">
     <span>J</span>
     <span class="bounce">o</span>
@@ -168,11 +120,6 @@ footer{
     <span>g</span>
     <span>l</span>
     <span>e</span>
-  </div>
-
-  <div style="margin-top:20px;display:flex;gap:10px;">
-    <button id="heroSearch" class="button">Search Joogle</button>
-    <button id="jooglyBtn" class="button">I'm Feeling Joogly</button>
   </div>
 </div>
 
@@ -182,52 +129,24 @@ footer{
   Joogle is a private parody made with love and is not affiliated with Google LLC.
 </footer>
 
-<audio id="loveMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
-
 <script>
+
 const PROXY_URL="https://joogle-proxy.flodingus.workers.dev";
 
-/* DARK MODE */
-document.getElementById("darkToggle").onclick=()=>{
-  document.body.classList.toggle("dark");
-};
-
-/* SEARCH SUBMIT */
 document.getElementById("searchForm").addEventListener("submit",e=>{
   e.preventDefault();
-  performSearch(searchBox.value);
+  performSearch(searchBox.value.trim());
 });
-document.getElementById("heroSearch").onclick=()=>{
-  performSearch(searchBox.value);
-};
 
-/* I'M FEELING JOOGLE */
-document.getElementById("jooglyBtn").onclick=async()=>{
-  const q=searchBox.value || "random";
-  const res=await fetch(PROXY_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({q})
-  });
-  const data=await res.json();
-  if(data.organic?.length){
-    window.location.href=data.organic[0].link;
-  }
-};
-
-/* MAIN SEARCH */
 async function performSearch(query){
   if(!query) return;
 
-  if(query.toLowerCase()==="julie"){
-    triggerJulieEasterEgg();
+  if(query.toLowerCase().includes("weather")){
+    loadWeather();
     return;
   }
 
-  homeHero.style.opacity="0";
-  homeHero.style.transform="translateY(-20px)";
-  setTimeout(()=>homeHero.style.display="none",400);
-
+  hero.style.display="none";
   main.innerHTML="Loading...";
 
   const res=await fetch(PROXY_URL,{
@@ -239,80 +158,74 @@ async function performSearch(query){
 
   let html="";
   if(data.organic){
-    html+=`<div class="summaryCard">${data.organic[0].snippet}</div>`;
     data.organic.forEach(r=>{
       html+=`
-        <div class="resultItem">
-          <a href="${r.link}" target="_blank">
-          <h3>${r.title}</h3></a>
-          <p>${r.snippet}</p>
-        </div>`;
+      <div>
+        <a href="${r.link}" target="_blank">
+          <h3>${r.title}</h3>
+        </a>
+        <p>${r.snippet}</p>
+      </div><br>`;
     });
   }
   main.innerHTML=html;
 }
 
-/* EASTER EGG */
-function triggerJulieEasterEgg(){
+function loadWeather(){
 
-  const notes=[
-    "You are officially the only Joogle that matters 💙",
-    "Best search result: Julie.",
-    "404: Better girlfriend not found.",
-    "No algorithm ranks above you."
-  ];
+  hero.style.display="none";
+  main.innerHTML="Detecting location...";
 
-  const overlay=document.createElement("div");
-  overlay.style.cssText=`
-    position:fixed;inset:0;
-    background:linear-gradient(135deg,#ff6ec4,#7873f5);
-    display:flex;flex-direction:column;
-    align-items:center;justify-content:center;
-    color:white;z-index:9999;text-align:center;
-  `;
+  navigator.geolocation.getCurrentPosition(async pos=>{
 
-  overlay.innerHTML=`
-    <h1 style="font-size:48px;">Hi Julie 💙</h1>
-    <p style="font-size:22px;margin-top:20px;">
-      ${notes[Math.floor(Math.random()*notes.length)]}
-    </p>
-    <button id="closeLove" class="button" style="margin-top:40px;">Close</button>
-  `;
+    const lat=pos.coords.latitude;
+    const lon=pos.coords.longitude;
 
-  document.body.appendChild(overlay);
+    // Get city name
+    const locRes=await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+    );
+    const locData=await locRes.json();
+    const city=
+      locData.address.city ||
+      locData.address.town ||
+      locData.address.village ||
+      locData.address.state;
 
-  for(let i=0;i<30;i++){
-    const heart=document.createElement("div");
-    heart.innerHTML="❤️";
-    heart.style.position="absolute";
-    heart.style.left=Math.random()*100+"%";
-    heart.style.top="-50px";
-    heart.style.fontSize=(20+Math.random()*20)+"px";
-    heart.style.animation=`fall ${3+Math.random()*3}s linear forwards`;
-    overlay.appendChild(heart);
-  }
+    // Get weather
+    const weatherRes=await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`
+    );
+    const weatherData=await weatherRes.json();
 
-  const music=document.getElementById("loveMusic");
-  music.volume=0.15;
-  music.play().catch(()=>{});
+    let html=`
+      <div class="weatherCard">
+        <h2>${city}</h2>
+        <h1>${Math.round(weatherData.current_weather.temperature)}°F</h1>
+        <p>Wind: ${weatherData.current_weather.windspeed} mph</p>
+        <hr>
+    `;
 
-  document.getElementById("closeLove").onclick=()=>{
-    overlay.remove();
-  };
+    weatherData.daily.time.forEach((day,i)=>{
+      html+=`
+        <div class="weatherDay">
+          <span>${day}</span>
+          <span>
+            ${Math.round(weatherData.daily.temperature_2m_max[i])}° /
+            ${Math.round(weatherData.daily.temperature_2m_min[i])}°
+          </span>
+        </div>
+      `;
+    });
+
+    html+="</div>";
+    main.innerHTML=html;
+
+  },()=>{
+    main.innerHTML="Location access denied.";
+  });
 }
 
-/* SECRET JJ */
-let jj=0;
-document.addEventListener("keydown",e=>{
-  if(e.key.toLowerCase()==="j"){
-    jj++;
-    if(jj===2){
-      triggerJulieEasterEgg();
-      jj=0;
-    }
-    setTimeout(()=>jj=0,500);
-  }
-});
 </script>
 
 </body>
