@@ -23,7 +23,6 @@ body{
   align-items:center;
   padding:15px 24px;
   border-bottom:1px solid #dadce0;
-  gap:10px;
 }
 
 .logo{
@@ -103,16 +102,15 @@ body{
   padding:0 20px;
 }
 
-.weatherCard{
+.card{
   background:#f8f9fa;
   padding:20px;
   border-radius:12px;
 }
 
-.weatherDay{
-  display:flex;
-  justify-content:space-between;
-  padding:6px 0;
+.error{
+  background:#ffecec;
+  color:#900;
 }
 
 footer{
@@ -160,6 +158,15 @@ footer{
 
 const PROXY_URL="https://joogle-proxy.flodingus.workers.dev";
 
+function timeoutFetch(resource, options = {}, timeout = 8000) {
+  return Promise.race([
+    fetch(resource, options),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Request timed out")), timeout)
+    )
+  ]);
+}
+
 document.getElementById("searchForm").addEventListener("submit",e=>{
   e.preventDefault();
   performSearch(searchBox.value.trim());
@@ -167,7 +174,7 @@ document.getElementById("searchForm").addEventListener("submit",e=>{
 
 function feelingJoogly(){
   const val=searchBox.value.trim();
-  if(val) window.open("https://www.google.com/search?q="+encodeURIComponent(val)," _blank");
+  if(val) window.open("https://www.google.com/search?q="+encodeURIComponent(val));
 }
 
 async function performSearch(query){
@@ -183,28 +190,30 @@ async function performSearch(query){
   hero.style.display="none";
   main.innerHTML="Loading...";
 
-  const res=await fetch(PROXY_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({q:query})
-  });
-
-  const data=await res.json();
-
-  let html="";
-  if(data.organic){
-    data.organic.forEach(r=>{
-      html+=`
-      <div>
-        <a href="${r.link}" target="_blank">
-          <h3>${r.title}</h3>
-        </a>
-        <p>${r.snippet}</p>
-      </div><br>`;
+  try{
+    const res=await timeoutFetch(PROXY_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({q:query})
     });
-  }
 
-  main.innerHTML=html;
+    const data=await res.json();
+    let html="";
+    if(data.organic){
+      data.organic.forEach(r=>{
+        html+=`
+        <div>
+          <a href="${r.link}" target="_blank">
+            <h3>${r.title}</h3>
+          </a>
+          <p>${r.snippet}</p>
+        </div><br>`;
+      });
+    }
+    main.innerHTML=html || "No results.";
+  }catch(err){
+    main.innerHTML=`<div class="card error">Search failed. Try again.</div>`;
+  }
 }
 
 async function handleWeather(query){
@@ -212,49 +221,53 @@ async function handleWeather(query){
   hero.style.display="none";
   main.innerHTML="Loading weather...";
 
-  let city=query.replace(/weather|forecast|in/gi,"").trim();
+  try{
 
-  let lat,lon,label;
+    let city=query.replace(/weather|forecast|in/gi,"").trim();
 
-  if(city){
-    const geo=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
-    const geoData=await geo.json();
-    if(!geoData.length){
-      main.innerHTML="City not found.";
-      return;
+    if(city){
+      await getWeatherByCity(city);
+    }else{
+      navigator.geolocation.getCurrentPosition(async pos=>{
+        await getWeatherByCoords(pos.coords.latitude,pos.coords.longitude);
+      },()=>{
+        main.innerHTML=`<div class="card error">Location access denied.</div>`;
+      });
     }
-    lat=geoData[0].lat;
-    lon=geoData[0].lon;
-    label=geoData[0].display_name.split(",").slice(0,2).join(",");
-  }else{
-    navigator.geolocation.getCurrentPosition(async pos=>{
-      lat=pos.coords.latitude;
-      lon=pos.coords.longitude;
 
-      const locRes=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-      const locData=await locRes.json();
-      label=locData.address.city || locData.address.town || locData.address.state;
+  }catch(err){
+    main.innerHTML=`<div class="card error">Weather service unavailable.</div>`;
+  }
+}
 
-      loadWeatherData(lat,lon,label);
-    },()=>{
-      main.innerHTML="Location access denied.";
-    });
+async function getWeatherByCity(city){
+
+  const geo=await timeoutFetch(
+    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`,
+    { headers:{ "Accept":"application/json" } }
+  );
+
+  const geoData=await geo.json();
+
+  if(!geoData.length){
+    main.innerHTML=`<div class="card error">City not found.</div>`;
     return;
   }
 
-  loadWeatherData(lat,lon,label);
+  await getWeatherByCoords(geoData[0].lat,geoData[0].lon,geoData[0].display_name);
 }
 
-async function loadWeatherData(lat,lon,label){
+async function getWeatherByCoords(lat,lon,label){
 
-  const weather=await fetch(
+  const weather=await timeoutFetch(
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`
   );
+
   const data=await weather.json();
 
   let html=`
-    <div class="weatherCard">
-      <h2>${label}</h2>
+    <div class="card">
+      <h2>${label || "Your Location"}</h2>
       <h1>${Math.round(data.current_weather.temperature)}°F</h1>
       <p>Wind: ${data.current_weather.windspeed} mph</p>
       <hr>
@@ -262,7 +275,7 @@ async function loadWeatherData(lat,lon,label){
 
   data.daily.time.forEach((day,i)=>{
     html+=`
-      <div class="weatherDay">
+      <div style="display:flex;justify-content:space-between">
         <span>${day}</span>
         <span>
           ${Math.round(data.daily.temperature_2m_max[i])}° /
