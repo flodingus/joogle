@@ -10,27 +10,12 @@
 <text y='.9em' font-size='90'>💙</text>
 </svg>">
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
 <style>
-body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#fff;
-  color:#202124;
-  transition:all .6s ease;
-}
-
-.header{
-  padding:15px 24px;
-  border-bottom:1px solid #dadce0;
-}
-
-.logo{
-  font-size:26px;
-  font-weight:bold;
-  letter-spacing:-2px;
-  cursor:pointer;
-}
-
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#fff;color:#202124;transition:.6s;overflow-x:hidden}
+.header{padding:15px 24px;border-bottom:1px solid #dadce0}
+.logo{font-size:26px;font-weight:bold;letter-spacing:-2px;cursor:pointer}
 .logo span:nth-child(1){color:#4285F4}
 .logo span:nth-child(2){color:#DB4437}
 .logo span:nth-child(3){color:#F4B400}
@@ -38,228 +23,194 @@ body{
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
 
-.hero{
-  height:60vh;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-}
-
-.heroLogo{
-  font-size:100px;
-  font-weight:bold;
-  letter-spacing:-8px;
-}
-
+.hero{height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.heroLogo{font-size:100px;font-weight:bold;letter-spacing:-8px}
 .heroLogo span:nth-child(1){color:#4285F4}
 .heroLogo span:nth-child(2){color:#DB4437}
 .heroLogo span:nth-child(3){color:#F4B400}
 .heroLogo span:nth-child(4){color:#4285F4}
 .heroLogo span:nth-child(5){color:#0F9D58}
 .heroLogo span:nth-child(6){color:#DB4437}
-
-.bounce{
-  display:inline-block;
-  animation:premiumBounce 2.4s infinite cubic-bezier(.28,.84,.42,1);
+.bounce{display:inline-block;animation:bounce 2.4s infinite cubic-bezier(.28,.84,.42,1)}
+@keyframes bounce{
+0%,100%{transform:translateY(0) scale(1)}
+25%{transform:translateY(-10px) scale(1.05,.95)}
+40%{transform:translateY(0) scale(.95,1.05)}
+55%{transform:translateY(-4px)}
 }
 
-@keyframes premiumBounce{
-  0%,100%{transform:translateY(0) scaleX(1) scaleY(1);}
-  25%{transform:translateY(-10px) scaleX(1.02) scaleY(.98);}
-  40%{transform:translateY(0) scaleX(.96) scaleY(1.05);}
-  55%{transform:translateY(-4px) scaleX(1.01) scaleY(.99);}
-  70%{transform:translateY(0);}
-}
+.searchArea{display:flex;gap:8px;margin-top:20px}
+.searchInput{width:420px;max-width:90vw;padding:12px 18px;border-radius:24px;border:1px solid #dadce0;font-size:16px}
+.button{padding:10px 16px;border-radius:20px;border:1px solid #dadce0;background:#f8f9fa;cursor:pointer}
 
-.searchArea{
-  display:flex;
-  gap:8px;
-  margin-top:20px;
-}
+.results{max-width:900px;margin:40px auto;padding:0 20px}
+.resultItem{margin-bottom:24px}
+.resultItem h3{margin:0;color:#1a0dab}
 
-.searchInput{
-  width:420px;
-  max-width:90vw;
-  padding:12px 18px;
-  border-radius:24px;
-  border:1px solid #dadce0;
-  font-size:16px;
-}
+.weatherCard{max-width:600px;margin:auto;padding:30px;border-radius:16px;background:#f8f9fa;box-shadow:0 4px 15px rgba(0,0,0,.05)}
 
-.button{
-  padding:10px 16px;
-  border-radius:20px;
-  border:1px solid #dadce0;
-  background:#f8f9fa;
-  cursor:pointer;
-}
+#map{height:500px;border-radius:16px;margin-top:20px}
 
-.results{
-  max-width:900px;
-  margin:40px auto;
-  padding:0 20px;
-}
+.julieMode{background:linear-gradient(135deg,#ffdde1,#ee9ca7)}
+.julieElite{background:linear-gradient(135deg,#ff9a9e,#fad0c4)}
 
-.resultItem{
-  margin-bottom:24px;
-}
+.loveContainer{height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.loveMessage{font-size:52px;font-weight:bold;color:white;text-shadow:0 0 30px white}
+.loveNote{font-size:22px;margin-top:25px;color:white}
+.signature{margin-top:30px;color:white}
 
-.resultItem h3{
-  margin:0;
-  color:#1a0dab;
-}
+.heart{position:absolute;bottom:-50px;font-size:24px;animation:floatUp 6s linear infinite}
+@keyframes floatUp{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-110vh);opacity:0}}
 
-/* JULIE CINEMATIC MODE */
-
-.julieMode{
-  background:linear-gradient(135deg,#ffdde1,#ee9ca7);
-  overflow:hidden;
-}
-
-.loveContainer{
-  height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  animation:fadeIn 1.5s ease;
-  text-align:center;
-}
-
-.loveMessage{
-  font-size:48px;
-  font-weight:bold;
-  color:white;
-  text-shadow:0 0 20px rgba(255,255,255,0.8);
-  animation:glow 2s infinite alternate;
-}
-
-.loveNote{
-  font-size:22px;
-  margin-top:25px;
-  color:white;
-}
-
-.signature{
-  margin-top:30px;
-  opacity:.8;
-  color:white;
-}
-
-@keyframes glow{
-  from{ text-shadow:0 0 10px rgba(255,255,255,0.6);}
-  to{ text-shadow:0 0 30px rgba(255,255,255,1);}
-}
-
-@keyframes fadeIn{
-  from{opacity:0;transform:scale(0.95);}
-  to{opacity:1;transform:scale(1);}
-}
-
-/* floating hearts */
-
-.heart{
-  position:absolute;
-  bottom:-50px;
-  font-size:24px;
-  animation:floatUp 6s linear infinite;
-}
-
-@keyframes floatUp{
-  0%{transform:translateY(0);opacity:1;}
-  100%{transform:translateY(-110vh);opacity:0;}
-}
+footer{text-align:center;font-size:12px;color:gray;padding:30px;opacity:.6}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <div class="logo" onclick="location.reload()">
-    <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-  </div>
+<div class="logo" onclick="location.reload()">
+<span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+</div>
 </div>
 
 <div id="hero" class="hero">
-  <div class="heroLogo">
-    <span>J</span>
-    <span class="bounce">o</span>
-    <span class="bounce">o</span>
-    <span>g</span>
-    <span>l</span>
-    <span>e</span>
-  </div>
+<div class="heroLogo">
+<span>J</span>
+<span class="bounce">o</span>
+<span class="bounce">o</span>
+<span>g</span><span>l</span><span>e</span>
+</div>
 
-  <form id="searchForm" class="searchArea">
-    <input id="searchBox" class="searchInput" placeholder="Search Joogle..." />
-    <button class="button" type="submit">Joogle Search</button>
-    <button class="button" type="button" onclick="feelingJoogly()">I'm Feeling Joogly</button>
-  </form>
+<form id="searchForm" class="searchArea">
+<input id="searchBox" class="searchInput" placeholder="Search Joogle..." />
+<button class="button" type="submit">Joogle Search</button>
+<button class="button" type="button" onclick="feelingJoogly()">I'm Feeling Joogly</button>
+</form>
 </div>
 
 <div id="main" class="results"></div>
 
+<footer>
+Joogle is a private parody made with love and is not affiliated with Google LLC.
+</footer>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script>
+const PROXY_URL="https://joogle-proxy.flodingus.workers.dev";
+let julieAudio=null;
 
 document.getElementById("searchForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  performSearch(searchBox.value.trim());
+e.preventDefault();
+performSearch(searchBox.value.trim());
 });
 
 function feelingJoogly(){
-  const val=searchBox.value.trim();
-  if(val) window.open("https://www.google.com/search?q="+encodeURIComponent(val));
+const val=searchBox.value.trim();
+if(val) window.open("https://www.google.com/search?q="+encodeURIComponent(val));
 }
 
 function spawnHeart(){
-  const heart=document.createElement("div");
-  heart.className="heart";
-  heart.style.left=Math.random()*100+"vw";
-  heart.style.animationDuration=(4+Math.random()*4)+"s";
-  heart.innerHTML="💙";
-  document.body.appendChild(heart);
-  setTimeout(()=>heart.remove(),8000);
+const heart=document.createElement("div");
+heart.className="heart";
+heart.style.left=Math.random()*100+"vw";
+heart.innerHTML="💙";
+document.body.appendChild(heart);
+setTimeout(()=>heart.remove(),8000);
+}
+
+function startJulieMusic(vol){
+if(!julieAudio){
+julieAudio=new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b63c9b2a.mp3?filename=romantic-piano-110624.mp3");
+julieAudio.loop=true;
+julieAudio.volume=0;
+julieAudio.play().then(()=>{
+let fade=setInterval(()=>{
+if(julieAudio.volume<vol){julieAudio.volume+=0.05}else clearInterval(fade)
+},200);
+});
+}
 }
 
 async function performSearch(query){
+if(!query) return;
+const q=query.toLowerCase();
 
-  if(!query) return;
-  const q=query.toLowerCase();
-
-  if(q.includes("julie")){
-
-    document.body.classList.add("julieMode");
-    hero.style.display="none";
-
-    const notes=[
-      "You are my favorite thing to Joogle.",
-      "If loving you was a search, I'd never hit enter.",
-      "You are my homepage.",
-      "You are my favorite result.",
-      "Every search ends with you."
-    ];
-
-    const randomNote=notes[Math.floor(Math.random()*notes.length)];
-
-    main.innerHTML=`
-      <div class="loveContainer">
-        <div class="loveMessage">💙 Julie 💙</div>
-        <div class="loveNote">${randomNote}</div>
-        <div class="signature">— Love, always.</div>
-        <audio autoplay loop>
-          <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b63c9b2a.mp3?filename=romantic-piano-110624.mp3" type="audio/mpeg">
-        </audio>
-      </div>
-    `;
-
-    setInterval(spawnHeart,500);
-    return;
-  }
-
-  main.innerHTML="Search disabled in this demo build.";
+if(q.includes("i love you")){
+document.body.className="julieElite";
+hero.style.display="none";
+main.innerHTML=`<div class="loveContainer">
+<div class="loveMessage">💙 I Love You 💙</div>
+<div class="loveNote">Always. Forever. Endlessly.</div>
+<div class="signature">— Yours.</div></div>`;
+setInterval(spawnHeart,300);
+startJulieMusic(1);
+return;
 }
 
+if(q.includes("julie")){
+document.body.className="julieMode";
+hero.style.display="none";
+main.innerHTML=`<div class="loveContainer">
+<div class="loveMessage">💙 Julie 💙</div>
+<div class="loveNote">You are my favorite thing to Joogle.</div>
+<div class="signature">— Love, always.</div></div>`;
+setInterval(spawnHeart,500);
+startJulieMusic(.7);
+return;
+}
+
+if(q.includes("weather")||q.includes("forecast")){
+handleWeather(query);
+return;
+}
+
+if(q.includes("near me")||q.includes("map")||q.includes("directions")){
+handleMap(query);
+return;
+}
+
+hero.style.display="none";
+main.innerHTML="Loading...";
+
+try{
+const res=await fetch(PROXY_URL,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({q:query})
+});
+const data=await res.json();
+main.innerHTML=data.organic.map(r=>`
+<div class="resultItem">
+<a href="${r.link}" target="_blank"><h3>${r.title}</h3></a>
+<p>${r.snippet}</p></div>`).join("");
+}catch{main.innerHTML="Search failed."}
+}
+
+async function handleWeather(query){
+hero.style.display="none";
+main.innerHTML="<div class='weatherCard'>Loading weather...</div>";
+const cleaned=query.toLowerCase().replace("forecast","").replace("weather","").trim();
+try{
+const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1`);
+const g=await geo.json();
+const place=g.results[0];
+const weather=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true&temperature_unit=fahrenheit`);
+const w=await weather.json();
+main.innerHTML=`<div class="weatherCard">
+<h2>${place.name}, ${place.country}</h2>
+<div style="font-size:48px;font-weight:bold">${Math.round(w.current_weather.temperature)}°F</div>
+<p>Wind: ${w.current_weather.windspeed} mph</p></div>`;
+}catch{main.innerHTML="<div class='weatherCard'>Weather unavailable.</div>"}
+}
+
+async function handleMap(query){
+hero.style.display="none";
+main.innerHTML="<div id='map'></div>";
+const map=L.map('map').setView([32.7767,-96.7970],10);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+}
 </script>
 
 </body>
