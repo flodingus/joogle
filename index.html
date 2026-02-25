@@ -5,18 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Joogle</title>
 
-<link rel="icon" href="data:image/svg+xml,
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
-<text y='.9em' font-size='90'>💙</text>
-</svg>">
+<link rel="icon" type="image/svg+xml"
+href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%92%99%3C/text%3E%3C/svg%3E">
 
 <style>
 body{
   margin:0;
   font-family:Arial,Helvetica,sans-serif;
-  background:#ffffff;
+  background:#fff;
   color:#202124;
-  transition:.4s;
   overflow-x:hidden;
 }
 
@@ -54,22 +51,10 @@ body{
   letter-spacing:-6px;
 }
 
-.bounce{
-  display:inline-block;
-  animation:bounce 2.4s infinite cubic-bezier(.28,.84,.42,1);
-}
-
-@keyframes bounce{
-  0%,100%{transform:translateY(0)}
-  30%{transform:translateY(-8px) scale(1.05,.95)}
-  50%{transform:translateY(0) scale(.95,1.05)}
-}
-
 .searchArea{
   margin-top:25px;
   display:flex;
   gap:10px;
-  flex-wrap:wrap;
   justify-content:center;
 }
 
@@ -108,13 +93,13 @@ body{
 .loveScreen{
   position:fixed;
   inset:0;
+  background:linear-gradient(135deg,#ffdde1,#ee9ca7);
   display:flex;
   align-items:center;
   justify-content:center;
   flex-direction:column;
   text-align:center;
-  background:linear-gradient(135deg,#ffdde1,#ee9ca7);
-  z-index:999;
+  z-index:1000;
 }
 
 .loveMessage{
@@ -133,7 +118,7 @@ body{
 .signature{
   margin-top:25px;
   color:white;
-  opacity:.8;
+  opacity:.9;
 }
 
 .heart{
@@ -141,6 +126,7 @@ body{
   bottom:-50px;
   font-size:22px;
   animation:floatUp 6s linear infinite;
+  z-index:1100;
 }
 
 @keyframes floatUp{
@@ -162,15 +148,15 @@ footer{
 
 <div class="header">
   <div class="logo" onclick="location.reload()">
-    <span>J</span><span>o</span><span class="bounce">o</span><span class="bounce">g</span><span>l</span><span>e</span>
+    <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
 </div>
 
 <div id="hero" class="hero">
   <div class="heroLogo">
     <span style="color:#4285F4">J</span>
-    <span style="color:#DB4437" class="bounce">o</span>
-    <span style="color:#F4B400" class="bounce">o</span>
+    <span style="color:#DB4437">o</span>
+    <span style="color:#F4B400">o</span>
     <span style="color:#4285F4">g</span>
     <span style="color:#0F9D58">l</span>
     <span style="color:#DB4437">e</span>
@@ -179,7 +165,6 @@ footer{
   <form id="searchForm" class="searchArea">
     <input id="searchBox" class="searchInput" placeholder="Search Joogle..." />
     <button class="button" type="submit">Search</button>
-    <button class="button" type="button" onclick="feelingJoogly()">I'm Feeling Joogly</button>
   </form>
 </div>
 
@@ -199,21 +184,24 @@ const loveNotes=[
 "You make every day better.",
 "My favorite thing to Joogle.",
 "I’d search the whole internet for you.",
-"Always you. 💙",
+"Always you 💙",
 "Forever your Joogle."
 ];
 
-document.getElementById("searchForm").addEventListener("submit",e=>{
+document.getElementById("searchForm").addEventListener("submit",function(e){
   e.preventDefault();
-  const query=searchBox.value.trim();
-  if(query.toLowerCase().includes("julie")){
-    triggerJulie();
-  }else{
+  const query=searchBox.value.trim().toLowerCase();
+
+  if(query.includes("julie")){
+    startJulie();
+  } else if(query.includes("weather")){
+    handleWeather(query);
+  } else {
     performSearch(query);
   }
 });
 
-function triggerJulie(){
+function startJulie(){
   const note=loveNotes[Math.floor(Math.random()*loveNotes.length)];
 
   const screen=document.createElement("div");
@@ -226,41 +214,27 @@ function triggerJulie(){
   document.body.appendChild(screen);
 
   if(!heartInterval){
-    heartInterval=setInterval(spawnHeart,400);
+    heartInterval=setInterval(()=>{
+      const heart=document.createElement("div");
+      heart.className="heart";
+      heart.style.left=Math.random()*100+"vw";
+      heart.innerHTML="💙";
+      document.body.appendChild(heart);
+      setTimeout(()=>heart.remove(),6000);
+    },400);
   }
 
   if(!julieAudio){
     julieAudio=new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b63c9b2a.mp3?filename=romantic-piano-110624.mp3");
     julieAudio.loop=true;
-    julieAudio.volume=0;
-    julieAudio.play();
-    let fade=setInterval(()=>{
-      if(julieAudio.volume<0.7){julieAudio.volume+=0.05}
-      else clearInterval(fade)
-    },200);
+    julieAudio.volume=0.7;
+    julieAudio.play().catch(()=>{});
   }
-}
-
-function spawnHeart(){
-  const heart=document.createElement("div");
-  heart.className="heart";
-  heart.style.left=Math.random()*100+"vw";
-  heart.innerHTML="💙";
-  document.body.appendChild(heart);
-  setTimeout(()=>heart.remove(),8000);
 }
 
 async function performSearch(query){
-  if(!query) return;
-
-  if(query.toLowerCase().includes("weather")){
-    handleWeather(query);
-    return;
-  }
-
   hero.style.display="none";
   main.innerHTML="Loading...";
-
   try{
     const res=await fetch(PROXY_URL,{
       method:"POST",
@@ -268,7 +242,6 @@ async function performSearch(query){
       body:JSON.stringify({q:query})
     });
     const data=await res.json();
-    if(!data.organic){main.innerHTML="No results.";return;}
     main.innerHTML=data.organic.map(r=>`
       <div style="margin-bottom:24px">
         <a href="${r.link}" target="_blank"><h3>${r.title}</h3></a>
@@ -284,16 +257,17 @@ async function handleWeather(query){
   main.innerHTML="<div class='weatherCard'>Loading weather...</div>";
 
   try{
-    let lat,lon,label;
-    const cleaned=query.toLowerCase().replace("weather","").trim();
+    let lat,lon,label="Your Area";
+    const cleaned=query.replace("weather","").trim();
 
     if(cleaned){
       const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1`);
       const g=await geo.json();
-      if(!g.results) throw "No city";
-      lat=g.results[0].latitude;
-      lon=g.results[0].longitude;
-      label=g.results[0].name+", "+g.results[0].country;
+      if(g.results && g.results.length){
+        lat=g.results[0].latitude;
+        lon=g.results[0].longitude;
+        label=g.results[0].name+", "+g.results[0].country;
+      }
     }else{
       await new Promise((resolve,reject)=>{
         navigator.geolocation.getCurrentPosition(pos=>{
@@ -302,14 +276,10 @@ async function handleWeather(query){
           resolve();
         },reject);
       });
-
-      const rev=await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1`);
-      const r=await rev.json();
-      label=r.results?.[0]?.name ? r.results[0].name+", "+r.results[0].country : "Your Area";
     }
 
     const weather=await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`
     );
     const w=await weather.json();
 
@@ -323,7 +293,7 @@ async function handleWeather(query){
       </div>
     `;
   }catch{
-    main.innerHTML="<div class='weatherCard'>Weather unavailable.</div>";
+    main.innerHTML="<div class='weatherCard'>Location permission denied or unavailable.</div>";
   }
 }
 </script>
