@@ -3,26 +3,28 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Joogle Pro</title>
+<title>Joogle</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+<text x='50%' y='60%' text-anchor='middle' font-size='80' font-family='Arial' fill='%234285F4'>J</text>
+<text x='70%' y='30%' font-size='25' fill='red'>♥</text>
+</svg>">
 
 <style>
 :root{
   --bg:#ffffff;
   --text:#202124;
   --border:#dadce0;
-  --link:#1a0dab;
   --card:#f8f9fa;
+  --link:#1a0dab;
 }
 body.dark{
   --bg:#121212;
   --text:#e8e8e8;
   --border:#333;
-  --link:#8ab4f8;
   --card:#1e1e1e;
+  --link:#8ab4f8;
 }
 body{
   margin:0;
@@ -67,11 +69,9 @@ body{
   border:1px solid var(--border);
   background:var(--card);
   cursor:pointer;
-  transition:all .2s ease;
+  transition:.2s;
 }
-.button:hover{
-  transform:translateY(-1px);
-}
+.button:hover{transform:translateY(-1px);}
 
 /* HERO */
 .homeHero{
@@ -86,10 +86,7 @@ body{
   font-size:100px;
   font-weight:bold;
   letter-spacing:-7px;
-  cursor:pointer;
-  transition:transform .2s ease;
   animation:glowPulse 3s infinite ease-in-out;
-  user-select:none;
 }
 .heroLogo span:nth-child(1){color:#4285F4}
 .heroLogo span:nth-child(2){color:#DB4437}
@@ -119,10 +116,9 @@ body{
   50%{filter:drop-shadow(0 0 15px rgba(66,133,244,0.35));}
 }
 
-/* RESULTS */
 .results{
-  max-width:1000px;
-  margin:20px auto;
+  max-width:900px;
+  margin:30px auto;
   padding:0 20px;
 }
 
@@ -134,6 +130,18 @@ body{
 }
 .resultItem{margin-bottom:20px;}
 .resultItem h3{color:var(--link);margin:0;}
+
+footer{
+  text-align:center;
+  font-size:12px;
+  color:gray;
+  padding:20px;
+  opacity:.7;
+}
+
+@keyframes fall{
+  to{transform:translateY(110vh);opacity:0;}
+}
 </style>
 </head>
 
@@ -149,7 +157,6 @@ body{
     <button class="button" type="submit">Search</button>
   </form>
 
-  <button id="voiceBtn" class="button">🎙</button>
   <button id="darkToggle" class="button">🌙</button>
 </div>
 
@@ -164,12 +171,18 @@ body{
   </div>
 
   <div style="margin-top:20px;display:flex;gap:10px;">
-    <button id="searchBtnHero" class="button">Search Joogle</button>
+    <button id="heroSearch" class="button">Search Joogle</button>
     <button id="jooglyBtn" class="button">I'm Feeling Joogly</button>
   </div>
 </div>
 
 <div class="results" id="main"></div>
+
+<footer>
+  Joogle is a private parody made with love and is not affiliated with Google LLC.
+</footer>
+
+<audio id="loveMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
 
 <script>
 const PROXY_URL="https://joogle-proxy.flodingus.workers.dev";
@@ -179,47 +192,49 @@ document.getElementById("darkToggle").onclick=()=>{
   document.body.classList.toggle("dark");
 };
 
-/* FORM SUBMIT */
+/* SEARCH SUBMIT */
 document.getElementById("searchForm").addEventListener("submit",e=>{
   e.preventDefault();
-  performSearch(document.getElementById("searchBox").value);
+  performSearch(searchBox.value);
 });
-
-document.getElementById("searchBtnHero").onclick=()=>{
-  performSearch(document.getElementById("searchBox").value);
+document.getElementById("heroSearch").onclick=()=>{
+  performSearch(searchBox.value);
 };
 
 /* I'M FEELING JOOGLE */
 document.getElementById("jooglyBtn").onclick=async()=>{
-  const q=document.getElementById("searchBox").value || "random";
+  const q=searchBox.value || "random";
   const res=await fetch(PROXY_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({q})
   });
   const data=await res.json();
-  if(data.organic && data.organic.length>0){
+  if(data.organic?.length){
     window.location.href=data.organic[0].link;
   }
 };
 
-/* SEARCH */
+/* MAIN SEARCH */
 async function performSearch(query){
   if(!query) return;
 
-  const hero=document.getElementById("homeHero");
-  hero.style.opacity="0";
-  hero.style.transform="translateY(-20px)";
-  setTimeout(()=>hero.style.display="none",400);
+  if(query.toLowerCase()==="julie"){
+    triggerJulieEasterEgg();
+    return;
+  }
 
-  document.getElementById("main").innerHTML="Loading...";
+  homeHero.style.opacity="0";
+  homeHero.style.transform="translateY(-20px)";
+  setTimeout(()=>homeHero.style.display="none",400);
+
+  main.innerHTML="Loading...";
 
   const res=await fetch(PROXY_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({q:query})
   });
-
   const data=await res.json();
 
   let html="";
@@ -234,8 +249,70 @@ async function performSearch(query){
         </div>`;
     });
   }
-  document.getElementById("main").innerHTML=html;
+  main.innerHTML=html;
 }
+
+/* EASTER EGG */
+function triggerJulieEasterEgg(){
+
+  const notes=[
+    "You are officially the only Joogle that matters 💙",
+    "Best search result: Julie.",
+    "404: Better girlfriend not found.",
+    "No algorithm ranks above you."
+  ];
+
+  const overlay=document.createElement("div");
+  overlay.style.cssText=`
+    position:fixed;inset:0;
+    background:linear-gradient(135deg,#ff6ec4,#7873f5);
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    color:white;z-index:9999;text-align:center;
+  `;
+
+  overlay.innerHTML=`
+    <h1 style="font-size:48px;">Hi Julie 💙</h1>
+    <p style="font-size:22px;margin-top:20px;">
+      ${notes[Math.floor(Math.random()*notes.length)]}
+    </p>
+    <button id="closeLove" class="button" style="margin-top:40px;">Close</button>
+  `;
+
+  document.body.appendChild(overlay);
+
+  for(let i=0;i<30;i++){
+    const heart=document.createElement("div");
+    heart.innerHTML="❤️";
+    heart.style.position="absolute";
+    heart.style.left=Math.random()*100+"%";
+    heart.style.top="-50px";
+    heart.style.fontSize=(20+Math.random()*20)+"px";
+    heart.style.animation=`fall ${3+Math.random()*3}s linear forwards`;
+    overlay.appendChild(heart);
+  }
+
+  const music=document.getElementById("loveMusic");
+  music.volume=0.15;
+  music.play().catch(()=>{});
+
+  document.getElementById("closeLove").onclick=()=>{
+    overlay.remove();
+  };
+}
+
+/* SECRET JJ */
+let jj=0;
+document.addEventListener("keydown",e=>{
+  if(e.key.toLowerCase()==="j"){
+    jj++;
+    if(jj===2){
+      triggerJulieEasterEgg();
+      jj=0;
+    }
+    setTimeout(()=>jj=0,500);
+  }
+});
 </script>
 
 </body>
