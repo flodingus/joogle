@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#fff;color:#202124;transition:.6s;overflow-x:hidden}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#fff;color:#202124;transition:.5s;overflow-x:hidden}
 .header{padding:15px 24px;border-bottom:1px solid #dadce0}
 .logo{font-size:26px;font-weight:bold;letter-spacing:-2px;cursor:pointer}
 .logo span:nth-child(1){color:#4285F4}
@@ -120,17 +120,19 @@ document.body.appendChild(heart);
 setTimeout(()=>heart.remove(),8000);
 }
 
-function startJulieMusic(vol){
-if(!julieAudio){
+function startJulieMusic(volume){
+if(julieAudio){ return; }
 julieAudio=new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b63c9b2a.mp3?filename=romantic-piano-110624.mp3");
 julieAudio.loop=true;
 julieAudio.volume=0;
 julieAudio.play().then(()=>{
 let fade=setInterval(()=>{
-if(julieAudio.volume<vol){julieAudio.volume+=0.05}else clearInterval(fade)
+if(julieAudio.volume<volume){julieAudio.volume+=0.05}
+else clearInterval(fade)
 },200);
+}).catch(()=>{
+document.body.addEventListener("click",()=>julieAudio.play(),{once:true});
 });
-}
 }
 
 async function performSearch(query){
@@ -181,6 +183,7 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({q:query})
 });
 const data=await res.json();
+if(!data.organic){main.innerHTML="No results.";return;}
 main.innerHTML=data.organic.map(r=>`
 <div class="resultItem">
 <a href="${r.link}" target="_blank"><h3>${r.title}</h3></a>
@@ -192,24 +195,64 @@ async function handleWeather(query){
 hero.style.display="none";
 main.innerHTML="<div class='weatherCard'>Loading weather...</div>";
 const cleaned=query.toLowerCase().replace("forecast","").replace("weather","").trim();
+
 try{
+let lat,lon,label;
+
+if(cleaned){
 const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1`);
 const g=await geo.json();
-const place=g.results[0];
-const weather=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true&temperature_unit=fahrenheit`);
+if(!g.results||!g.results.length) throw "No city";
+lat=g.results[0].latitude;
+lon=g.results[0].longitude;
+label=g.results[0].name+", "+g.results[0].country;
+}else{
+await new Promise((resolve,reject)=>{
+navigator.geolocation.getCurrentPosition(pos=>{
+lat=pos.coords.latitude;
+lon=pos.coords.longitude;
+label="Your Location";
+resolve();
+},reject);
+});
+}
+
+const weather=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`);
 const w=await weather.json();
+
 main.innerHTML=`<div class="weatherCard">
-<h2>${place.name}, ${place.country}</h2>
+<h2>${label}</h2>
 <div style="font-size:48px;font-weight:bold">${Math.round(w.current_weather.temperature)}°F</div>
 <p>Wind: ${w.current_weather.windspeed} mph</p></div>`;
-}catch{main.innerHTML="<div class='weatherCard'>Weather unavailable.</div>"}
+}catch{
+main.innerHTML="<div class='weatherCard'>Weather unavailable.</div>";
+}
 }
 
 async function handleMap(query){
 hero.style.display="none";
 main.innerHTML="<div id='map'></div>";
-const map=L.map('map').setView([32.7767,-96.7970],10);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+
+navigator.geolocation.getCurrentPosition(async pos=>{
+const lat=pos.coords.latitude;
+const lon=pos.coords.longitude;
+
+const map=L.map('map').setView([lat,lon],14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+L.marker([lat,lon]).addTo(map).bindPopup("You are here").openPopup();
+
+const searchTerm=query.toLowerCase().replace("near me","").trim();
+
+if(searchTerm){
+const overpass=await fetch(`https://overpass-api.de/api/interpreter?data=[out:json];node(around:2000,${lat},${lon})[amenity=${searchTerm}];out;`);
+const data=await overpass.json();
+data.elements.forEach(place=>{
+L.marker([place.lat,place.lon]).addTo(map)
+.bindPopup(place.tags.name||searchTerm);
+});
+}
+
+});
 }
 </script>
 
