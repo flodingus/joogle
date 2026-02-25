@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Joogle</title>
 
+<link rel="icon" href="data:image/svg+xml,
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+<text y='.9em' font-size='90'>💙</text>
+</svg>">
+
 <style>
 body{
   margin:0;
@@ -12,6 +17,7 @@ body{
   background:#fff;
   color:#202124;
 }
+
 .header{
   display:flex;
   align-items:center;
@@ -19,33 +25,20 @@ body{
   border-bottom:1px solid #dadce0;
   gap:10px;
 }
+
 .logo{
   font-size:26px;
   font-weight:bold;
   cursor:pointer;
+  letter-spacing:-2px;
 }
+
 .logo span:nth-child(1){color:#4285F4}
 .logo span:nth-child(2){color:#DB4437}
 .logo span:nth-child(3){color:#F4B400}
 .logo span:nth-child(4){color:#4285F4}
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
-
-.searchInput{
-  flex:1;
-  padding:10px 18px;
-  border-radius:24px;
-  border:1px solid #dadce0;
-  font-size:16px;
-}
-
-.button{
-  padding:8px 14px;
-  border-radius:20px;
-  border:1px solid #dadce0;
-  background:#f8f9fa;
-  cursor:pointer;
-}
 
 .hero{
   height:60vh;
@@ -58,17 +51,50 @@ body{
 .heroLogo{
   font-size:100px;
   font-weight:bold;
-  letter-spacing:-6px;
+  letter-spacing:-8px;
 }
+
+.heroLogo span:nth-child(1){color:#4285F4}
+.heroLogo span:nth-child(2){color:#DB4437}
+.heroLogo span:nth-child(3){color:#F4B400}
+.heroLogo span:nth-child(4){color:#4285F4}
+.heroLogo span:nth-child(5){color:#0F9D58}
+.heroLogo span:nth-child(6){color:#DB4437}
 
 .bounce{
   display:inline-block;
-  animation:bounce 2s infinite cubic-bezier(.28,.84,.42,1);
+  animation:premiumBounce 2.4s infinite cubic-bezier(.28,.84,.42,1);
 }
-@keyframes bounce{
-  0%,100%{transform:translateY(0)}
-  30%{transform:translateY(-12px)}
-  50%{transform:translateY(0)}
+
+@keyframes premiumBounce{
+  0%,100%{transform:translateY(0) scaleX(1) scaleY(1);}
+  25%{transform:translateY(-10px) scaleX(1.02) scaleY(.98);}
+  40%{transform:translateY(0) scaleX(.97) scaleY(1.03);}
+  55%{transform:translateY(-3px) scaleX(1.01) scaleY(.99);}
+  70%{transform:translateY(0);}
+}
+
+.searchArea{
+  display:flex;
+  gap:8px;
+  margin-top:20px;
+}
+
+.searchInput{
+  width:400px;
+  max-width:90vw;
+  padding:10px 18px;
+  border-radius:24px;
+  border:1px solid #dadce0;
+  font-size:16px;
+}
+
+.button{
+  padding:8px 16px;
+  border-radius:20px;
+  border:1px solid #dadce0;
+  background:#f8f9fa;
+  cursor:pointer;
 }
 
 .results{
@@ -81,8 +107,8 @@ body{
   background:#f8f9fa;
   padding:20px;
   border-radius:12px;
-  margin-bottom:20px;
 }
+
 .weatherDay{
   display:flex;
   justify-content:space-between;
@@ -105,11 +131,6 @@ footer{
   <div class="logo" onclick="location.reload()">
     <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
   </div>
-
-  <form id="searchForm" style="flex:1;display:flex;gap:8px;">
-    <input id="searchBox" class="searchInput" placeholder="Search Joogle...">
-    <button class="button" type="submit">Search</button>
-  </form>
 </div>
 
 <div id="hero" class="hero">
@@ -121,9 +142,15 @@ footer{
     <span>l</span>
     <span>e</span>
   </div>
+
+  <form id="searchForm" class="searchArea">
+    <input id="searchBox" class="searchInput" placeholder="Search Joogle..." />
+    <button class="button" type="submit">Joogle Search</button>
+    <button class="button" type="button" onclick="feelingJoogly()">I'm Feeling Joogly</button>
+  </form>
 </div>
 
-<div class="results" id="main"></div>
+<div id="main" class="results"></div>
 
 <footer>
   Joogle is a private parody made with love and is not affiliated with Google LLC.
@@ -138,11 +165,18 @@ document.getElementById("searchForm").addEventListener("submit",e=>{
   performSearch(searchBox.value.trim());
 });
 
+function feelingJoogly(){
+  const val=searchBox.value.trim();
+  if(val) window.open("https://www.google.com/search?q="+encodeURIComponent(val)," _blank");
+}
+
 async function performSearch(query){
   if(!query) return;
 
-  if(query.toLowerCase().includes("weather")){
-    loadWeather();
+  const q=query.toLowerCase();
+
+  if(q.includes("weather") || q.includes("forecast")){
+    handleWeather(query);
     return;
   }
 
@@ -154,6 +188,7 @@ async function performSearch(query){
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({q:query})
   });
+
   const data=await res.json();
 
   let html="";
@@ -168,62 +203,77 @@ async function performSearch(query){
       </div><br>`;
     });
   }
+
   main.innerHTML=html;
 }
 
-function loadWeather(){
+async function handleWeather(query){
 
   hero.style.display="none";
-  main.innerHTML="Detecting location...";
+  main.innerHTML="Loading weather...";
 
-  navigator.geolocation.getCurrentPosition(async pos=>{
+  let city=query.replace(/weather|forecast|in/gi,"").trim();
 
-    const lat=pos.coords.latitude;
-    const lon=pos.coords.longitude;
+  let lat,lon,label;
 
-    // Get city name
-    const locRes=await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-    );
-    const locData=await locRes.json();
-    const city=
-      locData.address.city ||
-      locData.address.town ||
-      locData.address.village ||
-      locData.address.state;
+  if(city){
+    const geo=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
+    const geoData=await geo.json();
+    if(!geoData.length){
+      main.innerHTML="City not found.";
+      return;
+    }
+    lat=geoData[0].lat;
+    lon=geoData[0].lon;
+    label=geoData[0].display_name.split(",").slice(0,2).join(",");
+  }else{
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      lat=pos.coords.latitude;
+      lon=pos.coords.longitude;
 
-    // Get weather
-    const weatherRes=await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`
-    );
-    const weatherData=await weatherRes.json();
+      const locRes=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+      const locData=await locRes.json();
+      label=locData.address.city || locData.address.town || locData.address.state;
 
-    let html=`
-      <div class="weatherCard">
-        <h2>${city}</h2>
-        <h1>${Math.round(weatherData.current_weather.temperature)}°F</h1>
-        <p>Wind: ${weatherData.current_weather.windspeed} mph</p>
-        <hr>
-    `;
-
-    weatherData.daily.time.forEach((day,i)=>{
-      html+=`
-        <div class="weatherDay">
-          <span>${day}</span>
-          <span>
-            ${Math.round(weatherData.daily.temperature_2m_max[i])}° /
-            ${Math.round(weatherData.daily.temperature_2m_min[i])}°
-          </span>
-        </div>
-      `;
+      loadWeatherData(lat,lon,label);
+    },()=>{
+      main.innerHTML="Location access denied.";
     });
+    return;
+  }
 
-    html+="</div>";
-    main.innerHTML=html;
+  loadWeatherData(lat,lon,label);
+}
 
-  },()=>{
-    main.innerHTML="Location access denied.";
+async function loadWeatherData(lat,lon,label){
+
+  const weather=await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`
+  );
+  const data=await weather.json();
+
+  let html=`
+    <div class="weatherCard">
+      <h2>${label}</h2>
+      <h1>${Math.round(data.current_weather.temperature)}°F</h1>
+      <p>Wind: ${data.current_weather.windspeed} mph</p>
+      <hr>
+  `;
+
+  data.daily.time.forEach((day,i)=>{
+    html+=`
+      <div class="weatherDay">
+        <span>${day}</span>
+        <span>
+          ${Math.round(data.daily.temperature_2m_max[i])}° /
+          ${Math.round(data.daily.temperature_2m_min[i])}°
+        </span>
+      </div>
+    `;
   });
+
+  html+="</div>";
+  main.innerHTML=html;
 }
 
 </script>
