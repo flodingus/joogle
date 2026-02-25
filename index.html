@@ -16,11 +16,10 @@ body{
   font-family:Arial,Helvetica,sans-serif;
   background:#fff;
   color:#202124;
+  transition:background 0.6s ease;
 }
 
 .header{
-  display:flex;
-  align-items:center;
   padding:15px 24px;
   border-bottom:1px solid #dadce0;
 }
@@ -28,8 +27,8 @@ body{
 .logo{
   font-size:26px;
   font-weight:bold;
-  cursor:pointer;
   letter-spacing:-2px;
+  cursor:pointer;
 }
 
 .logo span:nth-child(1){color:#4285F4}
@@ -68,8 +67,8 @@ body{
 @keyframes premiumBounce{
   0%,100%{transform:translateY(0) scaleX(1) scaleY(1);}
   25%{transform:translateY(-10px) scaleX(1.02) scaleY(.98);}
-  40%{transform:translateY(0) scaleX(.97) scaleY(1.03);}
-  55%{transform:translateY(-3px) scaleX(1.01) scaleY(.99);}
+  40%{transform:translateY(0) scaleX(.96) scaleY(1.05);}
+  55%{transform:translateY(-4px) scaleX(1.01) scaleY(.99);}
   70%{transform:translateY(0);}
 }
 
@@ -80,16 +79,16 @@ body{
 }
 
 .searchInput{
-  width:400px;
+  width:420px;
   max-width:90vw;
-  padding:10px 18px;
+  padding:12px 18px;
   border-radius:24px;
   border:1px solid #dadce0;
   font-size:16px;
 }
 
 .button{
-  padding:8px 16px;
+  padding:10px 16px;
   border-radius:20px;
   border:1px solid #dadce0;
   background:#f8f9fa;
@@ -98,14 +97,15 @@ body{
 
 .results{
   max-width:900px;
-  margin:30px auto;
+  margin:40px auto;
   padding:0 20px;
 }
 
 .card{
   background:#f8f9fa;
-  padding:20px;
-  border-radius:12px;
+  padding:24px;
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
 
 .error{
@@ -113,12 +113,60 @@ body{
   color:#900;
 }
 
+.resultItem{
+  margin-bottom:24px;
+}
+
+.resultItem h3{
+  margin:0;
+  color:#1a0dab;
+}
+
 footer{
   text-align:center;
   font-size:12px;
   color:gray;
-  padding:20px;
-  opacity:.7;
+  padding:30px;
+  opacity:.6;
+}
+
+/* JULIE MODE */
+
+.loveScreen{
+  height:70vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#fdfbfb,#ebedee);
+  animation:fadeIn 1.5s ease;
+}
+
+.loveCard{
+  background:white;
+  padding:50px;
+  border-radius:20px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.15);
+  text-align:center;
+  max-width:500px;
+}
+
+.loveCard h1{
+  font-size:40px;
+}
+
+.loveText{
+  font-size:20px;
+  margin:25px 0;
+}
+
+.signature{
+  margin-top:30px;
+  opacity:.6;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
 }
 </style>
 </head>
@@ -151,7 +199,7 @@ footer{
 <div id="main" class="results"></div>
 
 <footer>
-  Joogle is a private parody made with love and is not affiliated with Google LLC.
+Joogle is a private parody made with love and is not affiliated with Google LLC.
 </footer>
 
 <script>
@@ -162,7 +210,7 @@ function timeoutFetch(resource, options = {}, timeout = 8000) {
   return Promise.race([
     fetch(resource, options),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Request timed out")), timeout)
+      setTimeout(() => reject(new Error("Timeout")), timeout)
     )
   ]);
 }
@@ -182,13 +230,40 @@ async function performSearch(query){
 
   const q=query.toLowerCase();
 
-  if(q.includes("weather") || q.includes("forecast")){
-    handleWeather(query);
+  /* JULIE EASTER EGG */
+
+  if(q.includes("julie")){
+
+    const notes=[
+      "You are my favorite thing to Joogle.",
+      "If loving you was a search, I'd never hit enter.",
+      "You are my homepage.",
+      "I don't need Google when I have you.",
+      "You are my favorite result.",
+      "Every search ends with you."
+    ];
+
+    const randomNote=notes[Math.floor(Math.random()*notes.length)];
+
+    hero.style.display="none";
+
+    main.innerHTML=`
+      <div class="loveScreen">
+        <div class="loveCard">
+          <h1>💙 Julie 💙</h1>
+          <p class="loveText">${randomNote}</p>
+          <div class="signature">— Love, always.</div>
+        </div>
+        <audio autoplay loop>
+          <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b63c9b2a.mp3?filename=romantic-piano-110624.mp3" type="audio/mpeg">
+        </audio>
+      </div>
+    `;
     return;
   }
 
   hero.style.display="none";
-  main.innerHTML="Loading...";
+  main.innerHTML="<div class='card'>Loading...</div>";
 
   try{
     const res=await timeoutFetch(PROXY_URL,{
@@ -202,91 +277,19 @@ async function performSearch(query){
     if(data.organic){
       data.organic.forEach(r=>{
         html+=`
-        <div>
-          <a href="${r.link}" target="_blank">
-            <h3>${r.title}</h3>
-          </a>
-          <p>${r.snippet}</p>
-        </div><br>`;
+          <div class="resultItem">
+            <a href="${r.link}" target="_blank">
+              <h3>${r.title}</h3>
+            </a>
+            <p>${r.snippet}</p>
+          </div>
+        `;
       });
     }
-    main.innerHTML=html || "No results.";
+    main.innerHTML=html || "<div class='card'>No results.</div>";
   }catch(err){
-    main.innerHTML=`<div class="card error">Search failed. Try again.</div>`;
+    main.innerHTML="<div class='card error'>Search failed.</div>";
   }
-}
-
-async function handleWeather(query){
-
-  hero.style.display="none";
-  main.innerHTML="Loading weather...";
-
-  try{
-
-    let city=query.replace(/weather|forecast|in/gi,"").trim();
-
-    if(city){
-      await getWeatherByCity(city);
-    }else{
-      navigator.geolocation.getCurrentPosition(async pos=>{
-        await getWeatherByCoords(pos.coords.latitude,pos.coords.longitude);
-      },()=>{
-        main.innerHTML=`<div class="card error">Location access denied.</div>`;
-      });
-    }
-
-  }catch(err){
-    main.innerHTML=`<div class="card error">Weather service unavailable.</div>`;
-  }
-}
-
-async function getWeatherByCity(city){
-
-  const geo=await timeoutFetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`,
-    { headers:{ "Accept":"application/json" } }
-  );
-
-  const geoData=await geo.json();
-
-  if(!geoData.length){
-    main.innerHTML=`<div class="card error">City not found.</div>`;
-    return;
-  }
-
-  await getWeatherByCoords(geoData[0].lat,geoData[0].lon,geoData[0].display_name);
-}
-
-async function getWeatherByCoords(lat,lon,label){
-
-  const weather=await timeoutFetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`
-  );
-
-  const data=await weather.json();
-
-  let html=`
-    <div class="card">
-      <h2>${label || "Your Location"}</h2>
-      <h1>${Math.round(data.current_weather.temperature)}°F</h1>
-      <p>Wind: ${data.current_weather.windspeed} mph</p>
-      <hr>
-  `;
-
-  data.daily.time.forEach((day,i)=>{
-    html+=`
-      <div style="display:flex;justify-content:space-between">
-        <span>${day}</span>
-        <span>
-          ${Math.round(data.daily.temperature_2m_max[i])}° /
-          ${Math.round(data.daily.temperature_2m_min[i])}°
-        </span>
-      </div>
-    `;
-  });
-
-  html+="</div>";
-  main.innerHTML=html;
 }
 
 </script>
