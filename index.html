@@ -10,45 +10,26 @@
 <text y='.9em' font-size='90'>💙</text>
 </svg>">
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
 <style>
-:root{
---bg:#ffffff;
---text:#202124;
---card:rgba(255,255,255,.25);
---border:#dadce0;
-}
-
-.dark{
---bg:#121212;
---text:#f1f1f1;
---card:rgba(255,255,255,.08);
---border:#333;
-}
-
 body{
-margin:0;
-font-family:Arial,Helvetica,sans-serif;
-background:var(--bg);
-color:var(--text);
-transition:.4s;
-overflow-x:hidden;
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#ffffff;
+  color:#202124;
+  transition:.4s;
+  overflow-x:hidden;
 }
 
 .header{
-padding:15px 24px;
-border-bottom:1px solid var(--border);
-display:flex;
-justify-content:space-between;
-align-items:center;
+  padding:15px 24px;
+  border-bottom:1px solid #dadce0;
 }
 
 .logo{
-font-size:26px;
-font-weight:bold;
-letter-spacing:-2px;
-cursor:pointer;
+  font-size:26px;
+  font-weight:bold;
+  letter-spacing:-2px;
+  cursor:pointer;
 }
 
 .logo span:nth-child(1){color:#4285F4}
@@ -58,111 +39,101 @@ cursor:pointer;
 .logo span:nth-child(5){color:#0F9D58}
 .logo span:nth-child(6){color:#DB4437}
 
-.toggle{
-cursor:pointer;
-padding:6px 12px;
-border-radius:20px;
-border:1px solid var(--border);
-font-size:12px;
-}
-
 .hero{
-height:60vh;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-text-align:center;
+  height:65vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
 }
 
 .heroLogo{
-font-size:80px;
-font-weight:bold;
-letter-spacing:-6px;
+  font-size:90px;
+  font-weight:bold;
+  letter-spacing:-6px;
 }
 
 .bounce{
-display:inline-block;
-animation:bounce 2.4s infinite cubic-bezier(.28,.84,.42,1);
+  display:inline-block;
+  animation:bounce 2.4s infinite cubic-bezier(.28,.84,.42,1);
 }
 
 @keyframes bounce{
-0%,100%{transform:translateY(0)}
-30%{transform:translateY(-8px) scale(1.05,.95)}
-50%{transform:translateY(0) scale(.95,1.05)}
+  0%,100%{transform:translateY(0)}
+  30%{transform:translateY(-8px) scale(1.05,.95)}
+  50%{transform:translateY(0) scale(.95,1.05)}
 }
 
 .searchArea{
-display:flex;
-gap:8px;
-margin-top:20px;
-flex-wrap:wrap;
-justify-content:center;
+  margin-top:25px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:center;
 }
 
 .searchInput{
-width:400px;
-max-width:90vw;
-padding:12px 18px;
-border-radius:24px;
-border:1px solid var(--border);
-font-size:16px;
+  width:420px;
+  max-width:90vw;
+  padding:12px 18px;
+  border-radius:24px;
+  border:1px solid #dadce0;
+  font-size:16px;
 }
 
 .button{
-padding:10px 16px;
-border-radius:20px;
-border:1px solid var(--border);
-background:var(--bg);
-color:var(--text);
-cursor:pointer;
+  padding:10px 16px;
+  border-radius:20px;
+  border:1px solid #dadce0;
+  background:#f8f9fa;
+  cursor:pointer;
 }
 
 .results{
-max-width:1000px;
-margin:40px auto;
-padding:0 20px;
+  max-width:900px;
+  margin:40px auto;
+  padding:0 20px;
 }
 
-.weatherGlass{
-backdrop-filter:blur(20px);
-background:var(--card);
-border-radius:24px;
-padding:30px;
-box-shadow:0 20px 40px rgba(0,0,0,.2);
-animation:fadeIn 1s ease;
+.weatherCard{
+  max-width:600px;
+  margin:auto;
+  padding:30px;
+  border-radius:20px;
+  background:#f8f9fa;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
 
-@keyframes fadeIn{
-from{opacity:0;transform:translateY(20px)}
-to{opacity:1;transform:translateY(0)}
+.loveContainer{
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  background:linear-gradient(135deg,#ffdde1,#ee9ca7);
 }
 
-.hourBars{
-display:flex;
-gap:4px;
-align-items:flex-end;
-margin-top:20px;
-height:60px;
+.loveMessage{
+  font-size:52px;
+  font-weight:bold;
+  color:white;
+  text-shadow:0 0 20px white;
 }
 
-.hourBars div{
-width:6px;
-background:linear-gradient(to top,#4facfe,#00f2fe);
-border-radius:4px;
-}
-
-#map{
-height:500px;
-border-radius:20px;
-margin-top:20px;
+.loveNote{
+  margin-top:20px;
+  font-size:22px;
+  color:white;
 }
 
 footer{
-text-align:center;
-font-size:12px;
-padding:30px;
-opacity:.6;
+  text-align:center;
+  font-size:12px;
+  color:gray;
+  padding:30px;
+  opacity:.6;
 }
 </style>
 </head>
@@ -170,27 +141,26 @@ opacity:.6;
 <body>
 
 <div class="header">
-<div class="logo" onclick="location.reload()">
-<span>J</span><span>o</span><span class="bounce">o</span><span class="bounce">g</span><span>l</span><span>e</span>
-</div>
-<div class="toggle" onclick="toggleDark()">🌙 Toggle</div>
+  <div class="logo" onclick="location.reload()">
+    <span>J</span><span>o</span><span class="bounce">o</span><span class="bounce">g</span><span>l</span><span>e</span>
+  </div>
 </div>
 
 <div id="hero" class="hero">
-<div class="heroLogo">
-<span style="color:#4285F4">J</span>
-<span style="color:#DB4437" class="bounce">o</span>
-<span style="color:#F4B400" class="bounce">o</span>
-<span style="color:#4285F4">g</span>
-<span style="color:#0F9D58">l</span>
-<span style="color:#DB4437">e</span>
-</div>
+  <div class="heroLogo">
+    <span style="color:#4285F4">J</span>
+    <span style="color:#DB4437" class="bounce">o</span>
+    <span style="color:#F4B400" class="bounce">o</span>
+    <span style="color:#4285F4">g</span>
+    <span style="color:#0F9D58">l</span>
+    <span style="color:#DB4437">e</span>
+  </div>
 
-<form id="searchForm" class="searchArea">
-<input id="searchBox" class="searchInput" placeholder="Search Joogle..." />
-<button class="button" type="submit">Search</button>
-<button class="button" type="button" onclick="feelingJoogly()">I'm Feeling Joogly</button>
-</form>
+  <form id="searchForm" class="searchArea">
+    <input id="searchBox" class="searchInput" placeholder="Search Joogle..." />
+    <button class="button" type="submit">Search</button>
+    <button class="button" type="button" onclick="feelingJoogly()">I'm Feeling Joogly</button>
+  </form>
 </div>
 
 <div id="main" class="results"></div>
@@ -199,132 +169,127 @@ opacity:.6;
 Joogle is a private parody made with love and is not affiliated with Google LLC.
 </footer>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
 const PROXY_URL="https://joogle-proxy.flodingus.workers.dev";
-
-function toggleDark(){
-document.body.classList.toggle("dark");
-localStorage.setItem("joogleDark",document.body.classList.contains("dark"));
-}
-if(localStorage.getItem("joogleDark")==="true"){
-document.body.classList.add("dark");
-}
+let julieAudio=null;
 
 document.getElementById("searchForm").addEventListener("submit",e=>{
-e.preventDefault();
-performSearch(searchBox.value.trim());
+  e.preventDefault();
+  performSearch(searchBox.value.trim());
 });
 
 function feelingJoogly(){
-const val=searchBox.value.trim();
-if(val) window.open("https://www.google.com/search?q="+encodeURIComponent(val));
+  const val=searchBox.value.trim();
+  if(val) window.open("https://www.google.com/search?q="+encodeURIComponent(val));
+}
+
+function startJulieMusic(){
+  if(julieAudio) return;
+  julieAudio=new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b63c9b2a.mp3?filename=romantic-piano-110624.mp3");
+  julieAudio.loop=true;
+  julieAudio.volume=0;
+  julieAudio.play().then(()=>{
+    let fade=setInterval(()=>{
+      if(julieAudio.volume<0.7){julieAudio.volume+=0.05}
+      else clearInterval(fade)
+    },200);
+  }).catch(()=>{
+    document.body.addEventListener("click",()=>julieAudio.play(),{once:true});
+  });
 }
 
 async function performSearch(query){
-if(!query) return;
-const q=query.toLowerCase();
+  if(!query) return;
+  const q=query.toLowerCase();
 
-if(q.includes("weather")||q.includes("forecast")){
-handleWeather(query);
-return;
-}
+  // JULIE EASTER EGG
+  if(q.includes("julie")){
+    hero.style.display="none";
+    main.innerHTML=`
+      <div class="loveContainer">
+        <div class="loveMessage">💙 Julie 💙</div>
+        <div class="loveNote">You are my favorite thing to Joogle.</div>
+      </div>
+    `;
+    startJulieMusic();
+    return;
+  }
 
-if(q.includes("near me")||q.includes("map")||q.includes("directions")){
-handleMap(query);
-return;
-}
+  // WEATHER
+  if(q.includes("weather")||q.includes("forecast")){
+    handleWeather(query);
+    return;
+  }
 
-hero.style.display="none";
-main.innerHTML="Loading...";
+  // NORMAL SEARCH
+  hero.style.display="none";
+  main.innerHTML="Loading...";
 
-try{
-const res=await fetch(PROXY_URL,{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({q:query})
-});
-const data=await res.json();
-main.innerHTML=data.organic.map(r=>`
-<div style="margin-bottom:24px">
-<a href="${r.link}" target="_blank"><h3>${r.title}</h3></a>
-<p>${r.snippet}</p>
-</div>`).join("");
-}catch{
-main.innerHTML="Search failed.";
-}
+  try{
+    const res=await fetch(PROXY_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({q:query})
+    });
+    const data=await res.json();
+    if(!data.organic){main.innerHTML="No results.";return;}
+    main.innerHTML=data.organic.map(r=>`
+      <div style="margin-bottom:24px">
+        <a href="${r.link}" target="_blank"><h3>${r.title}</h3></a>
+        <p>${r.snippet}</p>
+      </div>`).join("");
+  }catch{
+    main.innerHTML="Search failed.";
+  }
 }
 
 async function handleWeather(query){
-hero.style.display="none";
+  hero.style.display="none";
+  main.innerHTML="<div class='weatherCard'>Loading weather...</div>";
 
-let lat,lon,label;
-const cleaned=query.toLowerCase().replace("forecast","").replace("weather","").trim();
+  try{
+    let lat,lon,label;
+    const cleaned=query.toLowerCase().replace("weather","").replace("forecast","").trim();
 
-if(cleaned){
-const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1`);
-const g=await geo.json();
-lat=g.results[0].latitude;
-lon=g.results[0].longitude;
-label=g.results[0].name+", "+g.results[0].country;
-}else{
-await new Promise(resolve=>{
-navigator.geolocation.getCurrentPosition(pos=>{
-lat=pos.coords.latitude;
-lon=pos.coords.longitude;
-resolve();
-});
-});
-const rev=await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1`);
-const r=await rev.json();
-label=r.results[0].name+", "+r.results[0].country;
-}
+    if(cleaned){
+      const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1`);
+      const g=await geo.json();
+      if(!g.results) throw "No city";
+      lat=g.results[0].latitude;
+      lon=g.results[0].longitude;
+      label=g.results[0].name+", "+g.results[0].country;
+    }else{
+      await new Promise((resolve,reject)=>{
+        navigator.geolocation.getCurrentPosition(pos=>{
+          lat=pos.coords.latitude;
+          lon=pos.coords.longitude;
+          resolve();
+        },reject);
+      });
 
-const weather=await fetch(
-`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&hourly=temperature_2m&temperature_unit=fahrenheit&timezone=auto`
-);
-const w=await weather.json();
+      const rev=await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1`);
+      const r=await rev.json();
+      label=r.results[0].name+", "+r.results[0].country;
+    }
 
-const temp=Math.round(w.current_weather.temperature);
-const sky=temp<40?"#4facfe":temp<70?"#43e97b":"#fa709a";
-document.body.style.background=`linear-gradient(135deg,${sky},var(--bg))`;
+    const weather=await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&timezone=auto`
+    );
+    const w=await weather.json();
 
-main.innerHTML=`
-<div class="weatherGlass">
-<h2>${label}</h2>
-<div style="font-size:64px;font-weight:bold">${temp}°F</div>
-<p>Wind ${w.current_weather.windspeed} mph</p>
+    main.innerHTML=`
+      <div class="weatherCard">
+        <h2>${label}</h2>
+        <div style="font-size:48px;font-weight:bold">
+          ${Math.round(w.current_weather.temperature)}°F
+        </div>
+        <p>Wind ${w.current_weather.windspeed} mph</p>
+      </div>
+    `;
 
-<div style="display:flex;justify-content:space-between;margin-top:15px">
-${w.daily.time.slice(0,7).map((d,i)=>`
-<div style="text-align:center">
-<div>${d.slice(5)}</div>
-<div style="font-weight:bold">${Math.round(w.daily.temperature_2m_max[i])}°</div>
-<div style="opacity:.6">${Math.round(w.daily.temperature_2m_min[i])}°</div>
-</div>`).join("")}
-</div>
-
-<div class="hourBars">
-${w.hourly.temperature_2m.slice(0,24).map(t=>`
-<div style="height:${t}px"></div>
-`).join("")}
-</div>
-</div>`;
-}
-
-async function handleMap(query){
-hero.style.display="none";
-main.innerHTML="<div id='map'></div>";
-
-navigator.geolocation.getCurrentPosition(async pos=>{
-const lat=pos.coords.latitude;
-const lon=pos.coords.longitude;
-
-const map=L.map('map').setView([lat,lon],14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-L.marker([lat,lon]).addTo(map).bindPopup("You are here").openPopup();
-});
+  }catch{
+    main.innerHTML="<div class='weatherCard'>Weather unavailable.</div>";
+  }
 }
 </script>
 
