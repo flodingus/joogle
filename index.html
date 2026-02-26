@@ -38,10 +38,6 @@ body{
   margin-bottom:30px;
 }
 
-.joogle-logo span{
-  display:inline-block;
-}
-
 .bounce{
   animation:bounce 0.45s ease;
 }
@@ -198,7 +194,7 @@ function createLogo(container){
     <span class="o1" style="color:#EA4335;">o</span>
 
     <svg class="eye-svg" viewBox="0 0 60 60">
-      <circle cx="30" cy="30" r="19" fill="#FBBC05"/>
+      <circle cx="30" cy="30" r="19" fill="#EA4335"/>
       <circle class="iris" cx="30" cy="30" r="6" fill="black" opacity="0"/>
       <circle class="shine" cx="33" cy="27" r="2" fill="white" opacity="0"/>
       <path class="lashes"
@@ -212,7 +208,7 @@ function createLogo(container){
       <ellipse class="lid"
         cx="30" cy="30"
         rx="21" ry="0"
-        fill="#FBBC05"
+        fill="#EA4335"
         opacity="0"/>
     </svg>
 
@@ -255,21 +251,21 @@ function animateLogo(container){
         setTimeout(()=>{
           lid.setAttribute("ry","0");
           iris.style.transform="scale(1)";
-        },650);
+        },1100);
 
         setTimeout(()=>{
           lid.setAttribute("opacity","0");
           iris.style.opacity="0";
           lashes.style.opacity="0";
           shine.style.opacity="0";
-        },1200);
+        },1700);
 
       },200);
 
     },450);
   }
 
-  setInterval(loop,2600);
+  setInterval(loop,3000);
 }
 
 document.querySelectorAll(".joogle-logo").forEach(el=>{
