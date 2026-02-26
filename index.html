@@ -34,17 +34,17 @@ body{
   font-weight:500;
   display:flex;
   align-items:center;
-  gap:2px;
+  gap:4px;
   margin-bottom:30px;
 }
 
 .bounce{
-  animation:bounce 0.6s ease;
+  animation:bounce 0.5s ease;
 }
 
 @keyframes bounce{
   0%{transform:translateY(0);}
-  50%{transform:translateY(-12px);}
+  50%{transform:translateY(-16px);}
   100%{transform:translateY(0);}
 }
 
@@ -113,7 +113,6 @@ button:hover{
   text-align:center;
 }
 
-/* Love Page */
 .love-page{
   position:fixed;
   inset:0;
@@ -153,16 +152,20 @@ button:hover{
 
 <div class="main">
 
-  <!-- Logo -->
-  <div class="logo" id="logo">
+  <div class="logo">
     <span style="color:#4285F4;">J</span>
 
     <span id="o1" style="color:#EA4335;">o</span>
 
-    <!-- Eye O -->
+    <!-- Flirty Eye O -->
     <svg id="eyeSvg" width="60" height="60" viewBox="0 0 60 60">
-      <circle cx="30" cy="30" r="22" fill="#FBBC05"/>
-      <circle id="iris" cx="30" cy="30" r="9" fill="black"/>
+      <circle id="yellowO" cx="30" cy="30" r="22" fill="#FBBC05"/>
+      <circle id="iris" cx="30" cy="30" r="8" fill="black" opacity="0"/>
+      <path id="lashes"
+        d="M18 12 L20 5 M30 10 L30 2 M42 12 L40 5"
+        stroke="black"
+        stroke-width="2"
+        opacity="0"/>
       <rect id="lid" x="8" y="8" width="44" height="0" fill="#FBBC05"/>
     </svg>
 
@@ -186,7 +189,6 @@ button:hover{
   Joogle is a parody project created with love. Not affiliated with Google LLC.
 </div>
 
-<!-- Love Page -->
 <div class="love-page" id="lovePage">
   <div class="love-text">
     Out of all the searches in the world…<br>
@@ -200,82 +202,98 @@ button:hover{
 const WORKER_URL = "https://joogle-proxy.flodingus.workers.dev/";
 
 const o1 = document.getElementById("o1");
+const eyeSvg = document.getElementById("eyeSvg");
+const iris = document.getElementById("iris");
+const lashes = document.getElementById("lashes");
 const lid = document.getElementById("lid");
-const lovePage = document.getElementById("lovePage");
-const input = document.getElementById("searchInput");
-const resultsDiv = document.getElementById("results");
 
 function logoLoop(){
 
-  // Both bounce
+  // Bounce both
   o1.classList.add("bounce");
-  document.getElementById("eyeSvg").classList.add("bounce");
+  eyeSvg.classList.add("bounce");
 
   setTimeout(()=>{
-    // Slow flirty wink
-    lid.style.transition = "height 0.4s ease";
-    lid.setAttribute("height","44");
+    o1.classList.remove("bounce");
+    eyeSvg.classList.remove("bounce");
+
+    // Transform to eye
+    iris.style.transition="opacity 0.3s ease";
+    lashes.style.transition="opacity 0.3s ease";
+    iris.style.opacity="1";
+    lashes.style.opacity="1";
 
     setTimeout(()=>{
-      lid.setAttribute("height","0");
-    },600);
+      // Flirty blink
+      lid.style.transition="height 0.4s ease";
+      lid.setAttribute("height","44");
 
-    setTimeout(()=>{
-      o1.classList.remove("bounce");
-      document.getElementById("eyeSvg").classList.remove("bounce");
-    },1200);
+      setTimeout(()=>{
+        lid.setAttribute("height","0");
+      },700);
 
-  },1000);
+      setTimeout(()=>{
+        // Back to normal O
+        iris.style.opacity="0";
+        lashes.style.opacity="0";
+      },1400);
+
+    },300);
+
+  },600);
 }
-setInterval(logoLoop,6500);
+
+setInterval(logoLoop,3500);
 
 async function search(){
-  const q = input.value.trim();
+  const q=document.getElementById("searchInput").value.trim();
   if(!q) return;
 
-  history.pushState({}, "", "?q=" + encodeURIComponent(q));
-  resultsDiv.innerHTML = "Searching...";
+  history.pushState({}, "", "?q="+encodeURIComponent(q));
+  const resultsDiv=document.getElementById("results");
+  resultsDiv.innerHTML="Searching...";
 
   try{
-    const res = await fetch(WORKER_URL,{
+    const res=await fetch(WORKER_URL,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body:JSON.stringify({ q })
     });
-    const data = await res.json();
-    renderResults(data.organic || []);
-  }catch(e){
-    resultsDiv.innerHTML = "Search failed.";
+    const data=await res.json();
+    renderResults(data.organic||[]);
+  }catch{
+    resultsDiv.innerHTML="Search failed.";
   }
 }
 
 function renderResults(results){
-  resultsDiv.innerHTML = results.map(r=>`
+  const resultsDiv=document.getElementById("results");
+  resultsDiv.innerHTML=results.map(r=>`
     <div class="result">
       <a href="${r.link}" target="_blank">${r.title}</a>
       <div class="link">${r.link}</div>
-      <div class="snippet">${r.snippet || ""}</div>
+      <div class="snippet">${r.snippet||""}</div>
     </div>
   `).join("");
 }
 
 function imFeelingJoogly(){
   if(Math.random()<0.20){
-    lovePage.classList.add("active");
+    document.getElementById("lovePage").classList.add("active");
   }else{
     search();
   }
 }
 
 function exitLove(){
-  lovePage.classList.remove("active");
+  document.getElementById("lovePage").classList.remove("active");
 }
 
 function playSong(){
   window.open("https://open.spotify.com/search/every%20little%20thing%20is%20magic","_blank");
 }
 
-input.addEventListener("keydown",e=>{
+document.getElementById("searchInput").addEventListener("keydown",e=>{
   if(e.key==="Enter") search();
 });
 
@@ -283,7 +301,7 @@ window.onload=()=>{
   const params=new URLSearchParams(window.location.search);
   const q=params.get("q");
   if(q){
-    input.value=q;
+    document.getElementById("searchInput").value=q;
     search();
   }
 };
