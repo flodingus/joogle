@@ -80,6 +80,7 @@ button:hover{ background:#f1f3f4; }
   background:#fdf7f9;
   overflow:hidden;
   box-shadow:0 2px 6px rgba(0,0,0,0.05);
+  animation:fadeIn .4s ease;
 }
 
 .weather-accent{
@@ -92,11 +93,6 @@ button:hover{ background:#f1f3f4; }
   display:flex;
   justify-content:space-between;
   align-items:center;
-}
-
-.weather-left{
-  display:flex;
-  flex-direction:column;
 }
 
 .weather-temp{
@@ -151,6 +147,11 @@ button:hover{ background:#f1f3f4; }
   font-size:12px;
   color:#70757a;
   text-align:center;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(6px);}
+  to{opacity:1; transform:translateY(0);}
 }
 </style>
 </head>
@@ -222,6 +223,16 @@ createLogo(el);
 animateLogo(el);
 });
 
+function getCondition(code){
+if(code===0) return ["☀","Clear"];
+if(code>=1 && code<=3) return ["⛅","Partly Cloudy"];
+if(code>=45 && code<=48) return ["🌫","Fog"];
+if(code>=51 && code<=67) return ["🌧","Rain"];
+if(code>=71 && code<=77) return ["❄","Snow"];
+if(code>=95) return ["⛈","Thunderstorm"];
+return ["🌤","Variable"];
+}
+
 async function search(){
 const q=document.getElementById("searchInput").value.trim();
 if(!q) return;
@@ -231,7 +242,7 @@ document.getElementById("results").innerHTML="Searching...";
 document.getElementById("featureCard").innerHTML="";
 
 if(q.toLowerCase().includes("weather")){
-handleWeather(q);
+await handleWeather(q);
 }
 
 const res=await fetch(WORKER_URL,{
@@ -255,23 +266,16 @@ results.map(r=>`
 }
 
 async function handleWeather(query){
-document.getElementById("featureCard").innerHTML=
-`<div class="weather-card"><div class="weather-accent"></div>
-<div class="weather-content">Loading weather...</div></div>`;
-
 let city=query.toLowerCase().replace("weather","").trim();
 let lat,lon,locationLabel="";
 
 if(city){
 const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}`);
 const geoData=await geo.json();
-if(!geoData.results){
-document.getElementById("featureCard").innerHTML="";
-return;
-}
+if(!geoData.results) return;
 lat=geoData.results[0].latitude;
 lon=geoData.results[0].longitude;
-locationLabel=geoData.results[0].name;
+locationLabel=`${geoData.results[0].name}, ${geoData.results[0].admin1}`;
 }else{
 try{
 await new Promise((resolve,reject)=>{
@@ -281,20 +285,17 @@ lon=pos.coords.longitude;
 resolve();
 },()=>reject());
 });
-locationLabel="Your Location";
+const reverse=await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}`);
+const revData=await reverse.json();
+if(revData.results && revData.results.length>0){
+locationLabel=`${revData.results[0].name}, ${revData.results[0].admin1}`;
+}
 }catch{
-try{
 const ip=await fetch("https://ipapi.co/json/");
 const ipData=await ip.json();
 lat=ipData.latitude;
 lon=ipData.longitude;
-locationLabel=ipData.city;
-}catch{
-document.getElementById("featureCard").innerHTML=
-`<div class="weather-card"><div class="weather-accent"></div>
-<div class="weather-content">Enable location for precise local weather.</div></div>`;
-return;
-}
+locationLabel=`${ipData.city}, ${ipData.region}`;
 }
 }
 
@@ -302,15 +303,19 @@ const weather=await fetch(
 `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph`
 );
 const wData=await weather.json();
+const [icon,condition]=getCondition(wData.current_weather.weathercode);
 
 document.getElementById("featureCard").innerHTML=`
 <div class="weather-card">
 <div class="weather-accent"></div>
 <div class="weather-content">
-<div class="weather-left">
+<div style="display:flex;align-items:center;gap:12px;">
+<div style="font-size:36px;">${icon}</div>
+<div>
 <div class="weather-temp">${Math.round(wData.current_weather.temperature)}°F</div>
-<div class="weather-condition">Weather Code: ${wData.current_weather.weathercode}</div>
+<div class="weather-condition">${condition}</div>
 <div class="weather-location">${locationLabel}</div>
+</div>
 </div>
 <div class="weather-right">
 <div>Wind: ${Math.round(wData.current_weather.windspeed)} mph</div>
