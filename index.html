@@ -34,7 +34,7 @@ body{
   font-weight:500;
   display:inline-flex;
   align-items:flex-end;
-  letter-spacing:-2px;
+  letter-spacing:-3px;
   margin-bottom:30px;
 }
 
@@ -43,7 +43,7 @@ body{
 }
 
 .bounce{
-  animation:bounce 0.5s ease;
+  animation:bounce 0.45s ease;
 }
 
 @keyframes bounce{
@@ -52,11 +52,10 @@ body{
   100%{transform:translateY(0);}
 }
 
-/* Eye SVG scales with font size */
 .eye-svg{
   width:1em;
   height:1em;
-  vertical-align:baseline;
+  vertical-align:-0.08em;
 }
 
 .search-box{
@@ -163,7 +162,7 @@ button:hover{
 
 <div class="main">
 
-  <div class="joogle-logo" id="logoContainer"></div>
+  <div class="joogle-logo"></div>
 
   <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
 
@@ -199,19 +198,20 @@ function createLogo(container){
     <span class="o1" style="color:#EA4335;">o</span>
 
     <svg class="eye-svg" viewBox="0 0 60 60">
-      <circle cx="30" cy="30" r="22" fill="#FBBC05"/>
-      <circle class="iris" cx="30" cy="30" r="7" fill="black" opacity="0"/>
+      <circle cx="30" cy="30" r="19" fill="#FBBC05"/>
+      <circle class="iris" cx="30" cy="30" r="6" fill="black" opacity="0"/>
       <circle class="shine" cx="33" cy="27" r="2" fill="white" opacity="0"/>
       <path class="lashes"
-        d="M15 12 Q18 5 21 12
-           M25 10 Q30 3 35 10
-           M39 12 Q42 5 45 12"
+        d="M16 14 Q20 6 24 14
+           M26 12 Q30 4 34 12
+           M36 14 Q40 6 44 14"
         stroke="black"
-        stroke-width="2"
+        stroke-width="1.6"
         fill="none"
         opacity="0"/>
-      <path class="lid"
-        d="M8 30 Q30 55 52 30"
+      <ellipse class="lid"
+        cx="30" cy="30"
+        rx="21" ry="0"
         fill="#FBBC05"
         opacity="0"/>
     </svg>
@@ -224,40 +224,52 @@ function createLogo(container){
 
 function animateLogo(container){
   const o1 = container.querySelector(".o1");
+  const svg = container.querySelector("svg");
   const iris = container.querySelector(".iris");
   const lashes = container.querySelector(".lashes");
   const shine = container.querySelector(".shine");
   const lid = container.querySelector(".lid");
 
   function loop(){
+
     o1.classList.add("bounce");
-    container.querySelector("svg").classList.add("bounce");
+    svg.classList.add("bounce");
 
     setTimeout(()=>{
       o1.classList.remove("bounce");
-      container.querySelector("svg").classList.remove("bounce");
+      svg.classList.remove("bounce");
 
       iris.style.opacity="1";
       lashes.style.opacity="1";
       shine.style.opacity="1";
 
       setTimeout(()=>{
-        lid.style.opacity="1";
+
+        lid.style.transition="ry 0.35s ease";
+        lid.setAttribute("opacity","1");
+        lid.setAttribute("ry","21");
+
+        iris.style.transition="transform 0.3s ease";
+        iris.style.transform="scale(0.8)";
+
         setTimeout(()=>{
-          lid.style.opacity="0";
-        },700);
+          lid.setAttribute("ry","0");
+          iris.style.transform="scale(1)";
+        },650);
+
+        setTimeout(()=>{
+          lid.setAttribute("opacity","0");
+          iris.style.opacity="0";
+          lashes.style.opacity="0";
+          shine.style.opacity="0";
+        },1200);
+
       },200);
 
-      setTimeout(()=>{
-        iris.style.opacity="0";
-        lashes.style.opacity="0";
-        shine.style.opacity="0";
-      },1400);
-
-    },500);
+    },450);
   }
 
-  setInterval(loop,3000);
+  setInterval(loop,2600);
 }
 
 document.querySelectorAll(".joogle-logo").forEach(el=>{
