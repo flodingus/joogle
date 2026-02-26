@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Joogle</title>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
 <style>
 body{
   margin:0;
@@ -33,11 +35,11 @@ body{
   margin-bottom:30px;
 }
 
-/* EXACT VISUAL MATCH */
+/* 🔒 LOCKED FORMAT */
 .eye-svg{
-  width:0.82em;
-  height:0.82em;
-  vertical-align:-0.06em;
+  width:0.74em;
+  height:0.74em;
+  vertical-align:-0.08em;
 }
 
 .bounce{ animation:bounce 0.45s ease; }
@@ -70,6 +72,63 @@ button{
 }
 button:hover{ background:#f1f3f4; }
 
+.feature-card{
+  width:90%;
+  max-width:900px;
+  margin-top:30px;
+}
+
+.weather-card{
+  border:1px solid #dadce0;
+  border-radius:12px;
+  background:#fdf7f9;
+  overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+
+.weather-accent{
+  height:4px;
+  background:#ff9eb5;
+}
+
+.forecast-row{
+  display:flex;
+  justify-content:space-between;
+  margin-top:15px;
+  border-top:1px solid #eee;
+  padding-top:10px;
+}
+
+.forecast-day{
+  font-size:12px;
+  text-align:center;
+}
+
+.map-container{
+  height:380px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid #dadce0;
+}
+
+.place-list{
+  margin-top:15px;
+  font-size:14px;
+}
+
+.place-item{
+  margin-bottom:8px;
+  cursor:pointer;
+  color:#1a0dab;
+}
+.place-item:hover{ text-decoration:underline; }
+
+.results{
+  margin-top:30px;
+  width:90%;
+  max-width:800px;
+}
+
 .footer{
   margin-top:auto;
   padding:20px;
@@ -84,18 +143,29 @@ button:hover{ background:#f1f3f4; }
 
 <div class="main">
   <div class="joogle-logo" id="logo"></div>
+
   <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
+
   <div class="buttons">
     <button onclick="search()">Joogle Search</button>
     <button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
   </div>
+
+  <div class="feature-card" id="featureCard"></div>
+  <div class="results" id="results"></div>
 </div>
 
 <div class="footer">
 Joogle is a parody project created with love. Not affiliated with Google LLC.
 </div>
 
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script>
+const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
+
+/* ================= LOGO ================= */
+
 function initLogo(){
 const logo=document.getElementById("logo");
 
@@ -108,10 +178,12 @@ logo.innerHTML=`
   <circle class="pupil" cx="30" cy="30" r="6" fill="black"/>
   <circle cx="33" cy="27" r="2" fill="white"/>
 
-  <!-- Eyelashes -->
-  <path d="M18 14 Q22 6 26 14" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M26 12 Q30 4 34 12" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M34 14 Q38 6 42 14" stroke="black" stroke-width="2" fill="none"/>
+  <!-- 5 LOCKED LASHES -->
+  <path d="M14 18 Q18 6 22 18" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M20 14 Q24 4 28 14" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M26 12 Q30 2 34 12" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M32 14 Q36 4 40 14" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M38 18 Q42 6 46 18" stroke="black" stroke-width="2" fill="none"/>
 
   <ellipse class="lid" cx="30" cy="30" rx="22" ry="0" fill="#EA4335" opacity="0"/>
 </svg>
@@ -158,7 +230,123 @@ pupil.style.transform="scale(1)";
 setInterval(loop,3200);
 }
 
-function search(){}
+/* ================= SEARCH ENGINE ================= */
+
+async function search(){
+const q=document.getElementById("searchInput").value.trim();
+if(!q) return;
+
+document.getElementById("featureCard").innerHTML="";
+document.getElementById("results").innerHTML="";
+
+const lowerQ=q.toLowerCase();
+
+/* Near Me */
+if(lowerQ.includes("near me")){
+await handleNearMe();
+return;
+}
+
+/* Weather */
+if(lowerQ.includes("weather") || lowerQ.includes("forecast") || lowerQ.includes("temperature")){
+await handleWeather(q);
+return;
+}
+
+/* Organic */
+const res=await fetch(WORKER_URL,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({q})
+});
+
+const data=await res.json();
+renderResults(data.organic||[]);
+}
+
+function renderResults(results){
+document.getElementById("results").innerHTML=
+results.map(r=>`
+<div style="margin-bottom:20px;">
+<a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">
+${r.title}
+</a>
+<div style="color:#006621;font-size:14px;">${r.link}</div>
+<div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
+</div>
+`).join("");
+}
+
+/* ================= WEATHER ================= */
+
+async function handleWeather(query){
+let city=query.toLowerCase()
+.replace("weather","")
+.replace("forecast","")
+.replace("temperature","")
+.trim();
+
+if(!city) city="Phoenix";
+
+const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}`);
+const geoData=await geo.json();
+if(!geoData.results) return;
+
+const lat=geoData.results[0].latitude;
+const lon=geoData.results[0].longitude;
+const label=`${geoData.results[0].name}, ${geoData.results[0].admin1}`;
+
+const weather=await fetch(
+`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
+);
+
+const wData=await weather.json();
+
+let forecastHTML="";
+for(let i=0;i<wData.daily.time.length;i++){
+const day=new Date(wData.daily.time[i]);
+const name=day.toLocaleDateString("en-US",{weekday:"short"});
+forecastHTML+=`
+<div class="forecast-day">
+<div>${name}</div>
+<div>${Math.round(wData.daily.temperature_2m_max[i])}° / ${Math.round(wData.daily.temperature_2m_min[i])}°</div>
+</div>`;
+}
+
+document.getElementById("featureCard").innerHTML=`
+<div class="weather-card">
+<div class="weather-accent"></div>
+<div style="padding:20px;">
+<div style="font-size:40px;">${Math.round(wData.current_weather.temperature)}°F</div>
+<div>${label}</div>
+<div class="forecast-row">${forecastHTML}</div>
+</div>
+</div>`;
+}
+
+/* ================= NEAR ME ================= */
+
+async function handleNearMe(){
+let lat,lon;
+
+await new Promise((resolve,reject)=>{
+navigator.geolocation.getCurrentPosition(pos=>{
+lat=pos.coords.latitude;
+lon=pos.coords.longitude;
+resolve();
+},()=>reject());
+});
+
+document.getElementById("featureCard").innerHTML=
+`<div class="map-container" id="map"></div>
+<div class="place-list" id="placeList">Loading...</div>`;
+
+const map=L.map("map").setView([lat,lon],14);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+L.marker([lat,lon]).addTo(map).bindPopup("You are here");
+}
+
+/* ================= JOOGLE ================= */
 
 function imFeelingJoogly(){
 if(Math.random()<0.20){
