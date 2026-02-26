@@ -1,301 +1,302 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Joogle</title>
 
-<link rel="icon" type="image/svg+xml"
-href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%92%99%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+<text y='70%' x='50%' text-anchor='middle' font-size='80'>J</text>
+</svg>">
 
 <style>
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#fff;
-  color:#202124;
-  overflow-x:hidden;
+  font-family:Arial, Helvetica, sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  background:#ffffff;
+  transition: background 0.6s ease;
 }
 
-.header{
-  padding:15px 24px;
-  border-bottom:1px solid #dadce0;
+.main{
+  margin-top:18vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:100%;
 }
 
 .logo{
-  font-size:26px;
-  font-weight:bold;
-  letter-spacing:-2px;
-  cursor:pointer;
-}
-
-.logo span:nth-child(1){color:#4285F4}
-.logo span:nth-child(2){color:#DB4437}
-.logo span:nth-child(3){color:#F4B400}
-.logo span:nth-child(4){color:#4285F4}
-.logo span:nth-child(5){color:#0F9D58}
-.logo span:nth-child(6){color:#DB4437}
-
-.hero{
-  height:65vh;
+  font-size:64px;
+  font-weight:500;
+  margin-bottom:30px;
   display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
 }
 
-.heroLogo{
-  font-size:90px;
-  font-weight:bold;
-  letter-spacing:-6px;
+.o{
+  display:inline-block;
 }
 
-.searchArea{
-  margin-top:25px;
-  display:flex;
-  gap:10px;
-  justify-content:center;
+.bounce{
+  animation:bounce 0.6s ease;
 }
 
-.searchInput{
-  width:420px;
-  max-width:90vw;
-  padding:12px 18px;
-  border-radius:24px;
+@keyframes bounce{
+  0%{transform:translateY(0);}
+  50%{transform:translateY(-12px);}
+  100%{transform:translateY(0);}
+}
+
+.eye{
+  position:relative;
+}
+
+.eye::after{
+  content:'';
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:black;
+  border-radius:50%;
+  top:0;
+  left:0;
+  transform:scaleY(0);
+  transform-origin:center;
+  transition:transform 0.4s ease;
+}
+
+.eye.wink::after{
+  transform:scaleY(1);
+}
+
+.search-box{
+  width:90%;
+  max-width:580px;
+  padding:14px 20px;
+  border-radius:30px;
   border:1px solid #dadce0;
   font-size:16px;
+  outline:none;
 }
 
-.button{
-  padding:10px 16px;
-  border-radius:20px;
+.buttons{
+  margin-top:25px;
+}
+
+button{
+  margin:5px;
+  padding:10px 18px;
   border:1px solid #dadce0;
   background:#f8f9fa;
+  border-radius:4px;
   cursor:pointer;
+}
+
+button:hover{
+  background:#f1f3f4;
 }
 
 .results{
-  max-width:900px;
-  margin:40px auto;
-  padding:0 20px;
+  margin-top:40px;
+  width:90%;
+  max-width:800px;
 }
 
-.weatherCard{
-  max-width:600px;
-  margin:auto;
-  padding:30px;
-  border-radius:20px;
-  background:#f8f9fa;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
+.result{
+  margin-bottom:28px;
 }
 
-.loveScreen{
+.result a{
+  font-size:18px;
+  color:#1a0dab;
+  text-decoration:none;
+}
+
+.result a:hover{
+  text-decoration:underline;
+}
+
+.result .link{
+  font-size:14px;
+  color:#006621;
+}
+
+.result .snippet{
+  font-size:14px;
+  color:#545454;
+}
+
+.footer{
+  margin-top:auto;
+  padding:20px;
+  font-size:12px;
+  color:#70757a;
+  text-align:center;
+}
+
+.love-page{
   position:fixed;
-  inset:0;
-  background:linear-gradient(135deg,#ffdde1,#ee9ca7);
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:linear-gradient(to bottom, #ffffff 0%, #fff5f7 100%);
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  flex-direction:column;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.8s ease;
+}
+
+.love-page.active{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.love-text{
+  font-size:28px;
   text-align:center;
-  z-index:1000;
+  margin-bottom:30px;
 }
 
-.loveMessage{
-  font-size:52px;
-  font-weight:bold;
+.play-btn{
+  padding:12px 24px;
+  border-radius:30px;
+  border:none;
+  background:#ff9eb5;
   color:white;
-  text-shadow:0 0 25px white;
-}
-
-.loveNote{
-  margin-top:20px;
-  font-size:22px;
-  color:white;
-}
-
-.signature{
-  margin-top:25px;
-  color:white;
-  opacity:.9;
-}
-
-.heart{
-  position:fixed;
-  bottom:-50px;
-  font-size:22px;
-  animation:floatUp 6s linear infinite;
-  z-index:1100;
-}
-
-@keyframes floatUp{
-  0%{transform:translateY(0);opacity:1}
-  100%{transform:translateY(-110vh);opacity:0}
-}
-
-footer{
-  text-align:center;
-  font-size:12px;
-  color:gray;
-  padding:30px;
-  opacity:.6;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <div class="logo" onclick="location.reload()">
-    <span>J</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-  </div>
-</div>
-
-<div id="hero" class="hero">
-  <div class="heroLogo">
-    <span style="color:#4285F4">J</span>
-    <span style="color:#DB4437">o</span>
-    <span style="color:#F4B400">o</span>
-    <span style="color:#4285F4">g</span>
-    <span style="color:#0F9D58">l</span>
-    <span style="color:#DB4437">e</span>
+<div class="main">
+  <div class="logo" id="logo">
+    J
+    <span class="o" id="o1">o</span>
+    <span class="o" id="o2">o</span>
+    g l e
   </div>
 
-  <form id="searchForm" class="searchArea">
-    <input id="searchBox" class="searchInput" placeholder="Search Joogle..." />
-    <button class="button" type="submit">Search</button>
-  </form>
+  <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
+
+  <div class="buttons">
+    <button onclick="search()">Joogle Search</button>
+    <button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
+  </div>
+
+  <div class="results" id="results"></div>
 </div>
 
-<div id="main" class="results"></div>
+<div class="footer">
+  Joogle is a parody project created with love. Not affiliated with Google LLC.
+</div>
 
-<footer>
-Joogle is a private parody made with love and is not affiliated with Google LLC.
-</footer>
+<div class="love-page" id="lovePage">
+  <div class="love-text">
+    Out of all the searches in the world…<br>
+    you’re my favorite.
+  </div>
+  <button class="play-btn" onclick="playSong()">Play Something Special</button>
+  <button style="margin-top:20px;" onclick="exitLove()">Back to Joogle</button>
+</div>
 
 <script>
-const PROXY_URL="https://joogle-proxy.flodingus.workers.dev";
-let julieAudio=null;
-let heartInterval=null;
+const WORKER_URL = "https://joogle-proxy.flodingus.workers.dev/";
 
-const loveNotes=[
-"You're my favorite search result.",
-"You make every day better.",
-"My favorite thing to Joogle.",
-"I’d search the whole internet for you.",
-"Always you 💙",
-"Forever your Joogle."
-];
+const o1 = document.getElementById("o1");
+const o2 = document.getElementById("o2");
+const resultsDiv = document.getElementById("results");
+const input = document.getElementById("searchInput");
+const lovePage = document.getElementById("lovePage");
 
-document.getElementById("searchForm").addEventListener("submit",function(e){
-  e.preventDefault();
-  const query=searchBox.value.trim().toLowerCase();
+function logoLoop(){
+  o1.classList.add("bounce");
+  o2.classList.add("bounce");
 
-  if(query.includes("julie")){
-    startJulie();
-  } else if(query.includes("weather")){
-    handleWeather(query);
-  } else {
-    performSearch(query);
+  setTimeout(()=>{
+    o2.classList.add("eye");
+    setTimeout(()=>{
+      o2.classList.add("wink");
+      setTimeout(()=>{
+        o2.classList.remove("wink");
+        setTimeout(()=>{
+          o2.classList.remove("eye");
+          o1.classList.remove("bounce");
+          o2.classList.remove("bounce");
+        },300);
+      },300);
+    },300);
+  },800);
+}
+setInterval(logoLoop,6500);
+
+async function search(){
+  const q = input.value.trim();
+  if(!q) return;
+
+  history.pushState({}, "", "?q=" + encodeURIComponent(q));
+  resultsDiv.innerHTML = "Searching...";
+
+  try{
+    const res = await fetch(WORKER_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ q })
+    });
+    const data = await res.json();
+    renderResults(data.organic || []);
+  }catch(e){
+    resultsDiv.innerHTML = "Search failed.";
   }
+}
+
+function renderResults(results){
+  resultsDiv.innerHTML = results.map(r=>`
+    <div class="result">
+      <a href="${r.link}" target="_blank">${r.title}</a>
+      <div class="link">${r.link}</div>
+      <div class="snippet">${r.snippet || ""}</div>
+    </div>
+  `).join("");
+}
+
+function imFeelingJoogly(){
+  if(Math.random()<0.20){
+    lovePage.classList.add("active");
+  }else{
+    search();
+  }
+}
+
+function exitLove(){
+  lovePage.classList.remove("active");
+}
+
+function playSong(){
+  window.open("https://open.spotify.com/search/every%20little%20thing%20is%20magic","_blank");
+}
+
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter") search();
 });
 
-function startJulie(){
-  const note=loveNotes[Math.floor(Math.random()*loveNotes.length)];
-
-  const screen=document.createElement("div");
-  screen.className="loveScreen";
-  screen.innerHTML=`
-    <div class="loveMessage">💙 Julie 💙</div>
-    <div class="loveNote">${note}</div>
-    <div class="signature">— Always Yours</div>
-  `;
-  document.body.appendChild(screen);
-
-  if(!heartInterval){
-    heartInterval=setInterval(()=>{
-      const heart=document.createElement("div");
-      heart.className="heart";
-      heart.style.left=Math.random()*100+"vw";
-      heart.innerHTML="💙";
-      document.body.appendChild(heart);
-      setTimeout(()=>heart.remove(),6000);
-    },400);
+window.onload=()=>{
+  const params=new URLSearchParams(window.location.search);
+  const q=params.get("q");
+  if(q){
+    input.value=q;
+    search();
   }
-
-  if(!julieAudio){
-    julieAudio=new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b63c9b2a.mp3?filename=romantic-piano-110624.mp3");
-    julieAudio.loop=true;
-    julieAudio.volume=0.7;
-    julieAudio.play().catch(()=>{});
-  }
-}
-
-async function performSearch(query){
-  hero.style.display="none";
-  main.innerHTML="Loading...";
-  try{
-    const res=await fetch(PROXY_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({q:query})
-    });
-    const data=await res.json();
-    main.innerHTML=data.organic.map(r=>`
-      <div style="margin-bottom:24px">
-        <a href="${r.link}" target="_blank"><h3>${r.title}</h3></a>
-        <p>${r.snippet}</p>
-      </div>`).join("");
-  }catch{
-    main.innerHTML="Search failed.";
-  }
-}
-
-async function handleWeather(query){
-  hero.style.display="none";
-  main.innerHTML="<div class='weatherCard'>Loading weather...</div>";
-
-  try{
-    let lat,lon,label="Your Area";
-    const cleaned=query.replace("weather","").trim();
-
-    if(cleaned){
-      const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1`);
-      const g=await geo.json();
-      if(g.results && g.results.length){
-        lat=g.results[0].latitude;
-        lon=g.results[0].longitude;
-        label=g.results[0].name+", "+g.results[0].country;
-      }
-    }else{
-      await new Promise((resolve,reject)=>{
-        navigator.geolocation.getCurrentPosition(pos=>{
-          lat=pos.coords.latitude;
-          lon=pos.coords.longitude;
-          resolve();
-        },reject);
-      });
-    }
-
-    const weather=await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`
-    );
-    const w=await weather.json();
-
-    main.innerHTML=`
-      <div class="weatherCard">
-        <h2>${label}</h2>
-        <div style="font-size:48px;font-weight:bold">
-          ${Math.round(w.current_weather.temperature)}°F
-        </div>
-        <p>Wind ${w.current_weather.windspeed} mph</p>
-      </div>
-    `;
-  }catch{
-    main.innerHTML="<div class='weatherCard'>Location permission denied or unavailable.</div>";
-  }
-}
+};
 </script>
 
 </body>
