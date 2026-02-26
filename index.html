@@ -30,16 +30,17 @@ body{
   font-size:64px;
   font-weight:500;
   display:inline-flex;
-  align-items:flex-end;
+  align-items:baseline; /* critical alignment fix */
   letter-spacing:-3px;
   margin-bottom:30px;
 }
 
-/* PERFECT SIZE MATCH */
+/* PERFECT MATCH FIX */
 .eye-svg{
-  width:0.78em;
-  height:0.78em;
-  vertical-align:-0.05em;
+  width:1em;
+  height:1em;
+  position:relative;
+  top:0.02em; /* micro baseline correction */
 }
 
 .bounce{ animation:bounce 0.45s ease; }
@@ -158,7 +159,7 @@ Joogle is a parody project created with love. Not affiliated with Google LLC.
 <script>
 const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 
-/* ---------------- LOGO + ANIMATION ---------------- */
+/* LOGO */
 
 function initLogo(){
 const logo=document.getElementById("logo");
@@ -172,7 +173,7 @@ logo.innerHTML=`
   <circle class="pupil" cx="30" cy="30" r="6" fill="black"/>
   <circle cx="33" cy="27" r="2" fill="white"/>
 
-  <!-- EYELASHES -->
+  <!-- LASHES -->
   <path d="M18 14 Q22 6 26 14" stroke="black" stroke-width="2" fill="none"/>
   <path d="M26 12 Q30 4 34 12" stroke="black" stroke-width="2" fill="none"/>
   <path d="M34 14 Q38 6 42 14" stroke="black" stroke-width="2" fill="none"/>
@@ -222,7 +223,7 @@ pupil.style.transform="scale(1)";
 setInterval(loop,3200);
 }
 
-/* ---------------- SEARCH ---------------- */
+/* SEARCH */
 
 async function search(){
 const q=document.getElementById("searchInput").value.trim();
@@ -264,54 +265,7 @@ results.map(r=>`
 `).join("");
 }
 
-/* ---------------- WEATHER ---------------- */
-
-async function handleWeather(query){
-let city=query.toLowerCase()
-.replace("weather","")
-.replace("forecast","")
-.replace("temperature","")
-.trim();
-
-if(!city) city="Phoenix";
-
-const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}`);
-const geoData=await geo.json();
-if(!geoData.results) return;
-
-const lat=geoData.results[0].latitude;
-const lon=geoData.results[0].longitude;
-const locationLabel=`${geoData.results[0].name}, ${geoData.results[0].admin1}`;
-
-const weather=await fetch(
-`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
-);
-
-const wData=await weather.json();
-
-let forecastHTML="";
-for(let i=0;i<wData.daily.time.length;i++){
-const day=new Date(wData.daily.time[i]);
-const label=day.toLocaleDateString("en-US",{weekday:"short"});
-forecastHTML+=`
-<div class="forecast-day">
-<div>${label}</div>
-<div>${Math.round(wData.daily.temperature_2m_max[i])}° / ${Math.round(wData.daily.temperature_2m_min[i])}°</div>
-</div>`;
-}
-
-document.getElementById("featureCard").innerHTML=`
-<div class="weather-card">
-<div class="weather-accent"></div>
-<div style="padding:20px;">
-<div style="font-size:40px;">${Math.round(wData.current_weather.temperature)}°F</div>
-<div>${locationLabel}</div>
-<div class="forecast-row">${forecastHTML}</div>
-</div>
-</div>`;
-}
-
-/* ---------------- JOOGLE ---------------- */
+/* JOOGLE */
 
 function imFeelingJoogly(){
 if(Math.random()<0.20){
