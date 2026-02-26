@@ -14,7 +14,7 @@
 body{
   margin:0;
   font-family:Arial, Helvetica, sans-serif;
-  background:#ffffff;
+  background:#fff;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -38,10 +38,7 @@ body{
   margin-bottom:30px;
 }
 
-.bounce{
-  animation:bounce 0.45s ease;
-}
-
+.bounce{ animation:bounce 0.45s ease; }
 @keyframes bounce{
   0%{transform:translateY(0);}
   50%{transform:translateY(-14px);}
@@ -64,9 +61,7 @@ body{
   outline:none;
 }
 
-.buttons{
-  margin-top:25px;
-}
+.buttons{ margin-top:25px; }
 
 button{
   margin:5px;
@@ -76,36 +71,45 @@ button{
   border-radius:4px;
   cursor:pointer;
 }
+button:hover{ background:#f1f3f4; }
 
-button:hover{
-  background:#f1f3f4;
+.feature-card{
+  width:90%;
+  max-width:800px;
+  margin-top:30px;
+}
+
+.weather-card{
+  border:1px solid #dadce0;
+  border-radius:12px;
+  padding:20px;
+  background:#f8f9fa;
+}
+
+.weather-temp{
+  font-size:42px;
+  font-weight:500;
 }
 
 .results{
-  margin-top:40px;
+  margin-top:30px;
   width:90%;
   max-width:800px;
 }
 
-.result{
-  margin-bottom:28px;
-}
+.result{ margin-bottom:28px; }
 
 .result a{
   font-size:18px;
   color:#1a0dab;
   text-decoration:none;
 }
-
-.result a:hover{
-  text-decoration:underline;
-}
+.result a:hover{ text-decoration:underline; }
 
 .result .link{
   font-size:14px;
   color:#006621;
 }
-
 .result .snippet{
   font-size:14px;
   color:#545454;
@@ -157,22 +161,18 @@ button:hover{
 <body>
 
 <div class="main">
-
   <div class="joogle-logo"></div>
-
   <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
-
   <div class="buttons">
     <button onclick="search()">Joogle Search</button>
     <button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
   </div>
-
+  <div class="feature-card" id="featureCard"></div>
   <div class="results" id="results"></div>
-
 </div>
 
 <div class="footer">
-  Joogle is a parody project created with love. Not affiliated with Google LLC.
+Joogle is a parody project created with love. Not affiliated with Google LLC.
 </div>
 
 <div class="love-page" id="lovePage">
@@ -186,48 +186,31 @@ button:hover{
 </div>
 
 <script>
-const WORKER_URL = "https://joogle-proxy.flodingus.workers.dev/";
+const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 
 function createLogo(container){
-  container.innerHTML = `
-    <span style="color:#4285F4;">J</span>
-    <span class="o1" style="color:#EA4335;">o</span>
-
-    <svg class="eye-svg" viewBox="0 0 60 60">
-      <circle cx="30" cy="30" r="19" fill="#EA4335"/>
-      <circle class="iris" cx="30" cy="30" r="6" fill="black" opacity="0"/>
-      <circle class="shine" cx="33" cy="27" r="2" fill="white" opacity="0"/>
-      <path class="lashes"
-        d="M16 14 Q20 6 24 14
-           M26 12 Q30 4 34 12
-           M36 14 Q40 6 44 14"
-        stroke="black"
-        stroke-width="1.6"
-        fill="none"
-        opacity="0"/>
-      <ellipse class="lid"
-        cx="30" cy="30"
-        rx="21" ry="0"
-        fill="#EA4335"
-        opacity="0"/>
-    </svg>
-
-    <span style="color:#4285F4;">g</span>
-    <span style="color:#34A853;">l</span>
-    <span style="color:#EA4335;">e</span>
-  `;
+  container.innerHTML=`
+  <span style="color:#4285F4;">J</span>
+  <span class="o1" style="color:#EA4335;">o</span>
+  <svg class="eye-svg" viewBox="0 0 60 60">
+    <circle cx="30" cy="30" r="19" fill="#EA4335"/>
+    <circle class="iris" cx="30" cy="30" r="6" fill="black" opacity="0"/>
+    <circle class="shine" cx="33" cy="27" r="2" fill="white" opacity="0"/>
+    <ellipse class="lid" cx="30" cy="30" rx="21" ry="0" fill="#EA4335" opacity="0"/>
+  </svg>
+  <span style="color:#4285F4;">g</span>
+  <span style="color:#34A853;">l</span>
+  <span style="color:#EA4335;">e</span>`;
 }
 
 function animateLogo(container){
-  const o1 = container.querySelector(".o1");
-  const svg = container.querySelector("svg");
-  const iris = container.querySelector(".iris");
-  const lashes = container.querySelector(".lashes");
-  const shine = container.querySelector(".shine");
-  const lid = container.querySelector(".lid");
+  const o1=container.querySelector(".o1");
+  const svg=container.querySelector("svg");
+  const iris=container.querySelector(".iris");
+  const shine=container.querySelector(".shine");
+  const lid=container.querySelector(".lid");
 
   function loop(){
-
     o1.classList.add("bounce");
     svg.classList.add("bounce");
 
@@ -236,32 +219,21 @@ function animateLogo(container){
       svg.classList.remove("bounce");
 
       iris.style.opacity="1";
-      lashes.style.opacity="1";
       shine.style.opacity="1";
 
       setTimeout(()=>{
-
         lid.style.transition="ry 0.35s ease";
         lid.setAttribute("opacity","1");
         lid.setAttribute("ry","21");
-
-        iris.style.transition="transform 0.3s ease";
-        iris.style.transform="scale(0.8)";
-
         setTimeout(()=>{
           lid.setAttribute("ry","0");
-          iris.style.transform="scale(1)";
         },1100);
-
         setTimeout(()=>{
           lid.setAttribute("opacity","0");
           iris.style.opacity="0";
-          lashes.style.opacity="0";
           shine.style.opacity="0";
         },1700);
-
       },200);
-
     },450);
   }
 
@@ -278,31 +250,73 @@ async function search(){
   if(!q) return;
 
   history.pushState({}, "", "?q="+encodeURIComponent(q));
-  const resultsDiv=document.getElementById("results");
-  resultsDiv.innerHTML="Searching...";
+  document.getElementById("results").innerHTML="Searching...";
+  document.getElementById("featureCard").innerHTML="";
 
-  try{
-    const res=await fetch(WORKER_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ q })
-    });
-    const data=await res.json();
-    renderResults(data.organic||[]);
-  }catch{
-    resultsDiv.innerHTML="Search failed.";
+  if(q.toLowerCase().includes("weather")){
+    handleWeather(q);
   }
+
+  const res=await fetch(WORKER_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({q})
+  });
+  const data=await res.json();
+  renderResults(data.organic||[]);
 }
 
 function renderResults(results){
-  document.getElementById("results").innerHTML =
-    results.map(r=>`
-      <div class="result">
-        <a href="${r.link}" target="_blank">${r.title}</a>
-        <div class="link">${r.link}</div>
-        <div class="snippet">${r.snippet||""}</div>
-      </div>
-    `).join("");
+  document.getElementById("results").innerHTML=
+  results.map(r=>`
+    <div class="result">
+      <a href="${r.link}" target="_blank">${r.title}</a>
+      <div class="link">${r.link}</div>
+      <div class="snippet">${r.snippet||""}</div>
+    </div>
+  `).join("");
+}
+
+async function handleWeather(q){
+  let lat,lon,cityName="";
+
+  try{
+    await new Promise((resolve,reject)=>{
+      navigator.geolocation.getCurrentPosition(
+        pos=>{
+          lat=pos.coords.latitude;
+          lon=pos.coords.longitude;
+          resolve();
+        },
+        ()=>reject()
+      );
+    });
+  }catch{
+    try{
+      const ip=await fetch("https://ipapi.co/json/");
+      const ipData=await ip.json();
+      lat=ipData.latitude;
+      lon=ipData.longitude;
+      cityName=ipData.city;
+    }catch{
+      document.getElementById("featureCard").innerHTML=
+      `<div class="weather-card">Enable location for precise local weather.</div>`;
+      return;
+    }
+  }
+
+  const weather=await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
+  );
+  const wData=await weather.json();
+
+  document.getElementById("featureCard").innerHTML=`
+    <div class="weather-card">
+      <div class="weather-temp">${Math.round(wData.current_weather.temperature)}°C</div>
+      <div>${cityName||"Your Location"}</div>
+      <div>Wind: ${wData.current_weather.windspeed} km/h</div>
+    </div>
+  `;
 }
 
 function imFeelingJoogly(){
@@ -334,6 +348,5 @@ window.onload=()=>{
   }
 };
 </script>
-
 </body>
 </html>
