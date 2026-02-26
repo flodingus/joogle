@@ -35,7 +35,12 @@ body{
   margin-bottom:30px;
 }
 
-.eye-svg{ width:0.9em;height:0.9em;vertical-align:-0.06em; }
+/* PERFECT SIZE MATCH */
+.eye-svg{
+  width:0.78em;
+  height:0.78em;
+  vertical-align:-0.05em;
+}
 
 .bounce{ animation:bounce 0.45s ease; }
 
@@ -157,6 +162,7 @@ const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 
 function initLogo(){
 const logo=document.getElementById("logo");
+
 logo.innerHTML=`
 <span style="color:#4285F4;">J</span>
 <span class="o1" style="color:#EA4335;">o</span>
@@ -165,6 +171,12 @@ logo.innerHTML=`
   <circle cx="30" cy="30" r="18" fill="white" stroke="#EA4335" stroke-width="4"/>
   <circle class="pupil" cx="30" cy="30" r="6" fill="black"/>
   <circle cx="33" cy="27" r="2" fill="white"/>
+
+  <!-- EYELASHES -->
+  <path d="M18 14 Q22 6 26 14" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M26 12 Q30 4 34 12" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M34 14 Q38 6 42 14" stroke="black" stroke-width="2" fill="none"/>
+
   <ellipse class="lid" cx="30" cy="30" rx="22" ry="0" fill="#EA4335" opacity="0"/>
 </svg>
 
@@ -226,11 +238,7 @@ await handleNearMe(q);
 return;
 }
 
-if(
-lowerQ.includes("weather") ||
-lowerQ.includes("forecast") ||
-lowerQ.includes("temperature")
-){
+if(lowerQ.includes("weather") || lowerQ.includes("forecast") || lowerQ.includes("temperature")){
 await handleWeather(q);
 return;
 }
@@ -243,6 +251,17 @@ body:JSON.stringify({q})
 
 const data=await res.json();
 renderResults(data.organic||[]);
+}
+
+function renderResults(results){
+document.getElementById("results").innerHTML=
+results.map(r=>`
+<div style="margin-bottom:20px;">
+<a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
+<div style="color:#006621;font-size:14px;">${r.link}</div>
+<div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
+</div>
+`).join("");
 }
 
 /* ---------------- WEATHER ---------------- */
