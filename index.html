@@ -14,12 +14,11 @@
 body{
   margin:0;
   font-family:Arial, Helvetica, sans-serif;
+  background:#ffffff;
   display:flex;
   flex-direction:column;
   align-items:center;
   min-height:100vh;
-  background:#ffffff;
-  transition: background 0.6s ease;
 }
 
 .main{
@@ -33,12 +32,10 @@ body{
 .logo{
   font-size:64px;
   font-weight:500;
-  margin-bottom:30px;
   display:flex;
-}
-
-.o{
-  display:inline-block;
+  align-items:center;
+  gap:2px;
+  margin-bottom:30px;
 }
 
 .bounce{
@@ -49,28 +46,6 @@ body{
   0%{transform:translateY(0);}
   50%{transform:translateY(-12px);}
   100%{transform:translateY(0);}
-}
-
-.eye{
-  position:relative;
-}
-
-.eye::after{
-  content:'';
-  position:absolute;
-  width:100%;
-  height:100%;
-  background:black;
-  border-radius:50%;
-  top:0;
-  left:0;
-  transform:scaleY(0);
-  transform-origin:center;
-  transition:transform 0.4s ease;
-}
-
-.eye.wink::after{
-  transform:scaleY(1);
 }
 
 .search-box{
@@ -138,13 +113,11 @@ button:hover{
   text-align:center;
 }
 
+/* Love Page */
 .love-page{
   position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:linear-gradient(to bottom, #ffffff 0%, #fff5f7 100%);
+  inset:0;
+  background:linear-gradient(to bottom,#ffffff 0%,#fff5f7 100%);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -179,11 +152,23 @@ button:hover{
 <body>
 
 <div class="main">
+
+  <!-- Logo -->
   <div class="logo" id="logo">
-    J
-    <span class="o" id="o1">o</span>
-    <span class="o" id="o2">o</span>
-    g l e
+    <span style="color:#4285F4;">J</span>
+
+    <span id="o1" style="color:#EA4335;">o</span>
+
+    <!-- Eye O -->
+    <svg id="eyeSvg" width="60" height="60" viewBox="0 0 60 60">
+      <circle cx="30" cy="30" r="22" fill="#FBBC05"/>
+      <circle id="iris" cx="30" cy="30" r="9" fill="black"/>
+      <rect id="lid" x="8" y="8" width="44" height="0" fill="#FBBC05"/>
+    </svg>
+
+    <span style="color:#4285F4;">g</span>
+    <span style="color:#34A853;">l</span>
+    <span style="color:#EA4335;">e</span>
   </div>
 
   <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
@@ -194,12 +179,14 @@ button:hover{
   </div>
 
   <div class="results" id="results"></div>
+
 </div>
 
 <div class="footer">
   Joogle is a parody project created with love. Not affiliated with Google LLC.
 </div>
 
+<!-- Love Page -->
 <div class="love-page" id="lovePage">
   <div class="love-text">
     Out of all the searches in the world…<br>
@@ -213,29 +200,32 @@ button:hover{
 const WORKER_URL = "https://joogle-proxy.flodingus.workers.dev/";
 
 const o1 = document.getElementById("o1");
-const o2 = document.getElementById("o2");
-const resultsDiv = document.getElementById("results");
-const input = document.getElementById("searchInput");
+const lid = document.getElementById("lid");
 const lovePage = document.getElementById("lovePage");
+const input = document.getElementById("searchInput");
+const resultsDiv = document.getElementById("results");
 
 function logoLoop(){
+
+  // Both bounce
   o1.classList.add("bounce");
-  o2.classList.add("bounce");
+  document.getElementById("eyeSvg").classList.add("bounce");
 
   setTimeout(()=>{
-    o2.classList.add("eye");
+    // Slow flirty wink
+    lid.style.transition = "height 0.4s ease";
+    lid.setAttribute("height","44");
+
     setTimeout(()=>{
-      o2.classList.add("wink");
-      setTimeout(()=>{
-        o2.classList.remove("wink");
-        setTimeout(()=>{
-          o2.classList.remove("eye");
-          o1.classList.remove("bounce");
-          o2.classList.remove("bounce");
-        },300);
-      },300);
-    },300);
-  },800);
+      lid.setAttribute("height","0");
+    },600);
+
+    setTimeout(()=>{
+      o1.classList.remove("bounce");
+      document.getElementById("eyeSvg").classList.remove("bounce");
+    },1200);
+
+  },1000);
 }
 setInterval(logoLoop,6500);
 
