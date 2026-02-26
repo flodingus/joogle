@@ -90,6 +90,9 @@ button:hover{ background:#f1f3f4; }
 
 .weather-content{
   padding:20px;
+}
+
+.weather-top{
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -111,10 +114,17 @@ button:hover{ background:#f1f3f4; }
   margin-top:6px;
 }
 
-.weather-right{
-  font-size:14px;
-  color:#555;
-  text-align:right;
+.forecast-row{
+  display:flex;
+  justify-content:space-between;
+  margin-top:20px;
+  border-top:1px solid #eee;
+  padding-top:15px;
+}
+
+.forecast-day{
+  text-align:center;
+  font-size:13px;
 }
 
 .results{
@@ -272,53 +282,52 @@ let lat,lon,locationLabel="";
 if(city){
 const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}`);
 const geoData=await geo.json();
-if(!geoData.results) return;
 lat=geoData.results[0].latitude;
 lon=geoData.results[0].longitude;
 locationLabel=`${geoData.results[0].name}, ${geoData.results[0].admin1}`;
 }else{
-try{
-await new Promise((resolve,reject)=>{
-navigator.geolocation.getCurrentPosition(pos=>{
-lat=pos.coords.latitude;
-lon=pos.coords.longitude;
-resolve();
-},()=>reject());
-});
-const reverse=await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}`);
-const revData=await reverse.json();
-if(revData.results && revData.results.length>0){
-locationLabel=`${revData.results[0].name}, ${revData.results[0].admin1}`;
-}
-}catch{
 const ip=await fetch("https://ipapi.co/json/");
 const ipData=await ip.json();
 lat=ipData.latitude;
 lon=ipData.longitude;
 locationLabel=`${ipData.city}, ${ipData.region}`;
 }
-}
 
 const weather=await fetch(
-`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph`
+`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=5`
 );
 const wData=await weather.json();
+
 const [icon,condition]=getCondition(wData.current_weather.weathercode);
+
+let forecastHTML="";
+for(let i=0;i<wData.daily.time.length;i++){
+const day=new Date(wData.daily.time[i]);
+const label=day.toLocaleDateString("en-US",{weekday:"short"});
+forecastHTML+=`
+<div class="forecast-day">
+<div>${label}</div>
+<div>${Math.round(wData.daily.temperature_2m_max[i])}° / ${Math.round(wData.daily.temperature_2m_min[i])}°</div>
+</div>`;
+}
 
 document.getElementById("featureCard").innerHTML=`
 <div class="weather-card">
 <div class="weather-accent"></div>
 <div class="weather-content">
-<div style="display:flex;align-items:center;gap:12px;">
-<div style="font-size:36px;">${icon}</div>
+<div class="weather-top">
 <div>
+<div style="display:flex;align-items:center;gap:10px;">
+<div style="font-size:36px;">${icon}</div>
 <div class="weather-temp">${Math.round(wData.current_weather.temperature)}°F</div>
+</div>
 <div class="weather-condition">${condition}</div>
 <div class="weather-location">${locationLabel}</div>
 </div>
-</div>
-<div class="weather-right">
 <div>Wind: ${Math.round(wData.current_weather.windspeed)} mph</div>
+</div>
+<div class="forecast-row">
+${forecastHTML}
 </div>
 </div>
 </div>`;
