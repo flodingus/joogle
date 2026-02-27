@@ -177,9 +177,7 @@ async function search(){
   document.getElementById("featureCard").innerHTML="";
   document.getElementById("results").innerHTML="";
 
-  const lower=q.toLowerCase();
-
-  if(lower.startsWith("weather") || lower.startsWith("forecast")){
+  if(/^weather/i.test(q) || /^forecast/i.test(q)){
     await handleWeather(q);
     return;
   }
@@ -208,55 +206,36 @@ function renderResults(results){
   `).join("");
 }
 
-/* ================= INTELLIGENT WEATHER ================= */
+/* ===== FIXED WEATHER ENGINE ===== */
 
 async function handleWeather(query){
 
-  let location=query.replace(/weather|forecast/i,"").trim();
+  let location=query
+      .replace(/^weather/i,"")
+      .replace(/^forecast/i,"")
+      .trim()
+      .replace(/,/g,"");
 
-  // AUTO GEOLOCATION
   if(!location){
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(async pos=>{
-        await fetchWeather(pos.coords.latitude,pos.coords.longitude,"Your Location");
-      });
-      return;
-    }else{
-      location="Phoenix AZ";
-    }
+    location="Phoenix AZ";
   }
 
   const geo=await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=5`
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=5&language=en`
   );
 
   const geoData=await geo.json();
 
-  if(!geoData.results){
+  if(!geoData.results || geoData.results.length===0){
     document.getElementById("featureCard").innerHTML=
-      "<div>No location found.</div>";
-    return;
-  }
-
-  // MULTIPLE MATCHES
-  if(geoData.results.length>1){
-    let optionsHTML=geoData.results.map(r=>`
-      <div style="cursor:pointer;padding:8px;border-bottom:1px solid #eee;"
-        onclick="fetchWeather(${r.latitude},${r.longitude},'${r.name}, ${r.admin1 || ""}')">
-        ${r.name}, ${r.admin1 || ""} ${r.country}
-      </div>
-    `).join("");
-
-    document.getElementById("featureCard").innerHTML=
-      `<div class="weather-card">
-         <strong>Select a location:</strong>
-         ${optionsHTML}
-       </div>`;
+      `<div class="weather-card">No location found for "<strong>${location}</strong>"</div>`;
     return;
   }
 
   const r=geoData.results[0];
-  await fetchWeather(r.latitude,r.longitude,`${r.name}, ${r.admin1 || ""}`);
+
+  await fetchWeather(r.latitude,r.longitude,
+    `${r.name}${r.admin1 ? ", "+r.admin1 : ""}`);
 }
 
 async function fetchWeather(lat,lon,label){
@@ -302,7 +281,7 @@ function imFeelingJoogly(){
     "funny cat videos",
     "why is the sky blue",
     "best pizza near me",
-    "weather phoenix az",
+    "weather Dallas TX",
     "how to get rich"
   ];
   input.value=randomQueries[Math.floor(Math.random()*randomQueries.length)];
