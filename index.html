@@ -1,10 +1,10 @@
 <!DOCTYPE html>
+<html lang="en"><!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Joogle</title>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
@@ -26,7 +26,7 @@ body{
   width:100%;
 }
 
-/* ===== EXACT LOCKED LOGO ===== */
+/* ================= LOCKED LOGO (SQUEEZED CLEAVAGE) ================= */
 
 .joogle-logo{
   font-size:64px;
@@ -44,33 +44,33 @@ body{
   animation:bounce 1.6s ease-in-out infinite;
 }
 
-.twin-o:nth-child(2){
-  margin-left:-6px;
+/* tighter inward squeeze */
+.twin-o:first-of-type{
+  transform:scaleX(0.95);
 }
 
-.twin-o::after{
+.twin-o:nth-of-type(2){
+  margin-left:-8px;
+  transform:scaleX(0.95);
+}
+
+/* subtle cleavage shading */
+.twin-o:first-of-type::after{
   content:"";
   position:absolute;
-  left:50%;
+  right:-1px;
   top:30%;
-  transform:translateX(-50%);
-  width:2px;
+  width:3px;
   height:40%;
-  background:linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.15),
-    rgba(0,0,0,0)
-  );
-  border-radius:2px;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.25),rgba(0,0,0,0));
+  border-radius:3px;
   pointer-events:none;
 }
 
 @keyframes bounce{
-  0%,100%{ transform:translateY(0); }
-  50%{ transform:translateY(-14px); }
+  0%,100%{ transform:translateY(0) scaleX(0.95); }
+  50%{ transform:translateY(-14px) scaleX(0.95); }
 }
-
-/* ===== SEARCH ===== */
 
 .search-box{
   width:90%;
@@ -105,15 +105,27 @@ button{
   border:1px solid #dadce0;
 }
 
-.place-list{
-  margin-top:15px;
+.place-item{
+  margin-bottom:15px;
+  padding:10px;
+  border-bottom:1px solid #eee;
 }
 
-.detail-panel{
-  margin-top:20px;
-  padding:15px;
+.detail-links a{
+  margin-right:15px;
+  font-size:14px;
+}
+
+.weather-card{
   border:1px solid #dadce0;
   border-radius:12px;
+  padding:20px;
+}
+
+.forecast-row{
+  display:flex;
+  justify-content:space-between;
+  margin-top:15px;
 }
 
 .results{
@@ -177,8 +189,15 @@ async function search(){
   document.getElementById("featureCard").innerHTML="";
   document.getElementById("results").innerHTML="";
 
-  if(q.toLowerCase().includes("near me")){
-    handleNearMe(q);
+  const lower=q.toLowerCase();
+
+  if(lower.includes("weather")){
+    handleWeather(q);
+    return;
+  }
+
+  if(lower.includes("near me")){
+    handleNearMe();
     return;
   }
 
@@ -192,7 +211,51 @@ async function search(){
   renderResults(data.organic||[]);
 }
 
-async function handleNearMe(query){
+/* ================= WEATHER ================= */
+
+async function handleWeather(query){
+
+  let location=query.replace(/weather/i,"").trim();
+
+  if(!location){
+    const geo=await fetch("https://ipapi.co/json/");
+    const geoData=await geo.json();
+    location=geoData.city;
+  }
+
+  const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}`);
+  const geoData=await geoRes.json();
+  if(!geoData.results) return;
+
+  const lat=geoData.results[0].latitude;
+  const lon=geoData.results[0].longitude;
+
+  const weatherRes=await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
+  );
+
+  const weather=await weatherRes.json();
+
+  let forecastHTML="";
+  weather.daily.time.forEach((d,i)=>{
+    forecastHTML+=`
+      <div>
+        <div>${new Date(d).toLocaleDateString("en-US",{weekday:"short"})}</div>
+        <div>${Math.round(weather.daily.temperature_2m_max[i])}° / ${Math.round(weather.daily.temperature_2m_min[i])}°</div>
+      </div>`;
+  });
+
+  document.getElementById("featureCard").innerHTML=
+    `<div class="weather-card">
+       <div style="font-size:40px;">${Math.round(weather.current_weather.temperature)}°F</div>
+       <div>${geoData.results[0].name}</div>
+       <div class="forecast-row">${forecastHTML}</div>
+     </div>`;
+}
+
+/* ================= MAP ================= */
+
+async function handleNearMe(){
 
   navigator.geolocation.getCurrentPosition(async pos=>{
 
@@ -200,13 +263,11 @@ async function handleNearMe(query){
     const lon=pos.coords.longitude;
 
     document.getElementById("featureCard").innerHTML=
-    `<div class="map-container" id="map"></div>
-     <div class="place-list" id="placeList"></div>
-     <div id="detailPanel"></div>`;
+      `<div class="map-container" id="map"></div>
+       <div id="placeList"></div>`;
 
     const map=L.map("map").setView([lat,lon],14);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-    L.marker([lat,lon]).addTo(map).bindPopup("You are here");
 
     const overpass=`
       [out:json];
@@ -225,58 +286,40 @@ async function handleNearMe(query){
     data.elements.forEach(place=>{
       if(!place.tags || !place.tags.name) return;
 
-      const marker=L.marker([place.lat,place.lon]).addTo(map);
+      const website=place.tags.website
+        ? `<a href="${place.tags.website}" target="_blank">Website</a>`
+        : "";
 
-      marker.on("click",()=>showDetails(place));
+      const directions=`<a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">Get Directions</a>`;
 
       const item=document.createElement("div");
-      item.innerHTML=`<strong>${place.tags.name}</strong>`;
-      item.style.cursor="pointer";
-
-      item.onclick=()=>{
-        map.setView([place.lat,place.lon],16);
-        showDetails(place);
-      };
+      item.className="place-item";
+      item.innerHTML=`
+        <strong>${place.tags.name}</strong>
+        <div class="detail-links">${website} ${directions}</div>
+      `;
 
       list.appendChild(item);
     });
+
   });
-}
-
-function showDetails(place){
-
-  const website = place.tags.website
-    ? `<div><a href="${place.tags.website}" target="_blank">Visit Website</a></div>`
-    : "";
-
-  document.getElementById("detailPanel").innerHTML=`
-    <div class="detail-panel">
-      <h2>${place.tags.name}</h2>
-      ${website}
-      <div style="margin-top:10px;">
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
-        Get Directions
-        </a>
-      </div>
-    </div>
-  `;
 }
 
 function renderResults(results){
   document.getElementById("results").innerHTML=
-  results.map(r=>`
-    <div style="margin-bottom:20px;">
-      <a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
-      <div style="color:#006621;font-size:14px;">${r.link}</div>
-      <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
-    </div>
-  `).join("");
+    results.map(r=>`
+      <div style="margin-bottom:20px;">
+        <a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
+        <div style="color:#006621;font-size:14px;">${r.link}</div>
+        <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
+      </div>
+    `).join("");
 }
 
 document.getElementById("searchInput")
-.addEventListener("keydown",e=>{
-  if(e.key==="Enter") search();
-});
+  .addEventListener("keydown",e=>{
+    if(e.key==="Enter") search();
+  });
 </script>
 
 </body>
