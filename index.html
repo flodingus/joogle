@@ -1,151 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Joogle</title>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
 <style>
-body{
-  margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:#fff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  min-height:100vh;
-}
-.main{
-  margin-top:18vh;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  width:100%;
-}
-.joogle-logo{
-  font-size:64px;
-  font-weight:500;
-  display:inline-flex;
-  align-items:baseline;
-  letter-spacing:-3px;
-  margin-bottom:30px;
-}
-.twin-o{
-  display:inline-block;
-  color:#EA4335;
-  animation:bounce 1.6s ease-in-out infinite;
-}
-.twin-o:nth-child(3){ margin-left:-6px; }
-@keyframes bounce{
-  0%,100%{ transform:translateY(0); }
-  50%{ transform:translateY(-14px); }
-}
-.search-box{
-  width:90%;
-  max-width:580px;
-  padding:14px 20px;
-  border-radius:30px;
-  border:1px solid #dadce0;
-  font-size:16px;
-  outline:none;
-}
-.buttons{ margin-top:25px; }
-button{
-  margin:5px;
-  padding:10px 18px;
-  border:1px solid #dadce0;
-  background:#f8f9fa;
-  border-radius:4px;
-  cursor:pointer;
-}
-button:hover{ background:#f1f3f4; }
-
-.feature-card{
-  width:90%;
-  max-width:900px;
-  margin-top:30px;
-}
-.map-container{
-  height:380px;
-  border-radius:12px;
-  overflow:hidden;
-  margin-top:20px;
-}
-.results{
-  margin-top:40px;
-  width:90%;
-  max-width:750px;
-}
-.result-item{ margin-bottom:32px; }
-.result-title{
-  font-size:20px;
-  color:#1a0dab;
-  text-decoration:none;
-}
-.result-title:hover{ text-decoration:underline; }
-
-.weather-card{
-  border:1px solid #dadce0;
-  border-radius:12px;
-  background:#fafafa;
-  padding:20px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.05);
-}
-.forecast-row{
-  display:flex;
-  justify-content:space-between;
-  margin-top:15px;
-  border-top:1px solid #eee;
-  padding-top:10px;
-}
-.forecast-day{ text-align:center; font-size:13px; }
-
-.footer{
-  margin-top:auto;
-  padding:20px;
-  font-size:12px;
-  color:#70757a;
-  text-align:center;
-}
+body{margin:0;font-family:Arial;background:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+.main{margin-top:18vh;display:flex;flex-direction:column;align-items:center;width:100%;}
+.joogle-logo{font-size:64px;font-weight:500;display:inline-flex;align-items:baseline;letter-spacing:-3px;margin-bottom:30px;}
+.twin-o{display:inline-block;color:#EA4335;animation:bounce 1.6s ease-in-out infinite;}
+.twin-o:nth-child(3){margin-left:-6px;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+.search-box{width:90%;max-width:580px;padding:14px 20px;border-radius:30px;border:1px solid #dadce0;font-size:16px;}
+.buttons{margin-top:25px;}
+button{margin:5px;padding:10px 18px;border:1px solid #dadce0;background:#f8f9fa;border-radius:4px;cursor:pointer;}
+button:hover{background:#f1f3f4;}
+.feature-card{width:90%;max-width:900px;margin-top:30px;}
+.map-container{height:380px;border-radius:12px;overflow:hidden;margin-top:20px;}
+.local-item{border:1px solid #ddd;border-radius:8px;padding:12px;margin-bottom:10px;cursor:pointer;}
+.local-item.active{border-color:#4285F4;background:#eef4ff;}
+.rating{color:#fbbc05;font-size:14px;}
+.distance{font-size:13px;color:#666;}
+.results{margin-top:40px;width:90%;max-width:750px;}
+.result-item{margin-bottom:32px;}
+.result-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.result-favicon{width:16px;height:16px;}
+.result-url{font-size:14px;color:#006621;}
+.result-title{font-size:20px;color:#1a0dab;text-decoration:none;}
+.result-title:hover{text-decoration:underline;}
+.result-snippet{font-size:14px;color:#4d5156;margin-top:4px;}
+.weather-card{border:1px solid #dadce0;border-radius:12px;background:#fafafa;padding:20px;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+.forecast-row{display:flex;justify-content:space-between;margin-top:15px;border-top:1px solid #eee;padding-top:10px;}
+.forecast-day{text-align:center;font-size:13px;}
+.footer{margin-top:auto;padding:20px;font-size:12px;color:#70757a;text-align:center;}
 </style>
 </head>
-
 <body>
 
 <div class="main">
-
 <div class="joogle-logo">
-  <span style="color:#4285F4;">J</span>
-  <span class="twin-o">o</span>
-  <span class="twin-o">o</span>
-  <span style="color:#4285F4;">g</span>
-  <span style="color:#34A853;">l</span>
-  <span style="color:#EA4335;">e</span>
+<span style="color:#4285F4;">J</span>
+<span class="twin-o">o</span>
+<span class="twin-o">o</span>
+<span style="color:#4285F4;">g</span>
+<span style="color:#34A853;">l</span>
+<span style="color:#EA4335;">e</span>
 </div>
 
 <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
-
 <div class="buttons">
-  <button id="searchBtn">Joogle Search</button>
-  <button id="jooglyBtn">I'm Feeling Joogly</button>
+<button id="searchBtn">Joogle Search</button>
+<button id="jooglyBtn">I'm Feeling Joogly</button>
 </div>
 
 <div class="feature-card" id="featureCard"></div>
 <div class="results" id="results"></div>
-
 </div>
 
-<div class="footer">
-Joogle is a parody project created with love. Not affiliated with Google LLC.
-</div>
+<div class="footer">Joogle is a parody project.</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
 
 const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
+let userLat,userLon,currentMap;
+
+/* ================= SEARCH ROUTER ================= */
 
 async function search(){
   const q=document.getElementById("searchInput").value.trim();
@@ -156,134 +76,185 @@ async function search(){
 
   const lower=q.toLowerCase();
 
-  if(lower.startsWith("weather") || lower.startsWith("forecast")){
+  if(lower.startsWith("weather")||lower.startsWith("forecast")){
     await handleWeather(q);
     return;
   }
 
   if(lower.includes("near me")){
-    await handleLocalNearMe(lower);
+    await handleLocal(lower);
   }
 
   await runOrganicSearch(q);
 }
 
-/* ================= LOCAL FIXED ================= */
+/* ================= LOCAL ENGINE ================= */
 
-async function handleLocalNearMe(lower){
-
-  if(!navigator.geolocation) return;
-
-  const category = detectCategory(lower);
-  if(!category) return;
-
-  navigator.geolocation.getCurrentPosition(async position => {
-
-    const lat = position.coords.latitude;
-    const lon = position.coords.longitude;
-
-    const overpassQuery = `
-      [out:json][timeout:25];
-      node["amenity"="${category}"](around:2000,${lat},${lon});
-      out;
-    `;
-
-    try{
-      const response = await fetch("https://overpass-api.de/api/interpreter",{
-        method:"POST",
-        headers: { "Content-Type": "text/plain" },
-        body: overpassQuery
-      });
-
-      const data = await response.json();
-      renderMap(lat,lon,data.elements);
-
-    }catch(err){
-      console.error("Overpass error:",err);
-    }
-
-  });
-}
-
-function detectCategory(lower){
-
-  if(lower.includes("restaurant")) return "restaurant";
-  if(lower.includes("coffee")) return "cafe";
-  if(lower.includes("bar")) return "bar";
-  if(lower.includes("gas")) return "fuel";
-  if(lower.includes("hotel")) return "hotel";
-  if(lower.includes("pharmacy")) return "pharmacy";
-  if(lower.includes("library")) return "library";
-
+function detectCategory(q){
+  if(q.includes("restaurant")) return "restaurant";
+  if(q.includes("coffee")) return "cafe";
+  if(q.includes("bar")) return "bar";
+  if(q.includes("gas")) return "fuel";
+  if(q.includes("hotel")) return "hotel";
+  if(q.includes("pharmacy")) return "pharmacy";
+  if(q.includes("library")) return "library";
   return null;
 }
 
-function renderMap(lat,lon,places){
+async function handleLocal(q){
 
-  document.getElementById("featureCard").innerHTML =
-    `<div id="map" class="map-container"></div>`;
+  const category=detectCategory(q);
+  if(!category) return;
 
-  const map = L.map("map").setView([lat,lon],14);
+  navigator.geolocation.getCurrentPosition(async pos=>{
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    attribution:'© OpenStreetMap'
-  }).addTo(map);
+    userLat=pos.coords.latitude;
+    userLon=pos.coords.longitude;
 
-  L.marker([lat,lon]).addTo(map).bindPopup("<strong>You are here</strong>");
+    const query=`
+      [out:json][timeout:25];
+      node["amenity"="${category}"](around:2000,${userLat},${userLon});
+      out;
+    `;
 
-  if(!places) return;
+    const res=await fetch("https://overpass-api.de/api/interpreter",{
+      method:"POST",
+      headers:{"Content-Type":"text/plain"},
+      body:query
+    });
 
-  places.slice(0,12).forEach(place=>{
-    if(place.tags && place.tags.name){
-      L.marker([place.lat,place.lon])
-        .addTo(map)
-        .bindPopup(`<strong>${place.tags.name}</strong>`);
-    }
+    const data=await res.json();
+    renderLocal(data.elements);
+  });
+}
+
+function distanceMiles(lat1,lon1,lat2,lon2){
+  const R=3958.8;
+  const dLat=(lat2-lat1)*Math.PI/180;
+  const dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+
+          Math.cos(lat1*Math.PI/180)*
+          Math.cos(lat2*Math.PI/180)*
+          Math.sin(dLon/2)**2;
+  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  return R*c;
+}
+
+function isOpenNow(hours){
+  if(!hours) return true;
+  const now=new Date();
+  const time=now.getHours()*100+now.getMinutes();
+  const match=hours.match(/(\d{2}):?(\d{2})-(\d{2}):?(\d{2})/);
+  if(!match) return true;
+  const open=parseInt(match[1]+match[2]);
+  const close=parseInt(match[3]+match[4]);
+  return time>=open && time<=close;
+}
+
+function fakeRating(name){
+  const hash=name.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  return (3.5+(hash%15)/10).toFixed(1);
+}
+
+function renderLocal(places){
+
+  const filtered=places
+    .filter(p=>p.tags&&p.tags.name&&isOpenNow(p.tags.opening_hours))
+    .map(p=>{
+      p.distance=distanceMiles(userLat,userLon,p.lat,p.lon);
+      return p;
+    })
+    .sort((a,b)=>a.distance-b.distance);
+
+  document.getElementById("featureCard").innerHTML=
+  `<div id="map" class="map-container"></div>
+   <div id="localList"></div>`;
+
+  currentMap=L.map("map").setView([userLat,userLon],14);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(currentMap);
+  L.marker([userLat,userLon]).addTo(currentMap).bindPopup("You are here");
+
+  const list=document.getElementById("localList");
+
+  filtered.slice(0,10).forEach(p=>{
+
+    const rating=fakeRating(p.tags.name);
+
+    const marker=L.marker([p.lat,p.lon])
+      .addTo(currentMap)
+      .bindPopup(`<strong>${p.tags.name}</strong>`);
+
+    const div=document.createElement("div");
+    div.className="local-item";
+    div.innerHTML=`
+      <strong>${p.tags.name}</strong>
+      <div class="rating">⭐ ${rating}</div>
+      <div class="distance">${p.distance.toFixed(1)} mi away</div>
+      <div><a target="_blank"
+        href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}">
+        Directions
+      </a></div>
+    `;
+
+    div.onclick=()=>{
+      marker.openPopup();
+      currentMap.setView([p.lat,p.lon],16);
+    };
+
+    marker.on("click",()=>{
+      div.scrollIntoView({behavior:"smooth",block:"center"});
+    });
+
+    list.appendChild(div);
   });
 }
 
 /* ================= ORGANIC ================= */
 
 async function runOrganicSearch(q){
-  try{
-    const res=await fetch(WORKER_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({q})
-    });
-    const data=await res.json();
-    document.getElementById("results").innerHTML =
-      (data.organic||[]).map(r=>`
-        <div class="result-item">
-          <a class="result-title" href="${r.link}" target="_blank">
-            ${r.title}
-          </a>
-        </div>
-      `).join("");
-  }catch(err){
-    console.error(err);
-  }
+  const res=await fetch(WORKER_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({q})
+  });
+  const data=await res.json();
+
+  document.getElementById("results").innerHTML=
+  (data.organic||[]).map(r=>{
+    let domain="";
+    try{domain=new URL(r.link).hostname;}catch(e){}
+    return`
+    <div class="result-item">
+      <div class="result-header">
+        <img class="result-favicon"
+         src="https://www.google.com/s2/favicons?domain=${domain}">
+        <div class="result-url">${domain}</div>
+      </div>
+      <a class="result-title" href="${r.link}" target="_blank">
+        ${r.title}
+      </a>
+      <div class="result-snippet">${r.snippet||""}</div>
+    </div>`;
+  }).join("");
 }
 
-/* ================= WEATHER (UNCHANGED STABLE) ================= */
+/* ================= WEATHER (LOCKED) ================= */
 
 async function handleWeather(query){
-  document.getElementById("featureCard").innerHTML =
-    `<div class="weather-card">Weather system still locked & working.</div>`;
+  document.getElementById("featureCard").innerHTML=
+  `<div class="weather-card">Weather system still locked & working.</div>`;
 }
 
 function imFeelingJoogly(){
-  const input=document.getElementById("searchInput");
-  input.value="restaurants near me";
+  document.getElementById("searchInput").value="restaurants near me";
   search();
 }
 
 document.getElementById("searchBtn").addEventListener("click",search);
 document.getElementById("jooglyBtn").addEventListener("click",imFeelingJoogly);
-document.getElementById("searchInput")
-  .addEventListener("keydown",e=>{
-    if(e.key==="Enter") search();
-  });
+document.getElementById("searchInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter") search();
+});
 
 </script>
 
