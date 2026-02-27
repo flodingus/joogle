@@ -20,29 +20,52 @@ body{
 
 .main{
   margin-top:18vh;
-  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
   width:100%;
 }
 
-/* ================= LOCKED CLEAVAGE LOGO ================= */
+/* ================= EXACT LOCKED LOGO ================= */
 
 .joogle-logo{
   font-size:64px;
   font-weight:500;
+  display:inline-flex;
+  align-items:baseline;
   letter-spacing:-3px;
   margin-bottom:30px;
 }
 
-.o-left,
-.o-right{
+/* Twin O styling */
+.twin-o{
   display:inline-block;
+  position:relative;
   color:#EA4335;
   animation:bounce 1.6s ease-in-out infinite;
 }
 
-/* Cleavage squeeze */
-.o-left{ margin-right:-18px; }
-.o-right{ margin-left:-18px; }
+.twin-o:nth-child(2){
+  margin-left:-6px;
+}
+
+/* Cleavage illusion */
+.twin-o::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:30%;
+  transform:translateX(-50%);
+  width:2px;
+  height:40%;
+  background:linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.15),
+    rgba(0,0,0,0)
+  );
+  border-radius:2px;
+  pointer-events:none;
+}
 
 @keyframes bounce{
   0%,100%{ transform:translateY(0); }
@@ -76,7 +99,20 @@ button:hover{ background:#f1f3f4; }
 .feature-card{
   width:90%;
   max-width:900px;
-  margin:30px auto 0 auto;
+  margin-top:30px;
+}
+
+.weather-card{
+  border:1px solid #dadce0;
+  border-radius:12px;
+  padding:20px;
+  background:#fafafa;
+}
+
+.forecast-row{
+  display:flex;
+  justify-content:space-between;
+  margin-top:15px;
 }
 
 .map-container{
@@ -88,12 +124,10 @@ button:hover{ background:#f1f3f4; }
 
 .place-list{
   margin-top:15px;
-  font-size:14px;
-  text-align:left;
 }
 
 .place-item{
-  margin-bottom:10px;
+  margin-bottom:8px;
   cursor:pointer;
   color:#1a0dab;
 }
@@ -103,7 +137,6 @@ button:hover{ background:#f1f3f4; }
   margin-top:30px;
   width:90%;
   max-width:800px;
-  text-align:left;
 }
 
 .footer{
@@ -121,19 +154,19 @@ button:hover{ background:#f1f3f4; }
 <div class="main">
 
 <div class="joogle-logo">
-<span style="color:#4285F4;">J</span>
-<span class="o-left">o</span>
-<span class="o-right">o</span>
-<span style="color:#4285F4;">g</span>
-<span style="color:#34A853;">l</span>
-<span style="color:#EA4335;">e</span>
+  <span style="color:#4285F4;">J</span>
+  <span class="twin-o">o</span>
+  <span class="twin-o">o</span>
+  <span style="color:#4285F4;">g</span>
+  <span style="color:#34A853;">l</span>
+  <span style="color:#EA4335;">e</span>
 </div>
 
 <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
 
 <div class="buttons">
-<button onclick="search()">Joogle Search</button>
-<button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
+  <button onclick="search()">Joogle Search</button>
+  <button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
 </div>
 
 <div class="feature-card" id="featureCard"></div>
@@ -177,7 +210,7 @@ function detectCategory(query){
   return "restaurant";
 }
 
-/* ================= SEARCH ================= */
+/* ================= SEARCH ROUTER ================= */
 
 async function search(){
   const q=document.getElementById("searchInput").value.trim();
@@ -187,6 +220,11 @@ async function search(){
   document.getElementById("results").innerHTML="";
 
   const lower=q.toLowerCase();
+
+  if(lower.includes("weather") || lower.includes("forecast")){
+    await handleWeather(q);
+    return;
+  }
 
   if(lower.includes("near me") || lower.includes("nearby")){
     await handleNearMe(q);
@@ -203,7 +241,49 @@ async function search(){
   renderResults(data.organic||[]);
 }
 
-/* ================= MAP ================= */
+/* ================= WEATHER (FAHRENHEIT ONLY) ================= */
+
+async function handleWeather(query){
+
+  let location=query.replace(/weather|forecast/i,"").trim();
+
+  if(!location){
+    const geo=await fetch("https://ipapi.co/json/");
+    const geoData=await geo.json();
+    location=geoData.city;
+  }
+
+  const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}`);
+  const geoData=await geoRes.json();
+  if(!geoData.results) return;
+
+  const lat=geoData.results[0].latitude;
+  const lon=geoData.results[0].longitude;
+
+  const weatherRes=await fetch(
+  `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
+  );
+
+  const weather=await weatherRes.json();
+
+  let forecastHTML="";
+  weather.daily.time.forEach((d,i)=>{
+    forecastHTML+=`
+    <div>
+      <div>${new Date(d).toLocaleDateString("en-US",{weekday:"short"})}</div>
+      <div>${Math.round(weather.daily.temperature_2m_max[i])}° / ${Math.round(weather.daily.temperature_2m_min[i])}°</div>
+    </div>`;
+  });
+
+  document.getElementById("featureCard").innerHTML=
+  `<div class="weather-card">
+     <div style="font-size:40px;">${Math.round(weather.current_weather.temperature)}°F</div>
+     <div>${geoData.results[0].name}</div>
+     <div class="forecast-row">${forecastHTML}</div>
+   </div>`;
+}
+
+/* ================= LOCAL ================= */
 
 async function handleNearMe(query){
 
@@ -298,9 +378,9 @@ function renderResults(results){
   document.getElementById("results").innerHTML=
   results.map(r=>`
   <div style="margin-bottom:20px;">
-  <a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
-  <div style="color:#006621;font-size:14px;">${r.link}</div>
-  <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
+    <a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
+    <div style="color:#006621;font-size:14px;">${r.link}</div>
+    <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
   </div>
   `).join("");
 }
