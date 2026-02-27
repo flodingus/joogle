@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Joogle</title>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
@@ -22,7 +24,7 @@ body{
   width:100%;
 }
 
-/* ---------------- LOCKED LOGO ---------------- */
+/* ================= LOCKED CLEAVAGE LOGO ================= */
 
 .joogle-logo{
   font-size:64px;
@@ -38,15 +40,16 @@ body{
   animation:bounce 1.6s ease-in-out infinite;
 }
 
-.o-left{ margin-right:-14px; }
-.o-right{ margin-left:-14px; }
+/* Cleavage squeeze */
+.o-left{ margin-right:-18px; }
+.o-right{ margin-left:-18px; }
 
 @keyframes bounce{
   0%,100%{ transform:translateY(0); }
   50%{ transform:translateY(-14px); }
 }
 
-/* ---------------- SEARCH ---------------- */
+/* ================= SEARCH ================= */
 
 .search-box{
   width:90%;
@@ -147,7 +150,34 @@ Joogle is a parody project created with love.
 <script>
 const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 
-/* ---------------- SEARCH ---------------- */
+/* ================= SMART INTENT ================= */
+
+const categoryMap={
+  restaurant:["restaurant","pizza","food","dinner","lunch"],
+  cafe:["coffee","cafe","espresso","starbucks"],
+  bar:["bar","pub","brewery"],
+  fuel:["gas","gas station","fuel"],
+  pharmacy:["pharmacy","cvs","walgreens"],
+  library:["library"],
+  fitness_centre:["gym","fitness"],
+  hospital:["hospital","er"],
+  hotel:["hotel","motel"],
+  supermarket:["grocery","supermarket","market"]
+};
+
+function detectCategory(query){
+  const q=query.toLowerCase();
+  for(const amenity in categoryMap){
+    for(const keyword of categoryMap[amenity]){
+      if(q.includes(keyword)){
+        return amenity;
+      }
+    }
+  }
+  return "restaurant";
+}
+
+/* ================= SEARCH ================= */
 
 async function search(){
   const q=document.getElementById("searchInput").value.trim();
@@ -156,7 +186,9 @@ async function search(){
   document.getElementById("featureCard").innerHTML="";
   document.getElementById("results").innerHTML="";
 
-  if(q.toLowerCase().includes("near me")){
+  const lower=q.toLowerCase();
+
+  if(lower.includes("near me") || lower.includes("nearby")){
     await handleNearMe(q);
     return;
   }
@@ -171,7 +203,7 @@ async function search(){
   renderResults(data.organic||[]);
 }
 
-/* ---------------- MAP ---------------- */
+/* ================= MAP ================= */
 
 async function handleNearMe(query){
 
@@ -184,6 +216,8 @@ async function handleNearMe(query){
     },()=>reject());
   });
 
+  const amenity=detectCategory(query);
+
   document.getElementById("featureCard").innerHTML=
   `<div class="map-container" id="map"></div>
    <div class="place-list" id="placeList"></div>`;
@@ -194,7 +228,7 @@ async function handleNearMe(query){
 
   const overpass=`
   [out:json];
-  node["amenity"="restaurant"](around:3000,${lat},${lon});
+  node["amenity"="${amenity}"](around:3000,${lat},${lon});
   out;
   `;
 
@@ -206,29 +240,31 @@ async function handleNearMe(query){
   const data=await response.json();
   const listContainer=document.getElementById("placeList");
 
-  data.elements.forEach(place=>{
-    if(place.tags && place.tags.name){
+  const places=data.elements
+    .filter(p=>p.tags && p.tags.name)
+    .map(p=>{
+      p.distance=getDistance(lat,lon,p.lat,p.lon);
+      return p;
+    })
+    .sort((a,b)=>a.distance-b.distance);
 
-      const marker=L.marker([place.lat,place.lon]).addTo(map);
+  places.forEach(place=>{
+    const marker=L.marker([place.lat,place.lon]).addTo(map);
 
-      const item=document.createElement("div");
-      item.className="place-item";
-      item.textContent=place.tags.name;
+    marker.on("click",()=>{
+      showDetails(place);
+    });
 
-      item.onclick=()=>{
-        map.setView([place.lat,place.lon],16);
-        marker.openPopup();
-        showDetails(place);
-      };
+    const item=document.createElement("div");
+    item.className="place-item";
+    item.textContent=`${place.tags.name} (${place.distance.toFixed(2)} mi)`;
 
-      marker.bindPopup(place.tags.name);
+    item.onclick=()=>{
+      map.setView([place.lat,place.lon],16);
+      showDetails(place);
+    };
 
-      marker.on("click",()=>{
-        showDetails(place);
-      });
-
-      listContainer.appendChild(item);
-    }
+    listContainer.appendChild(item);
   });
 }
 
@@ -238,7 +274,24 @@ function showDetails(place){
     <h2>${place.tags.name}</h2>
     <div>${place.tags["addr:street"]||""}</div>
     <div>${place.tags.phone||""}</div>
+    <div>
+      <a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
+      Get Directions
+      </a>
+    </div>
   </div>`;
+}
+
+function getDistance(lat1,lon1,lat2,lon2){
+  const R=3958.8;
+  const dLat=(lat2-lat1)*Math.PI/180;
+  const dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+
+    Math.cos(lat1*Math.PI/180)*
+    Math.cos(lat2*Math.PI/180)*
+    Math.sin(dLon/2)**2;
+  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  return R*c;
 }
 
 function renderResults(results){
