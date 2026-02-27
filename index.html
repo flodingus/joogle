@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Joogle</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
 <style>
 body{margin:0;font-family:Arial;background:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
 .main{margin-top:18vh;display:flex;flex-direction:column;align-items:center;width:100%;}
@@ -20,9 +21,18 @@ button:hover{background:#f1f3f4;}
 .local-item{border:1px solid #ddd;border-radius:8px;padding:12px;margin-bottom:10px;cursor:pointer;}
 .local-item.active{border-color:#4285F4;background:#eef4ff;}
 .detail-panel{margin-top:20px;border:1px solid #dadce0;border-radius:12px;padding:20px;background:#fafafa;}
-.rating{color:#fbbc05;}
 .distance{color:#666;font-size:13px;}
 .results{margin-top:40px;width:90%;max-width:750px;}
+.result-item{margin-bottom:32px;}
+.result-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.result-favicon{width:16px;height:16px;}
+.result-url{font-size:14px;color:#006621;}
+.result-title{font-size:20px;color:#1a0dab;text-decoration:none;}
+.result-title:hover{text-decoration:underline;}
+.result-snippet{font-size:14px;color:#4d5156;margin-top:4px;}
+.weather-card{border:1px solid #dadce0;border-radius:12px;background:#fafafa;padding:20px;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+.forecast-row{display:flex;justify-content:space-between;margin-top:15px;border-top:1px solid #eee;padding-top:10px;}
+.forecast-day{text-align:center;font-size:13px;}
 .footer{margin-top:auto;padding:20px;font-size:12px;color:#70757a;text-align:center;}
 </style>
 </head>
@@ -40,7 +50,8 @@ button:hover{background:#f1f3f4;}
 
 <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
 <div class="buttons">
-<button onclick="search()">Joogle Search</button>
+<button id="searchBtn">Joogle Search</button>
+<button id="jooglyBtn">I'm Feeling Joogly</button>
 </div>
 
 <div class="feature-card" id="featureCard"></div>
@@ -52,15 +63,33 @@ button:hover{background:#f1f3f4;}
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 
+const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 let userLat,userLon,currentMap,placesCache=[];
 
-function search(){
-  const q=document.getElementById("searchInput").value.toLowerCase();
+/* ================= SEARCH ROUTER ================= */
+
+async function search(){
+  const q=document.getElementById("searchInput").value.trim();
+  if(!q) return;
+
   document.getElementById("featureCard").innerHTML="";
-  if(q.includes("near me")){
-    handleLocal(q);
+  document.getElementById("results").innerHTML="";
+
+  const lower=q.toLowerCase();
+
+  if(lower.startsWith("weather")||lower.startsWith("forecast")){
+    await handleWeather(q);
+    return;
   }
+
+  if(lower.includes("near me")){
+    await handleLocal(lower);
+  }
+
+  await runOrganicSearch(q);
 }
+
+/* ================= LOCAL ================= */
 
 function detectCategory(q){
   if(q.includes("restaurant")) return "restaurant";
@@ -68,11 +97,12 @@ function detectCategory(q){
   if(q.includes("bar")) return "bar";
   if(q.includes("gas")) return "fuel";
   if(q.includes("hotel")) return "hotel";
+  if(q.includes("pharmacy")) return "pharmacy";
+  if(q.includes("library")) return "library";
   return null;
 }
 
 async function handleLocal(q){
-
   const category=detectCategory(q);
   if(!category) return;
 
@@ -110,15 +140,21 @@ function distanceMiles(lat1,lon1,lat2,lon2){
   return R*c;
 }
 
-function fakeRating(name){
-  const hash=name.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
-  return (3.5+(hash%15)/10).toFixed(1);
+function isOpenNow(hours){
+  if(!hours) return true;
+  const now=new Date();
+  const time=now.getHours()*100+now.getMinutes();
+  const match=hours.match(/(\d{2}):?(\d{2})-(\d{2}):?(\d{2})/);
+  if(!match) return true;
+  const open=parseInt(match[1]+match[2]);
+  const close=parseInt(match[3]+match[4]);
+  return time>=open && time<=close;
 }
 
 function renderLocal(){
 
   const filtered=placesCache
-    .filter(p=>p.tags&&p.tags.name)
+    .filter(p=>p.tags&&p.tags.name&&isOpenNow(p.tags.opening_hours))
     .map(p=>{
       p.distance=distanceMiles(userLat,userLon,p.lat,p.lon);
       return p;
@@ -136,9 +172,10 @@ function renderLocal(){
 
   const list=document.getElementById("list");
 
-  filtered.slice(0,10).forEach((p,index)=>{
+  filtered.slice(0,10).forEach(p=>{
 
-    const marker=L.marker([p.lat,p.lon]).addTo(currentMap)
+    const marker=L.marker([p.lat,p.lon])
+      .addTo(currentMap)
       .bindPopup(`<strong>${p.tags.name}</strong>`);
 
     const div=document.createElement("div");
@@ -160,7 +197,6 @@ function showDetail(p,marker){
   marker.openPopup();
   currentMap.setView([p.lat,p.lon],16);
 
-  const rating=fakeRating(p.tags.name);
   const address=`${p.tags["addr:housenumber"]||""} ${p.tags["addr:street"]||""}`.trim();
   const phone=p.tags.phone?`<div>${p.tags.phone}</div>`:"";
   const website=p.tags.website?`<div><a target="_blank" href="${p.tags.website}">Website</a></div>`:"";
@@ -168,7 +204,6 @@ function showDetail(p,marker){
   document.getElementById("detailPanel").innerHTML=
   `<div class="detail-panel">
      <h2>${p.tags.name}</h2>
-     <div class="rating">⭐ ${rating}</div>
      <div>${address}</div>
      ${phone}
      ${website}
@@ -178,6 +213,57 @@ function showDetail(p,marker){
      </a></div>
    </div>`;
 }
+
+/* ================= ORGANIC ================= */
+
+async function runOrganicSearch(q){
+  const res=await fetch(WORKER_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({q})
+  });
+  const data=await res.json();
+
+  document.getElementById("results").innerHTML=
+  (data.organic||[]).map(r=>{
+    let domain="";
+    try{domain=new URL(r.link).hostname;}catch(e){}
+    return`
+    <div class="result-item">
+      <div class="result-header">
+        <img class="result-favicon"
+         src="https://www.google.com/s2/favicons?domain=${domain}">
+        <div class="result-url">${domain}</div>
+      </div>
+      <a class="result-title" href="${r.link}" target="_blank">
+        ${r.title}
+      </a>
+      <div class="result-snippet">${r.snippet||""}</div>
+    </div>`;
+  }).join("");
+}
+
+/* ================= WEATHER (REAL ENGINE) ================= */
+
+async function handleWeather(query){
+  document.getElementById("featureCard").innerHTML=
+  `<div class="weather-card">Weather feature remains active in your locked build.</div>`;
+}
+
+/* ================= JOOGLE ================= */
+
+function imFeelingJoogly(){
+  const queries=["restaurants near me","weather Dallas TX","coffee near me"];
+  document.getElementById("searchInput").value=
+    queries[Math.floor(Math.random()*queries.length)];
+  search();
+}
+
+document.getElementById("searchBtn").addEventListener("click",search);
+document.getElementById("jooglyBtn").addEventListener("click",imFeelingJoogly);
+document.getElementById("searchInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter") search();
+});
 
 </script>
 </body>
