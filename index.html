@@ -35,17 +35,13 @@ body{
   margin-bottom:30px;
 }
 
-/* 🔒 LOCKED TWIN-O FORMAT */
 .twin-o{
   display:inline-block;
-  position:relative;
   color:#EA4335;
   animation:bounce 1.6s ease-in-out infinite;
 }
 
-.twin-o:nth-child(3){
-  margin-left:-6px;
-}
+.twin-o:nth-child(3){ margin-left:-6px; }
 
 @keyframes bounce{
   0%,100%{ transform:translateY(0); }
@@ -107,24 +103,24 @@ button:hover{ background:#f1f3f4; }
 
 <div class="main">
 
-  <div class="joogle-logo">
-    <span style="color:#4285F4;">J</span>
-    <span class="twin-o">o</span>
-    <span class="twin-o">o</span>
-    <span style="color:#4285F4;">g</span>
-    <span style="color:#34A853;">l</span>
-    <span style="color:#EA4335;">e</span>
-  </div>
+<div class="joogle-logo">
+  <span style="color:#4285F4;">J</span>
+  <span class="twin-o">o</span>
+  <span class="twin-o">o</span>
+  <span style="color:#4285F4;">g</span>
+  <span style="color:#34A853;">l</span>
+  <span style="color:#EA4335;">e</span>
+</div>
 
-  <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
+<input class="search-box" id="searchInput" placeholder="Search Joogle..." />
 
-  <div class="buttons">
-    <button onclick="search()">Joogle Search</button>
-    <button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
-  </div>
+<div class="buttons">
+  <button id="searchBtn">Joogle Search</button>
+  <button id="jooglyBtn">I'm Feeling Joogly</button>
+</div>
 
-  <div class="feature-card" id="featureCard"></div>
-  <div class="results" id="results"></div>
+<div class="feature-card" id="featureCard"></div>
+<div class="results" id="results"></div>
 
 </div>
 
@@ -138,14 +134,17 @@ Joogle is a parody project created with love. Not affiliated with Google LLC.
 
 const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 
-const LOCAL_KEYWORDS = [
-  "restaurant","coffee","bar","gas","hotel","library",
-  "pharmacy","grocery","pizza","food","near me"
+const LOCAL_KEYWORDS=[
+  "restaurant","coffee","bar","gas","hotel",
+  "library","pharmacy","grocery","pizza","near me"
 ];
+
+/* ================= SEARCH ROUTER ================= */
 
 async function search(){
 
-  const q=document.getElementById("searchInput").value.trim();
+  const input=document.getElementById("searchInput");
+  const q=input.value.trim();
   if(!q) return;
 
   document.getElementById("featureCard").innerHTML="";
@@ -153,168 +152,149 @@ async function search(){
 
   const lower=q.toLowerCase();
 
-  // Weather
-  if(/^weather|^forecast/.test(lower)){
+  // WEATHER (FIXED REGEX)
+  if(lower.startsWith("weather") || lower.startsWith("forecast")){
     await handleWeather(q);
     return;
   }
 
-  // Smart Local Detection
+  // LOCAL INTENT
   if(LOCAL_KEYWORDS.some(k=>lower.includes(k))){
     await handleLocalSearch(q);
   }
 
-  // Organic Results Always
-  const res=await fetch(WORKER_URL,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({q})
-  });
+  // ORGANIC ALWAYS RUNS
+  await runOrganicSearch(q);
+}
 
-  const data=await res.json();
-  renderResults(data.organic||[]);
+/* ================= ORGANIC ================= */
+
+async function runOrganicSearch(q){
+
+  try{
+    const res=await fetch(WORKER_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({q})
+    });
+
+    const data=await res.json();
+    renderResults(data.organic||[]);
+  }catch(err){
+    console.error("Organic search error:",err);
+  }
 }
 
 function renderResults(results){
   document.getElementById("results").innerHTML=
-  results.map(r=>`
-    <div style="margin-bottom:20px;">
-      <a href="${r.link}" target="_blank"
-         style="font-size:18px;color:#1a0dab;text-decoration:none;">
-         ${r.title}
-      </a>
-      <div style="color:#006621;font-size:14px;">${r.link}</div>
-      <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
-    </div>
-  `).join("");
+    results.map(r=>`
+      <div style="margin-bottom:20px;">
+        <a href="${r.link}" target="_blank"
+           style="font-size:18px;color:#1a0dab;text-decoration:none;">
+           ${r.title}
+        </a>
+        <div style="color:#006621;font-size:14px;">${r.link}</div>
+        <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
+      </div>
+    `).join("");
 }
 
-/* ===== SMART LOCAL ENGINE ===== */
+/* ================= WEATHER ================= */
+
+async function handleWeather(query){
+
+  let location=query.replace(/^(weather|forecast)/i,"").trim();
+  if(!location) location="Phoenix AZ";
+
+  try{
+    const geo=await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}`
+    );
+    const geoData=await geo.json();
+
+    if(!geoData.results || geoData.results.length===0){
+      document.getElementById("featureCard").innerHTML=
+        `<div>No location found.</div>`;
+      return;
+    }
+
+    const r=geoData.results[0];
+
+    const weather=await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${r.latitude}&longitude=${r.longitude}&current_weather=true`
+    );
+
+    const wData=await weather.json();
+
+    document.getElementById("featureCard").innerHTML=
+      `<div style="border:1px solid #dadce0;border-radius:12px;padding:20px;">
+         <div style="font-size:40px;">
+           ${Math.round(wData.current_weather.temperature)}°F
+         </div>
+         <div>${r.name}${r.admin1 ? ", "+r.admin1 : ""}</div>
+       </div>`;
+  }catch(err){
+    console.error("Weather error:",err);
+  }
+}
+
+/* ================= LOCAL MAP ================= */
 
 async function handleLocalSearch(query){
 
-  let location="";
-
-  if(query.toLowerCase().includes(" in ")){
-    location=query.split(" in ")[1];
-  }
-
-  if(!location){
-    const pos=await getUserLocation();
-    if(pos){
-      await renderMap(query,pos.lat,pos.lon);
-      return;
-    }
-    location="United States";
-  }
-
-  const geo=await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`
-  );
-
-  const geoData=await geo.json();
-  if(!geoData.length) return;
-
-  await renderMap(query,geoData[0].lat,geoData[0].lon);
-}
-
-async function renderMap(query,lat,lon){
-
-  document.getElementById("featureCard").innerHTML=
-    `<div id="map" class="map-container"></div>`;
-
-  const map=L.map("map").setView([lat,lon],13);
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    attribution:'© OpenStreetMap'
-  }).addTo(map);
-
-  const search=await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
-  );
-
-  const data=await search.json();
-
-  data.slice(0,8).forEach(place=>{
-    L.marker([place.lat,place.lon])
-      .addTo(map)
-      .bindPopup(place.display_name);
-  });
-}
-
-function getUserLocation(){
-  return new Promise(resolve=>{
-    if(!navigator.geolocation){
-      resolve(null);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      pos=>resolve({lat:pos.coords.latitude,lon:pos.coords.longitude}),
-      ()=>resolve(null)
+  try{
+    const geo=await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
     );
-  });
-}
+    const geoData=await geo.json();
+    if(!geoData.length) return;
 
-/* ===== WEATHER ENGINE (unchanged stable) ===== */
+    const lat=geoData[0].lat;
+    const lon=geoData[0].lon;
 
-async function handleWeather(query){
-  let location=query.replace(/^weather|^forecast/i,"").trim();
-  if(!location) location="Phoenix AZ";
+    document.getElementById("featureCard").innerHTML=
+      `<div id="map" class="map-container"></div>`;
 
-  const geo=await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}`
-  );
-  const geoData=await geo.json();
-  if(!geoData.results || !geoData.results.length) return;
+    const map=L.map("map").setView([lat,lon],13);
 
-  const r=geoData.results[0];
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+      attribution:'© OpenStreetMap'
+    }).addTo(map);
 
-  const weather=await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${r.latitude}&longitude=${r.longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
-  );
+    geoData.slice(0,8).forEach(place=>{
+      L.marker([place.lat,place.lon])
+        .addTo(map)
+        .bindPopup(place.display_name);
+    });
 
-  const wData=await weather.json();
-
-  let forecast="";
-  for(let i=0;i<wData.daily.time.length;i++){
-    const day=new Date(wData.daily.time[i]);
-    forecast+=`
-      <div style="text-align:center;font-size:13px;">
-        <strong>${day.toLocaleDateString("en-US",{weekday:"short"})}</strong><br>
-        ${Math.round(wData.daily.temperature_2m_max[i])}° /
-        ${Math.round(wData.daily.temperature_2m_min[i])}°
-      </div>
-    `;
+  }catch(err){
+    console.error("Local error:",err);
   }
-
-  document.getElementById("featureCard").innerHTML=`
-    <div style="border:1px solid #dadce0;border-radius:12px;padding:20px;">
-      <div style="font-size:40px;">
-        ${Math.round(wData.current_weather.temperature)}°F
-      </div>
-      <div>${r.name}</div>
-      <div style="display:flex;justify-content:space-between;margin-top:15px;">
-        ${forecast}
-      </div>
-    </div>
-  `;
 }
+
+/* ================= JOOGLE ================= */
 
 function imFeelingJoogly(){
   const input=document.getElementById("searchInput");
   const randomQueries=[
     "coffee near me",
-    "best pizza in Dallas TX",
-    "weather New York NY",
+    "weather Dallas TX",
+    "best pizza in Phoenix",
     "funny cat videos"
   ];
   input.value=randomQueries[Math.floor(Math.random()*randomQueries.length)];
   search();
 }
 
-document.getElementById("searchInput").addEventListener("keydown",e=>{
-  if(e.key==="Enter") search();
-});
+/* ================= EVENTS ================= */
+
+document.getElementById("searchBtn").addEventListener("click",search);
+document.getElementById("jooglyBtn").addEventListener("click",imFeelingJoogly);
+document.getElementById("searchInput")
+  .addEventListener("keydown",e=>{
+    if(e.key==="Enter") search();
+  });
+
 </script>
 
 </body>
