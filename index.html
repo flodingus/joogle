@@ -37,7 +37,6 @@ body{
   margin-bottom:30px;
 }
 
-/* Twin O styling */
 .twin-o{
   display:inline-block;
   position:relative;
@@ -45,25 +44,26 @@ body{
   animation:bounce 1.6s ease-in-out infinite;
 }
 
+/* stronger inward pull */
 .twin-o:nth-child(2){
-  margin-left:-6px;
+  margin-left:-10px;
 }
 
-/* Cleavage illusion */
+/* enhanced cleavage illusion */
 .twin-o::after{
   content:"";
   position:absolute;
   left:50%;
-  top:30%;
+  top:28%;
   transform:translateX(-50%);
-  width:2px;
-  height:40%;
+  width:3px;
+  height:45%;
   background:linear-gradient(
     to bottom,
-    rgba(0,0,0,0.15),
+    rgba(0,0,0,0.25),
     rgba(0,0,0,0)
   );
-  border-radius:2px;
+  border-radius:3px;
   pointer-events:none;
 }
 
@@ -133,6 +133,13 @@ button:hover{ background:#f1f3f4; }
 }
 .place-item:hover{ text-decoration:underline; }
 
+.detail-panel{
+  margin-top:20px;
+  padding:15px;
+  border:1px solid #dadce0;
+  border-radius:12px;
+}
+
 .results{
   margin-top:30px;
   width:90%;
@@ -183,8 +190,6 @@ Joogle is a parody project created with love.
 <script>
 const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 
-/* ================= SMART INTENT ================= */
-
 const categoryMap={
   restaurant:["restaurant","pizza","food","dinner","lunch"],
   cafe:["coffee","cafe","espresso","starbucks"],
@@ -209,8 +214,6 @@ function detectCategory(query){
   }
   return "restaurant";
 }
-
-/* ================= SEARCH ROUTER ================= */
 
 async function search(){
   const q=document.getElementById("searchInput").value.trim();
@@ -241,7 +244,7 @@ async function search(){
   renderResults(data.organic||[]);
 }
 
-/* ================= WEATHER (FAHRENHEIT ONLY) ================= */
+/* ================= WEATHER ================= */
 
 async function handleWeather(query){
 
@@ -299,8 +302,11 @@ async function handleNearMe(query){
   const amenity=detectCategory(query);
 
   document.getElementById("featureCard").innerHTML=
-  `<div class="map-container" id="map"></div>
-   <div class="place-list" id="placeList"></div>`;
+  `
+  <div class="map-container" id="map"></div>
+  <div class="place-list" id="placeList"></div>
+  <div id="detailPanel"></div>
+  `;
 
   const map=L.map("map").setView([lat,lon],14);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
@@ -333,14 +339,16 @@ async function handleNearMe(query){
 
     marker.on("click",()=>{
       showDetails(place);
+      map.setView([place.lat,place.lon],16);
     });
 
     const item=document.createElement("div");
     item.className="place-item";
-    item.textContent=`${place.tags.name} (${place.distance.toFixed(2)} mi)`;
+    item.innerHTML=`<strong>${place.tags.name}</strong> (${place.distance.toFixed(2)} mi)`;
 
     item.onclick=()=>{
       map.setView([place.lat,place.lon],16);
+      marker.openPopup();
       showDetails(place);
     };
 
@@ -349,17 +357,33 @@ async function handleNearMe(query){
 }
 
 function showDetails(place){
-  document.getElementById("results").innerHTML=`
-  <div>
-    <h2>${place.tags.name}</h2>
-    <div>${place.tags["addr:street"]||""}</div>
-    <div>${place.tags.phone||""}</div>
-    <div>
-      <a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
-      Get Directions
-      </a>
+
+  const address=`
+    ${place.tags["addr:housenumber"]||""}
+    ${place.tags["addr:street"]||""}
+  `.trim();
+
+  const phone=place.tags.phone
+    ? `<div><strong>Phone:</strong> ${place.tags.phone}</div>`
+    : "";
+
+  const website=place.tags.website
+    ? `<div><a href="${place.tags.website}" target="_blank">Visit Website</a></div>`
+    : "";
+
+  document.getElementById("detailPanel").innerHTML=`
+    <div class="detail-panel">
+      <h2>${place.tags.name}</h2>
+      <div>${address}</div>
+      ${phone}
+      ${website}
+      <div style="margin-top:10px;">
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
+        Get Directions
+        </a>
+      </div>
     </div>
-  </div>`;
+  `;
 }
 
 function getDistance(lat1,lon1,lat2,lon2){
