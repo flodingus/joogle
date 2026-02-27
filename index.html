@@ -102,29 +102,53 @@ button:hover{
 }
 
 .results{
-  margin-top:30px;
+  margin-top:40px;
   width:90%;
-  max-width:800px;
+  max-width:750px;
 }
 
-.result-item{
+.results-count{
+  color:#70757a;
+  font-size:14px;
   margin-bottom:20px;
 }
 
-.result-item a{
-  font-size:18px;
+.result-item{
+  margin-bottom:32px;
+}
+
+.result-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:4px;
+}
+
+.result-favicon{
+  width:16px;
+  height:16px;
+}
+
+.result-url{
+  font-size:14px;
+  color:#006621;
+}
+
+.result-title{
+  font-size:20px;
   color:#1a0dab;
   text-decoration:none;
 }
 
-.result-url{
-  color:#006621;
-  font-size:14px;
+.result-title:hover{
+  text-decoration:underline;
 }
 
 .result-snippet{
-  color:#545454;
   font-size:14px;
+  color:#4d5156;
+  margin-top:4px;
+  line-height:1.5;
 }
 
 .footer{
@@ -202,26 +226,52 @@ async function runOrganicSearch(q){
     });
 
     const data=await res.json();
-    renderResults(data.organic||[]);
+    renderResults(data.organic||[], data.search_information?.total_results);
   }catch(err){
     console.error(err);
   }
 }
 
-function renderResults(results){
+function renderResults(results,total){
 
   const container=document.getElementById("results");
 
-  container.innerHTML = results.map(r=>`
-    <div class="result-item">
-      <a href="${r.link}" target="_blank">${r.title}</a>
-      <div class="result-url">${r.link}</div>
-      <div class="result-snippet">${r.snippet||""}</div>
-    </div>
-  `).join("");
+  let countHTML="";
+  if(total){
+    countHTML=`<div class="results-count">About ${total.toLocaleString()} results</div>`;
+  }
+
+  container.innerHTML =
+    countHTML +
+    results.map(r=>{
+
+      let domain="";
+      try{
+        domain=new URL(r.link).hostname;
+      }catch(e){}
+
+      return `
+      <div class="result-item">
+        <div class="result-header">
+          <img class="result-favicon"
+               src="https://www.google.com/s2/favicons?domain=${domain}"
+               alt="">
+          <div class="result-url">${domain}</div>
+        </div>
+
+        <a class="result-title" href="${r.link}" target="_blank">
+          ${r.title}
+        </a>
+
+        <div class="result-snippet">
+          ${r.snippet || ""}
+        </div>
+      </div>
+      `;
+    }).join("");
 }
 
-/* ================= HARDENED WEATHER ================= */
+/* ================= WEATHER (LOCKED) ================= */
 
 async function handleWeather(query){
 
@@ -230,7 +280,6 @@ async function handleWeather(query){
 
   let lat=null, lon=null, label="";
 
-  // 1️⃣ Try Open-Meteo Geocoding
   try{
     const geo=await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=5&language=en`
@@ -245,7 +294,6 @@ async function handleWeather(query){
     }
   }catch(e){}
 
-  // 2️⃣ Fallback to OpenStreetMap if needed
   if(!lat){
     try{
       const geo=await fetch(
@@ -266,43 +314,38 @@ async function handleWeather(query){
     return;
   }
 
-  try{
-    const weather=await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
-    );
+  const weather=await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
+  );
 
-    const wData=await weather.json();
+  const wData=await weather.json();
 
-    let forecastHTML="";
-    for(let i=0;i<wData.daily.time.length;i++){
-      const day=new Date(wData.daily.time[i]);
-      const name=day.toLocaleDateString("en-US",{weekday:"short"});
-      forecastHTML+=`
-        <div class="forecast-day">
-          <div><strong>${name}</strong></div>
-          <div>${Math.round(wData.daily.temperature_2m_max[i])}°</div>
-          <div style="color:#777;">
-            ${Math.round(wData.daily.temperature_2m_min[i])}°
-          </div>
-        </div>
-      `;
-    }
-
-    document.getElementById("featureCard").innerHTML=`
-      <div class="weather-card">
-        <div style="font-size:40px;">
-          ${Math.round(wData.current_weather.temperature)}°F
-        </div>
-        <div>${label}</div>
-        <div class="forecast-row">
-          ${forecastHTML}
+  let forecastHTML="";
+  for(let i=0;i<wData.daily.time.length;i++){
+    const day=new Date(wData.daily.time[i]);
+    const name=day.toLocaleDateString("en-US",{weekday:"short"});
+    forecastHTML+=`
+      <div class="forecast-day">
+        <div><strong>${name}</strong></div>
+        <div>${Math.round(wData.daily.temperature_2m_max[i])}°</div>
+        <div style="color:#777;">
+          ${Math.round(wData.daily.temperature_2m_min[i])}°
         </div>
       </div>
     `;
-
-  }catch(err){
-    console.error(err);
   }
+
+  document.getElementById("featureCard").innerHTML=`
+    <div class="weather-card">
+      <div style="font-size:40px;">
+        ${Math.round(wData.current_weather.temperature)}°F
+      </div>
+      <div>${label}</div>
+      <div class="forecast-row">
+        ${forecastHTML}
+      </div>
+    </div>
+  `;
 }
 
 function imFeelingJoogly(){
