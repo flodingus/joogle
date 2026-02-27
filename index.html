@@ -28,16 +28,14 @@ body{
   font-size:64px;
   font-weight:500;
   display:inline-flex;
-  align-items:flex-end;
+  align-items:baseline; /* KEY FIX */
   letter-spacing:-3px;
   margin-bottom:30px;
 }
 
-/* LOCKED */
 .eye-svg{
   width:0.74em;
   height:0.74em;
-  vertical-align:-0.085em;
 }
 
 .bounce{ animation:bounce 0.45s ease; }
@@ -85,11 +83,11 @@ button:hover{ background:#f1f3f4; }
 <div class="main">
   <div class="joogle-logo" id="logo"></div>
 
-  <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
+  <input class="search-box" placeholder="Search Joogle..." />
 
   <div class="buttons">
-    <button onclick="search()">Joogle Search</button>
-    <button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
+    <button>Joogle Search</button>
+    <button>I'm Feeling Joogly</button>
   </div>
 </div>
 
@@ -106,70 +104,26 @@ logo.innerHTML=`
 <span style="color:#EA4335;">o</span>
 
 <svg class="eye-svg" viewBox="0 0 60 60">
-  <!-- Smaller circle -->
-  <circle cx="30" cy="32" r="15.5" fill="white" stroke="#EA4335" stroke-width="4"/>
-  <circle cx="30" cy="32" r="5" fill="black"/>
-  <circle cx="32" cy="29" r="2" fill="white"/>
+  <!-- Circle geometry tuned -->
+  <circle cx="30" cy="34" r="15" fill="white" stroke="#EA4335" stroke-width="4"/>
+  <circle cx="30" cy="34" r="5" fill="black"/>
+  <circle cx="32" cy="31" r="2" fill="white"/>
 
-  <!-- 5 balanced lashes -->
-  <path d="M18 18 Q22 6 26 18" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M23 14 Q27 4 31 14" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M28 12 Q30 2 32 12" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M33 14 Q37 4 41 14" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M38 18 Q42 6 46 18" stroke="black" stroke-width="2" fill="none"/>
+  <!-- 5 lashes -->
+  <path d="M18 20 Q22 8 26 20" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M23 16 Q27 6 31 16" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M28 14 Q30 4 32 14" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M33 16 Q37 6 41 16" stroke="black" stroke-width="2" fill="none"/>
+  <path d="M38 20 Q42 8 46 20" stroke="black" stroke-width="2" fill="none"/>
 
-  <ellipse class="lid" cx="30" cy="32" rx="18" ry="0" fill="#EA4335" opacity="0"/>
+  <ellipse cx="30" cy="34" rx="17" ry="0" fill="#EA4335" opacity="0"/>
 </svg>
 
 <span style="color:#4285F4;">g</span>
 <span style="color:#34A853;">l</span>
 <span style="color:#EA4335;">e</span>
 `;
-
-animateLogo();
 }
-
-function animateLogo(){
-const eye=document.querySelector(".eye-svg");
-const lid=document.querySelector("ellipse");
-
-function loop(){
-eye.classList.add("bounce");
-
-setTimeout(()=>{
-eye.classList.remove("bounce");
-
-setTimeout(()=>{
-lid.style.transition="all .3s ease";
-lid.setAttribute("ry","18");
-lid.style.opacity="1";
-
-setTimeout(()=>{
-lid.setAttribute("ry","0");
-lid.style.opacity="0";
-},1200);
-
-},300);
-
-},500);
-}
-
-setInterval(loop,3200);
-}
-
-function search(){}
-
-function imFeelingJoogly(){
-if(Math.random()<0.20){
-alert("Julie Mode Activated 💕");
-}else{
-search();
-}
-}
-
-document.getElementById("searchInput").addEventListener("keydown",e=>{
-if(e.key==="Enter") search();
-});
 
 initLogo();
 </script>
