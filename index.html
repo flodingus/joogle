@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Joogle</title>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
 <style>
 body{
   margin:0;
@@ -33,7 +35,7 @@ body{
   margin-bottom:30px;
 }
 
-/* Twin O styling */
+/* 🔒 LOCKED TWIN-O FORMAT */
 .twin-o{
   display:inline-block;
   position:relative;
@@ -41,11 +43,10 @@ body{
   animation:bounce 1.6s ease-in-out infinite;
 }
 
-.twin-o:nth-child(2){
-  margin-left:-6px; /* pulls together */
+.twin-o:nth-child(3){
+  margin-left:-6px;
 }
 
-/* Cleavage illusion */
 .twin-o::after{
   content:"";
   position:absolute;
@@ -90,6 +91,31 @@ button{
 }
 button:hover{ background:#f1f3f4; }
 
+.feature-card{
+  width:90%;
+  max-width:900px;
+  margin-top:30px;
+}
+
+.weather-card{
+  border:1px solid #dadce0;
+  border-radius:12px;
+  background:#fdf7f9;
+  overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+
+.weather-accent{
+  height:4px;
+  background:#ff9eb5;
+}
+
+.results{
+  margin-top:30px;
+  width:90%;
+  max-width:800px;
+}
+
 .footer{
   margin-top:auto;
   padding:20px;
@@ -103,28 +129,131 @@ button:hover{ background:#f1f3f4; }
 <body>
 
 <div class="main">
+
   <div class="joogle-logo">
     <span style="color:#4285F4;">J</span>
-
     <span class="twin-o">o</span>
     <span class="twin-o">o</span>
-
     <span style="color:#4285F4;">g</span>
     <span style="color:#34A853;">l</span>
     <span style="color:#EA4335;">e</span>
   </div>
 
-  <input class="search-box" placeholder="Search Joogle..." />
+  <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
 
   <div class="buttons">
-    <button>Joogle Search</button>
-    <button>I'm Feeling Joogly</button>
+    <button onclick="search()">Joogle Search</button>
+    <button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
   </div>
+
+  <div class="feature-card" id="featureCard"></div>
+  <div class="results" id="results"></div>
+
 </div>
 
 <div class="footer">
 Joogle is a parody project created with love. Not affiliated with Google LLC.
 </div>
+
+<script>
+const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
+
+/* ================= SEARCH ================= */
+
+async function search(){
+  const q=document.getElementById("searchInput").value.trim();
+  if(!q) return;
+
+  document.getElementById("featureCard").innerHTML="";
+  document.getElementById("results").innerHTML="";
+
+  const lower=q.toLowerCase();
+
+  // WEATHER
+  if(lower.includes("weather") || lower.includes("forecast")){
+    await handleWeather(q);
+    return;
+  }
+
+  // ORGANIC SEARCH
+  const res=await fetch(WORKER_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({q})
+  });
+
+  const data=await res.json();
+  renderResults(data.organic||[]);
+}
+
+function renderResults(results){
+  document.getElementById("results").innerHTML=
+  results.map(r=>`
+    <div style="margin-bottom:20px;">
+      <a href="${r.link}" target="_blank"
+         style="font-size:18px;color:#1a0dab;text-decoration:none;">
+         ${r.title}
+      </a>
+      <div style="color:#006621;font-size:14px;">${r.link}</div>
+      <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
+    </div>
+  `).join("");
+}
+
+/* ================= WEATHER ================= */
+
+async function handleWeather(query){
+  let city=query.toLowerCase().replace("weather","").trim();
+  if(!city) city="Phoenix";
+
+  const geo=await fetch(
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}`
+  );
+  const geoData=await geo.json();
+  if(!geoData.results) return;
+
+  const lat=geoData.results[0].latitude;
+  const lon=geoData.results[0].longitude;
+
+  const weather=await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`
+  );
+
+  const wData=await weather.json();
+
+  document.getElementById("featureCard").innerHTML=`
+    <div class="weather-card">
+      <div class="weather-accent"></div>
+      <div style="padding:20px;">
+        <div style="font-size:40px;">
+          ${Math.round(wData.current_weather.temperature)}°F
+        </div>
+        <div>${geoData.results[0].name}</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ================= JOOGLE ================= */
+
+function imFeelingJoogly(){
+  const input=document.getElementById("searchInput");
+  const randomQueries=[
+    "funny cat videos",
+    "why is the sky blue",
+    "best pizza near me",
+    "weather phoenix",
+    "how to get rich"
+  ];
+
+  input.value=randomQueries[Math.floor(Math.random()*randomQueries.length)];
+  search();
+}
+
+document.getElementById("searchInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter") search();
+});
+</script>
 
 </body>
 </html>
