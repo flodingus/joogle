@@ -83,7 +83,7 @@ button:hover{
 }
 
 .map-container{
-  height:350px;
+  height:380px;
   border-radius:12px;
   overflow:hidden;
   margin-top:20px;
@@ -205,8 +205,6 @@ Joogle is a parody project created with love. Not affiliated with Google LLC.
 
 const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 
-/* ================= SEARCH ROUTER ================= */
-
 async function search(){
 
   const q=document.getElementById("searchInput").value.trim();
@@ -233,13 +231,11 @@ function clearUI(){
   document.getElementById("results").innerHTML="";
 }
 
-/* ================= LOCAL RADIUS ENGINE ================= */
+/* ================= LOCAL ENGINE ================= */
 
 async function handleLocalNearMe(query){
 
-  if(!navigator.geolocation){
-    return;
-  }
+  if(!navigator.geolocation) return;
 
   navigator.geolocation.getCurrentPosition(async position => {
 
@@ -247,7 +243,6 @@ async function handleLocalNearMe(query){
     const lon = position.coords.longitude;
 
     const category = detectCategory(query);
-
     if(!category) return;
 
     const overpassQuery = `
@@ -292,14 +287,40 @@ function renderMap(lat,lon,places){
     attribution:'© OpenStreetMap'
   }).addTo(map);
 
-  L.marker([lat,lon]).addTo(map).bindPopup("You are here");
+  L.marker([lat,lon]).addTo(map).bindPopup("<strong>You are here</strong>");
 
   places.slice(0,12).forEach(place=>{
-    if(place.tags && place.tags.name){
-      L.marker([place.lat,place.lon])
-        .addTo(map)
-        .bindPopup(place.tags.name);
-    }
+    if(!place.tags || !place.tags.name) return;
+
+    const tags = place.tags;
+
+    const address = `
+      ${(tags["addr:housenumber"] || "")}
+      ${(tags["addr:street"] || "")}
+      ${(tags["addr:city"] || "")}
+    `.trim();
+
+    const cuisine = tags.cuisine ? `<div><strong>Cuisine:</strong> ${tags.cuisine}</div>` : "";
+    const phone = tags.phone ? `<div><strong>Phone:</strong> <a href="tel:${tags.phone}">${tags.phone}</a></div>` : "";
+    const website = tags.website ? `<div><a href="${tags.website}" target="_blank">Visit Website</a></div>` : "";
+    const hours = tags.opening_hours ? `<div><strong>Hours:</strong> ${tags.opening_hours}</div>` : "";
+
+    const popupHTML = `
+      <div style="min-width:220px;">
+        <div style="font-weight:bold;font-size:16px;margin-bottom:4px;">
+          ${tags.name}
+        </div>
+        ${address ? `<div>${address}</div>` : ""}
+        ${cuisine}
+        ${phone}
+        ${website}
+        ${hours}
+      </div>
+    `;
+
+    L.marker([place.lat,place.lon])
+      .addTo(map)
+      .bindPopup(popupHTML);
   });
 }
 
@@ -353,8 +374,81 @@ function renderResults(results,total){
 }
 
 /* ================= WEATHER (LOCKED) ================= */
-/* WEATHER FUNCTION REMAINS EXACTLY AS PREVIOUS VERSION */
-/* (Omitted here for brevity in explanation — but assume it is identical) */
+
+async function handleWeather(query){
+
+  let location=query.replace(/^(weather|forecast)/i,"").trim();
+  if(!location) location="Phoenix AZ";
+
+  let lat=null, lon=null, label="";
+
+  try{
+    const geo=await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=5&language=en`
+    );
+    const geoData=await geo.json();
+
+    if(geoData.results && geoData.results.length){
+      const r=geoData.results[0];
+      lat=r.latitude;
+      lon=r.longitude;
+      label=`${r.name}${r.admin1 ? ", "+r.admin1 : ""}`;
+    }
+  }catch(e){}
+
+  if(!lat){
+    try{
+      const geo=await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`
+      );
+      const geoData=await geo.json();
+      if(geoData.length){
+        lat=geoData[0].lat;
+        lon=geoData[0].lon;
+        label=geoData[0].display_name;
+      }
+    }catch(e){}
+  }
+
+  if(!lat){
+    document.getElementById("featureCard").innerHTML=
+      `<div class="weather-card">No location found for "${location}"</div>`;
+    return;
+  }
+
+  const weather=await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
+  );
+
+  const wData=await weather.json();
+
+  let forecastHTML="";
+  for(let i=0;i<wData.daily.time.length;i++){
+    const day=new Date(wData.daily.time[i]);
+    const name=day.toLocaleDateString("en-US",{weekday:"short"});
+    forecastHTML+=`
+      <div class="forecast-day">
+        <div><strong>${name}</strong></div>
+        <div>${Math.round(wData.daily.temperature_2m_max[i])}°</div>
+        <div style="color:#777;">
+          ${Math.round(wData.daily.temperature_2m_min[i])}°
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById("featureCard").innerHTML=`
+    <div class="weather-card">
+      <div style="font-size:40px;">
+        ${Math.round(wData.current_weather.temperature)}°F
+      </div>
+      <div>${label}</div>
+      <div class="forecast-row">
+        ${forecastHTML}
+      </div>
+    </div>
+  `;
+}
 
 function imFeelingJoogly(){
   const input=document.getElementById("searchInput");
@@ -370,7 +464,6 @@ function imFeelingJoogly(){
 
 document.getElementById("searchBtn").addEventListener("click",search);
 document.getElementById("jooglyBtn").addEventListener("click",imFeelingJoogly);
-
 document.getElementById("searchInput")
   .addEventListener("keydown",e=>{
     if(e.key==="Enter") search();
