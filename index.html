@@ -26,7 +26,7 @@ body{
   width:100%;
 }
 
-/* ================= EXACT LOCKED LOGO ================= */
+/* ===== EXACT LOCKED LOGO ===== */
 
 .joogle-logo{
   font-size:64px;
@@ -44,26 +44,24 @@ body{
   animation:bounce 1.6s ease-in-out infinite;
 }
 
-/* stronger inward pull */
 .twin-o:nth-child(2){
-  margin-left:-10px;
+  margin-left:-6px;
 }
 
-/* enhanced cleavage illusion */
 .twin-o::after{
   content:"";
   position:absolute;
   left:50%;
-  top:28%;
+  top:30%;
   transform:translateX(-50%);
-  width:3px;
-  height:45%;
+  width:2px;
+  height:40%;
   background:linear-gradient(
     to bottom,
-    rgba(0,0,0,0.25),
+    rgba(0,0,0,0.15),
     rgba(0,0,0,0)
   );
-  border-radius:3px;
+  border-radius:2px;
   pointer-events:none;
 }
 
@@ -72,7 +70,7 @@ body{
   50%{ transform:translateY(-14px); }
 }
 
-/* ================= SEARCH ================= */
+/* ===== SEARCH ===== */
 
 .search-box{
   width:90%;
@@ -81,7 +79,6 @@ body{
   border-radius:30px;
   border:1px solid #dadce0;
   font-size:16px;
-  outline:none;
 }
 
 .buttons{ margin-top:25px; }
@@ -94,25 +91,11 @@ button{
   border-radius:4px;
   cursor:pointer;
 }
-button:hover{ background:#f1f3f4; }
 
 .feature-card{
   width:90%;
   max-width:900px;
   margin-top:30px;
-}
-
-.weather-card{
-  border:1px solid #dadce0;
-  border-radius:12px;
-  padding:20px;
-  background:#fafafa;
-}
-
-.forecast-row{
-  display:flex;
-  justify-content:space-between;
-  margin-top:15px;
 }
 
 .map-container{
@@ -125,13 +108,6 @@ button:hover{ background:#f1f3f4; }
 .place-list{
   margin-top:15px;
 }
-
-.place-item{
-  margin-bottom:8px;
-  cursor:pointer;
-  color:#1a0dab;
-}
-.place-item:hover{ text-decoration:underline; }
 
 .detail-panel{
   margin-top:20px;
@@ -190,29 +166,8 @@ Joogle is a parody project created with love.
 <script>
 const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 
-const categoryMap={
-  restaurant:["restaurant","pizza","food","dinner","lunch"],
-  cafe:["coffee","cafe","espresso","starbucks"],
-  bar:["bar","pub","brewery"],
-  fuel:["gas","gas station","fuel"],
-  pharmacy:["pharmacy","cvs","walgreens"],
-  library:["library"],
-  fitness_centre:["gym","fitness"],
-  hospital:["hospital","er"],
-  hotel:["hotel","motel"],
-  supermarket:["grocery","supermarket","market"]
-};
-
-function detectCategory(query){
-  const q=query.toLowerCase();
-  for(const amenity in categoryMap){
-    for(const keyword of categoryMap[amenity]){
-      if(q.includes(keyword)){
-        return amenity;
-      }
-    }
-  }
-  return "restaurant";
+function imFeelingJoogly(){
+  alert("Joogly Mode Activated 💕");
 }
 
 async function search(){
@@ -222,15 +177,8 @@ async function search(){
   document.getElementById("featureCard").innerHTML="";
   document.getElementById("results").innerHTML="";
 
-  const lower=q.toLowerCase();
-
-  if(lower.includes("weather") || lower.includes("forecast")){
-    await handleWeather(q);
-    return;
-  }
-
-  if(lower.includes("near me") || lower.includes("nearby")){
-    await handleNearMe(q);
+  if(q.toLowerCase().includes("near me")){
+    handleNearMe(q);
     return;
   }
 
@@ -244,138 +192,66 @@ async function search(){
   renderResults(data.organic||[]);
 }
 
-/* ================= WEATHER ================= */
-
-async function handleWeather(query){
-
-  let location=query.replace(/weather|forecast/i,"").trim();
-
-  if(!location){
-    const geo=await fetch("https://ipapi.co/json/");
-    const geoData=await geo.json();
-    location=geoData.city;
-  }
-
-  const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}`);
-  const geoData=await geoRes.json();
-  if(!geoData.results) return;
-
-  const lat=geoData.results[0].latitude;
-  const lon=geoData.results[0].longitude;
-
-  const weatherRes=await fetch(
-  `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
-  );
-
-  const weather=await weatherRes.json();
-
-  let forecastHTML="";
-  weather.daily.time.forEach((d,i)=>{
-    forecastHTML+=`
-    <div>
-      <div>${new Date(d).toLocaleDateString("en-US",{weekday:"short"})}</div>
-      <div>${Math.round(weather.daily.temperature_2m_max[i])}° / ${Math.round(weather.daily.temperature_2m_min[i])}°</div>
-    </div>`;
-  });
-
-  document.getElementById("featureCard").innerHTML=
-  `<div class="weather-card">
-     <div style="font-size:40px;">${Math.round(weather.current_weather.temperature)}°F</div>
-     <div>${geoData.results[0].name}</div>
-     <div class="forecast-row">${forecastHTML}</div>
-   </div>`;
-}
-
-/* ================= LOCAL ================= */
-
 async function handleNearMe(query){
 
-  let lat,lon;
-  await new Promise((resolve,reject)=>{
-    navigator.geolocation.getCurrentPosition(pos=>{
-      lat=pos.coords.latitude;
-      lon=pos.coords.longitude;
-      resolve();
-    },()=>reject());
-  });
+  navigator.geolocation.getCurrentPosition(async pos=>{
 
-  const amenity=detectCategory(query);
+    const lat=pos.coords.latitude;
+    const lon=pos.coords.longitude;
 
-  document.getElementById("featureCard").innerHTML=
-  `
-  <div class="map-container" id="map"></div>
-  <div class="place-list" id="placeList"></div>
-  <div id="detailPanel"></div>
-  `;
+    document.getElementById("featureCard").innerHTML=
+    `<div class="map-container" id="map"></div>
+     <div class="place-list" id="placeList"></div>
+     <div id="detailPanel"></div>`;
 
-  const map=L.map("map").setView([lat,lon],14);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-  L.marker([lat,lon]).addTo(map).bindPopup("You are here");
+    const map=L.map("map").setView([lat,lon],14);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    L.marker([lat,lon]).addTo(map).bindPopup("You are here");
 
-  const overpass=`
-  [out:json];
-  node["amenity"="${amenity}"](around:3000,${lat},${lon});
-  out;
-  `;
+    const overpass=`
+      [out:json];
+      node["amenity"="restaurant"](around:3000,${lat},${lon});
+      out;
+    `;
 
-  const response=await fetch("https://overpass-api.de/api/interpreter",{
-    method:"POST",
-    body:overpass
-  });
-
-  const data=await response.json();
-  const listContainer=document.getElementById("placeList");
-
-  const places=data.elements
-    .filter(p=>p.tags && p.tags.name)
-    .map(p=>{
-      p.distance=getDistance(lat,lon,p.lat,p.lon);
-      return p;
-    })
-    .sort((a,b)=>a.distance-b.distance);
-
-  places.forEach(place=>{
-    const marker=L.marker([place.lat,place.lon]).addTo(map);
-
-    marker.on("click",()=>{
-      showDetails(place);
-      map.setView([place.lat,place.lon],16);
+    const response=await fetch("https://overpass-api.de/api/interpreter",{
+      method:"POST",
+      body:overpass
     });
 
-    const item=document.createElement("div");
-    item.className="place-item";
-    item.innerHTML=`<strong>${place.tags.name}</strong> (${place.distance.toFixed(2)} mi)`;
+    const data=await response.json();
+    const list=document.getElementById("placeList");
 
-    item.onclick=()=>{
-      map.setView([place.lat,place.lon],16);
-      marker.openPopup();
-      showDetails(place);
-    };
+    data.elements.forEach(place=>{
+      if(!place.tags || !place.tags.name) return;
 
-    listContainer.appendChild(item);
+      const marker=L.marker([place.lat,place.lon]).addTo(map);
+
+      marker.on("click",()=>showDetails(place));
+
+      const item=document.createElement("div");
+      item.innerHTML=`<strong>${place.tags.name}</strong>`;
+      item.style.cursor="pointer";
+
+      item.onclick=()=>{
+        map.setView([place.lat,place.lon],16);
+        showDetails(place);
+      };
+
+      list.appendChild(item);
+    });
   });
 }
 
 function showDetails(place){
 
-  const address=`
-    ${place.tags["addr:housenumber"]||""}
-    ${place.tags["addr:street"]||""}
-  `.trim();
-
-  const phone=place.tags.phone
-    ? `<div><strong>Phone:</strong> ${place.tags.phone}</div>`
-    : "";
-
-  const website=place.tags.website
+  const website = place.tags.website
     ? `<div><a href="${place.tags.website}" target="_blank">Visit Website</a></div>`
     : "";
 
   document.getElementById("detailPanel").innerHTML=`
     <div class="detail-panel">
       <h2>${place.tags.name}</h2>
-      <div>${address}</div>
-      ${phone}
       ${website}
       <div style="margin-top:10px;">
         <a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
@@ -386,31 +262,15 @@ function showDetails(place){
   `;
 }
 
-function getDistance(lat1,lon1,lat2,lon2){
-  const R=3958.8;
-  const dLat=(lat2-lat1)*Math.PI/180;
-  const dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+
-    Math.cos(lat1*Math.PI/180)*
-    Math.cos(lat2*Math.PI/180)*
-    Math.sin(dLon/2)**2;
-  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  return R*c;
-}
-
 function renderResults(results){
   document.getElementById("results").innerHTML=
   results.map(r=>`
-  <div style="margin-bottom:20px;">
-    <a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
-    <div style="color:#006621;font-size:14px;">${r.link}</div>
-    <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
-  </div>
+    <div style="margin-bottom:20px;">
+      <a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
+      <div style="color:#006621;font-size:14px;">${r.link}</div>
+      <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
+    </div>
   `).join("");
-}
-
-function imFeelingJoogly(){
-  alert("Joogly Mode Activated 💕");
 }
 
 document.getElementById("searchInput")
