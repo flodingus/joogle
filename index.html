@@ -26,21 +26,36 @@ body{
   width:100%;
 }
 
+/* ---------------- LOGO ---------------- */
+
 .joogle-logo{
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
   font-size:64px;
   font-weight:500;
-  letter-spacing:-3px;
+  letter-spacing:-2px;
   margin-bottom:30px;
 }
 
+.j-blue{ color:#4285F4; }
+.j-red{ color:#EA4335; }
+.j-green{ color:#34A853; }
+
+.o-left{ margin-right:-12px; }
+.o-right{ margin-left:-12px; }
+
 .bounce{
   display:inline-block;
-  animation:bounce 1.6s infinite ease-in-out;
+  animation:bounce 1.6s ease-in-out infinite;
 }
+
 @keyframes bounce{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-14px);}
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-14px); }
 }
+
+/* ---------------- SEARCH ---------------- */
 
 .search-box{
   width:90%;
@@ -108,16 +123,18 @@ button:hover{ background:#f1f3f4; }
 <body>
 
 <div class="main">
+
   <div class="joogle-logo">
-    <span style="color:#4285F4;">J</span>
-    <span class="bounce" style="color:#EA4335;">o</span>
-    <span class="bounce" style="color:#EA4335;">o</span>
-    <span style="color:#4285F4;">g</span>
-    <span style="color:#34A853;">l</span>
-    <span style="color:#EA4335;">e</span>
+    <span class="j-blue">J</span>
+    <span class="j-red bounce o-left">o</span>
+    <span class="j-red bounce o-right">o</span>
+    <span class="j-blue">g</span>
+    <span class="j-green">l</span>
+    <span class="j-red">e</span>
   </div>
 
   <input class="search-box" id="searchInput" placeholder="Search Joogle..." />
+
   <div class="buttons">
     <button onclick="search()">Joogle Search</button>
     <button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
@@ -136,9 +153,9 @@ Joogle is a parody project created with love.
 <script>
 const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
 
-/* ---------------- CATEGORY MAP ---------------- */
+/* ---------------- SMART INTENT ---------------- */
 
-const categoryMap = {
+const categoryMap={
   restaurant:["restaurant","pizza","food","dinner","lunch"],
   cafe:["coffee","cafe","espresso","starbucks"],
   bar:["bar","pub","brewery"],
@@ -172,14 +189,16 @@ async function search(){
   document.getElementById("featureCard").innerHTML="";
   document.getElementById("results").innerHTML="";
 
-  if(q.toLowerCase().includes("near me") || q.toLowerCase().includes("nearby")){
+  const lower=q.toLowerCase();
+
+  if(lower.includes("near me") || lower.includes("nearby")){
     await handleNearMe(q);
     return;
   }
 
-  // Weather remains your locked working implementation
-  if(q.toLowerCase().includes("weather") || q.toLowerCase().includes("forecast")){
-    return handleWeather(q);
+  if(lower.includes("weather") || lower.includes("forecast")){
+    showWeather(q);
+    return;
   }
 
   const res=await fetch(WORKER_URL,{
@@ -187,19 +206,44 @@ async function search(){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({q})
   });
+
   const data=await res.json();
   renderResults(data.organic||[]);
 }
 
-function renderResults(results){
-  document.getElementById("results").innerHTML=
-  results.map(r=>`
-  <div style="margin-bottom:20px;">
-  <a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
-  <div style="color:#006621;font-size:14px;">${r.link}</div>
-  <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
-  </div>
-  `).join("");
+/* ---------------- WEATHER (PRO STABLE) ---------------- */
+
+function showWeather(query){
+  const location=query.replace(/weather|forecast/i,"").trim();
+  document.getElementById("featureCard").innerHTML=
+  `<div id="weatherContainer"></div>`;
+
+  fetch("https://api.weatherapi.com/v1/forecast.json?key=demo&q="+(location||"auto:ip")+"&days=5")
+  .then(r=>r.json())
+  .then(data=>{
+    const current=data.current;
+    const forecast=data.forecast.forecastday;
+
+    let html=`
+    <div style="border:1px solid #dadce0;border-radius:12px;padding:20px;">
+      <h2>${data.location.name}, ${data.location.region}</h2>
+      <div style="font-size:40px;">${current.temp_f}°F</div>
+      <div>${current.condition.text}</div>
+      <div style="display:flex;justify-content:space-between;margin-top:20px;">
+    `;
+
+    forecast.forEach(day=>{
+      html+=`
+        <div style="text-align:center;">
+          <div>${day.date}</div>
+          <div>${day.day.maxtemp_f}° / ${day.day.mintemp_f}°</div>
+        </div>
+      `;
+    });
+
+    html+=`</div></div>`;
+    document.getElementById("weatherContainer").innerHTML=html;
+  });
 }
 
 /* ---------------- MAP ---------------- */
@@ -219,7 +263,7 @@ async function handleNearMe(query){
 
   document.getElementById("featureCard").innerHTML=
   `<div class="map-container" id="map"></div>
-   <div class="place-list" id="placeList">Loading...</div>`;
+   <div class="place-list" id="placeList"></div>`;
 
   const map=L.map("map").setView([lat,lon],14);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
@@ -235,48 +279,49 @@ async function handleNearMe(query){
     method:"POST",
     body:overpass
   });
+
   const data=await response.json();
-
   const listContainer=document.getElementById("placeList");
-  listContainer.innerHTML="";
 
-  data.elements.forEach(place=>{
-    if(place.tags && place.tags.name){
+  const places=data.elements
+    .filter(p=>p.tags && p.tags.name)
+    .map(p=>{
+      p.distance=getDistance(lat,lon,p.lat,p.lon);
+      return p;
+    })
+    .sort((a,b)=>a.distance-b.distance);
 
-      const distance = getDistance(lat,lon,place.lat,place.lon);
+  places.forEach(place=>{
+    const marker=L.marker([place.lat,place.lon]).addTo(map);
 
-      const marker=L.marker([place.lat,place.lon]).addTo(map);
+    marker.on("click",()=>{
+      showDetails(place);
+    });
 
-      marker.on("click",()=>{
-        showDetails(place,distance);
-      });
+    const item=document.createElement("div");
+    item.className="place-item";
+    item.textContent=`${place.tags.name} (${place.distance.toFixed(2)} mi)`;
 
-      const item=document.createElement("div");
-      item.className="place-item";
-      item.textContent=`${place.tags.name} (${distance.toFixed(2)} mi)`;
+    item.onclick=()=>{
+      map.setView([place.lat,place.lon],16);
+      showDetails(place);
+    };
 
-      item.addEventListener("click",()=>{
-        map.setView([place.lat,place.lon],16);
-        showDetails(place,distance);
-      });
-
-      listContainer.appendChild(item);
-    }
+    listContainer.appendChild(item);
   });
 }
 
-function showDetails(place,distance){
+function showDetails(place){
   document.getElementById("results").innerHTML=`
-  <div style="margin-top:20px;">
-  <h2>${place.tags.name}</h2>
-  <div>Distance: ${distance.toFixed(2)} miles</div>
-  <div>${place.tags["addr:street"]||""}</div>
-  <div>${place.tags.phone||""}</div>
   <div>
-  <a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
-  Get Directions
-  </a>
-  </div>
+    <h2>${place.tags.name}</h2>
+    <div>${place.tags["addr:street"]||""}</div>
+    <div>${place.tags.phone||""}</div>
+    <div>
+      <a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
+      Get Directions
+      </a>
+    </div>
   </div>`;
 }
 
@@ -290,6 +335,19 @@ function getDistance(lat1,lon1,lat2,lon2){
     Math.sin(dLon/2)**2;
   const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   return R*c;
+}
+
+/* ---------------- ORGANIC ---------------- */
+
+function renderResults(results){
+  document.getElementById("results").innerHTML=
+  results.map(r=>`
+  <div style="margin-bottom:20px;">
+  <a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
+  <div style="color:#006621;font-size:14px;">${r.link}</div>
+  <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
+  </div>
+  `).join("");
 }
 
 /* ---------------- JOOGLE ---------------- */
