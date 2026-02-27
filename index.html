@@ -28,22 +28,44 @@ body{
   font-size:64px;
   font-weight:500;
   display:inline-flex;
-  align-items:baseline; /* KEY FIX */
+  align-items:baseline;
   letter-spacing:-3px;
   margin-bottom:30px;
 }
 
-.eye-svg{
-  width:0.74em;
-  height:0.74em;
+/* Twin O styling */
+.twin-o{
+  display:inline-block;
+  position:relative;
+  color:#EA4335;
+  animation:bounce 1.6s ease-in-out infinite;
 }
 
-.bounce{ animation:bounce 0.45s ease; }
+.twin-o:nth-child(2){
+  margin-left:-6px; /* pulls together */
+}
+
+/* Cleavage illusion */
+.twin-o::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:30%;
+  transform:translateX(-50%);
+  width:2px;
+  height:40%;
+  background:linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.15),
+    rgba(0,0,0,0)
+  );
+  border-radius:2px;
+  pointer-events:none;
+}
 
 @keyframes bounce{
-  0%{transform:translateY(0);}
-  50%{transform:translateY(-14px);}
-  100%{transform:translateY(0);}
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-14px); }
 }
 
 .search-box{
@@ -81,7 +103,16 @@ button:hover{ background:#f1f3f4; }
 <body>
 
 <div class="main">
-  <div class="joogle-logo" id="logo"></div>
+  <div class="joogle-logo">
+    <span style="color:#4285F4;">J</span>
+
+    <span class="twin-o">o</span>
+    <span class="twin-o">o</span>
+
+    <span style="color:#4285F4;">g</span>
+    <span style="color:#34A853;">l</span>
+    <span style="color:#EA4335;">e</span>
+  </div>
 
   <input class="search-box" placeholder="Search Joogle..." />
 
@@ -94,39 +125,6 @@ button:hover{ background:#f1f3f4; }
 <div class="footer">
 Joogle is a parody project created with love. Not affiliated with Google LLC.
 </div>
-
-<script>
-function initLogo(){
-const logo=document.getElementById("logo");
-
-logo.innerHTML=`
-<span style="color:#4285F4;">J</span>
-<span style="color:#EA4335;">o</span>
-
-<svg class="eye-svg" viewBox="0 0 60 60">
-  <!-- Circle geometry tuned -->
-  <circle cx="30" cy="34" r="15" fill="white" stroke="#EA4335" stroke-width="4"/>
-  <circle cx="30" cy="34" r="5" fill="black"/>
-  <circle cx="32" cy="31" r="2" fill="white"/>
-
-  <!-- 5 lashes -->
-  <path d="M18 20 Q22 8 26 20" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M23 16 Q27 6 31 16" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M28 14 Q30 4 32 14" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M33 16 Q37 6 41 16" stroke="black" stroke-width="2" fill="none"/>
-  <path d="M38 20 Q42 8 46 20" stroke="black" stroke-width="2" fill="none"/>
-
-  <ellipse cx="30" cy="34" rx="17" ry="0" fill="#EA4335" opacity="0"/>
-</svg>
-
-<span style="color:#4285F4;">g</span>
-<span style="color:#34A853;">l</span>
-<span style="color:#EA4335;">e</span>
-`;
-}
-
-initLogo();
-</script>
 
 </body>
 </html>
