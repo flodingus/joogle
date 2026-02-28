@@ -26,17 +26,17 @@ body{
   margin-bottom:30px;
 }
 
-/* Colors */
+/* Google colors */
 .j{color:#4285F4;}
 .g{color:#4285F4;}
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-/* O wrapper */
+/* O container */
 .boob-wrap{
-  display:inline-flex;
+  display:flex;
   align-items:baseline;
-  gap:2px; /* small natural gap */
+  gap:0px; /* touching */
 }
 
 /* Base O */
@@ -48,24 +48,35 @@ body{
   box-sizing:border-box;
   background:transparent;
   position:relative;
+  transition:.2s ease;
 }
 
-/* inward squeeze effect (no overlap) */
+/* CLEAVAGE EFFECT */
+/* each O squeezes inward */
 .o.left{
-  transform:scaleX(0.88);
+  transform:scaleX(0.82);
+  margin-right:2px;
 }
 
 .o.right{
-  transform:scaleX(0.88);
+  transform:scaleX(0.82);
+  margin-left:2px;
 }
 
-/* subtle inner shading */
-.o::after{
+/* subtle inward shading */
+.o.left::after,
+.o.right::after{
   content:"";
   position:absolute;
   inset:0;
   border-radius:50%;
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.08);
+  box-shadow:
+    inset -4px 0 6px rgba(0,0,0,0.10);
+}
+
+.o.right::after{
+  box-shadow:
+    inset 4px 0 6px rgba(0,0,0,0.10);
 }
 
 /* SEARCH */
@@ -116,11 +127,9 @@ body{
   color:#777;
 }
 
-/* Responsive */
+/* Mobile scaling */
 @media(max-width:600px){
-  .logo{
-    font-size:64px;
-  }
+  .logo{font-size:64px;}
   .o{
     width:40px;
     height:44px;
