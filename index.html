@@ -32,7 +32,7 @@ body{
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-/* O container */
+/* O wrapper */
 .boob-wrap{
   display:flex;
   align-items:baseline;
@@ -45,42 +45,18 @@ body{
   border:9px solid #EA4335;
   border-radius:50%;
   box-sizing:border-box;
-  position:relative;
   background:transparent;
 }
 
-/* Squeeze inward */
+/* Clean squeeze — no overlays */
 .o.left{
-  transform:scaleX(0.9);
-  margin-right:-4px;
+  transform:scaleX(0.86);
+  margin-right:-2px;
 }
 
 .o.right{
-  transform:scaleX(0.9);
-  margin-left:-4px;
-}
-
-/* Create center dip illusion */
-.o.left::after{
-  content:"";
-  position:absolute;
-  right:-2px;
-  top:0;
-  height:100%;
-  width:12px;
-  background:linear-gradient(to left, rgba(255,255,255,0.95), rgba(255,255,255,0));
-  border-radius:50%;
-}
-
-.o.right::after{
-  content:"";
-  position:absolute;
-  left:-2px;
-  top:0;
-  height:100%;
-  width:12px;
-  background:linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0));
-  border-radius:50%;
+  transform:scaleX(0.86);
+  margin-left:-2px;
 }
 
 /* SEARCH */
