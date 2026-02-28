@@ -25,7 +25,7 @@ body{
   width:100%;
 }
 
-/* ===== LOGO – CLOSE & SQUEEZED ===== */
+/* ===== CLEAN CLEAVAGE LOGO ===== */
 
 .joogle-logo{
   font-size:64px;
@@ -36,41 +36,16 @@ body{
   margin-bottom:30px;
 }
 
+/* twin o's */
 .twin-o{
   display:inline-block;
-  position:relative;
   color:#EA4335;
   animation:bounce 1.6s ease-in-out infinite;
 }
 
-/* tight physical squeeze */
-.twin-o:nth-child(2){
-  margin-left:-14px;
-}
-
-/* inward pressure shading */
-.twin-o:first-of-type::after{
-  content:"";
-  position:absolute;
-  right:-4px;
-  top:28%;
-  width:6px;
-  height:46%;
-  background:linear-gradient(to bottom,rgba(0,0,0,0.35),rgba(0,0,0,0));
-  border-radius:6px;
-  pointer-events:none;
-}
-
-.twin-o:nth-of-type(2)::before{
-  content:"";
-  position:absolute;
-  left:-4px;
-  top:28%;
-  width:6px;
-  height:46%;
-  background:linear-gradient(to bottom,rgba(0,0,0,0.35),rgba(0,0,0,0));
-  border-radius:6px;
-  pointer-events:none;
+/* THIS is the squeeze */
+.twin-o + .twin-o{
+  margin-left:-18px; /* strong but clean squeeze */
 }
 
 @keyframes bounce{
@@ -224,24 +199,18 @@ async function search(){
   renderResults(data.organic||[]);
 }
 
-/* ===== WEATHER (CITY + STATE WORKS) ===== */
+/* WEATHER */
 
 async function handleWeather(query){
 
   let location=query.replace(/weather/i,"").trim();
-
-  if(!location){
-    const geo=await fetch("https://ipapi.co/json/");
-    const geoData=await geo.json();
-    location=geoData.city;
-  }
 
   const geoRes=await fetch(
     `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}`
   );
 
   const geoData=await geoRes.json();
-  if(!geoData.results || geoData.results.length===0) return;
+  if(!geoData.results) return;
 
   const lat=geoData.results[0].latitude;
   const lon=geoData.results[0].longitude;
@@ -269,7 +238,7 @@ async function handleWeather(query){
      </div>`;
 }
 
-/* ===== MAP ===== */
+/* MAP */
 
 async function handleNearMe(){
 
@@ -303,48 +272,25 @@ navigator.geolocation.getCurrentPosition(async pos=>{
   data.elements.forEach(place=>{
     if(!place.tags || !place.tags.name) return;
 
-    const website=place.tags.website
-      ? `<a href="${place.tags.website}" target="_blank">Website</a>`
-      : "";
-
     const directions=
       `<a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
        Get Directions
        </a>`;
 
     const marker=L.marker([place.lat,place.lon]).addTo(map);
-    marker.bindPopup(`<strong>${place.tags.name}</strong><br>${website}<br>${directions}`);
-
-    marker.on("click",()=>showDetails(place));
+    marker.bindPopup(`<strong>${place.tags.name}</strong><br>${directions}`);
 
     const item=document.createElement("div");
     item.className="place-item";
     item.innerHTML=`
       <strong>${place.tags.name}</strong>
-      <div class="place-links">${website} ${directions}</div>
+      <div class="place-links">${directions}</div>
     `;
-
-    item.onclick=()=>{
-      map.setView([place.lat,place.lon],16);
-      marker.openPopup();
-      showDetails(place);
-    };
 
     list.appendChild(item);
   });
 
 });
-}
-
-function showDetails(place){
-  document.getElementById("detailPanel").innerHTML=`
-    <div class="detail-panel">
-      <h2>${place.tags.name}</h2>
-      <a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
-      Get Directions
-      </a>
-    </div>
-  `;
 }
 
 function renderResults(results){
