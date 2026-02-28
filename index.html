@@ -36,7 +36,6 @@ body{
 .boob-wrap{
   display:flex;
   align-items:baseline;
-  gap:0px; /* touching */
 }
 
 /* Base O */
@@ -46,37 +45,42 @@ body{
   border:9px solid #EA4335;
   border-radius:50%;
   box-sizing:border-box;
-  background:transparent;
   position:relative;
-  transition:.2s ease;
+  background:transparent;
 }
 
-/* CLEAVAGE EFFECT */
-/* each O squeezes inward */
+/* Squeeze inward */
 .o.left{
-  transform:scaleX(0.82);
-  margin-right:2px;
+  transform:scaleX(0.9);
+  margin-right:-4px;
 }
 
 .o.right{
-  transform:scaleX(0.82);
-  margin-left:2px;
+  transform:scaleX(0.9);
+  margin-left:-4px;
 }
 
-/* subtle inward shading */
-.o.left::after,
+/* Create center dip illusion */
+.o.left::after{
+  content:"";
+  position:absolute;
+  right:-2px;
+  top:0;
+  height:100%;
+  width:12px;
+  background:linear-gradient(to left, rgba(255,255,255,0.95), rgba(255,255,255,0));
+  border-radius:50%;
+}
+
 .o.right::after{
   content:"";
   position:absolute;
-  inset:0;
+  left:-2px;
+  top:0;
+  height:100%;
+  width:12px;
+  background:linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0));
   border-radius:50%;
-  box-shadow:
-    inset -4px 0 6px rgba(0,0,0,0.10);
-}
-
-.o.right::after{
-  box-shadow:
-    inset 4px 0 6px rgba(0,0,0,0.10);
 }
 
 /* SEARCH */
@@ -127,7 +131,7 @@ body{
   color:#777;
 }
 
-/* Mobile scaling */
+/* Mobile */
 @media(max-width:600px){
   .logo{font-size:64px;}
   .o{
@@ -144,10 +148,10 @@ body{
 <div class="logo">
   <span class="j">J</span>
 
-  <span class="boob-wrap">
+  <div class="boob-wrap">
     <span class="o left"></span>
     <span class="o right"></span>
-  </span>
+  </div>
 
   <span class="g">g</span>
   <span class="l">l</span>
