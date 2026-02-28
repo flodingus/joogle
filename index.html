@@ -8,7 +8,7 @@
 <style>
 body{
   margin:0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:Arial, Helvetica, sans-serif;
   background:#fff;
   display:flex;
   flex-direction:column;
@@ -19,32 +19,53 @@ body{
 
 /* LOGO */
 .logo{
-  font-size:96px;
+  font-size:104px;
   font-weight:500;
   display:flex;
   align-items:baseline;
-  letter-spacing:-4px;
+  letter-spacing:-3px;
   margin-bottom:30px;
 }
 
-/* Google colors */
+/* Colors */
 .j{color:#4285F4;}
-.o{color:#EA4335;}
+.o{color:#EA4335; position:relative; display:inline-block;}
 .g{color:#4285F4;}
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-/* Cleavage squeeze */
+/* squeeze spacing */
+.o.left{ margin-right:-24px; }
+.o.right{ margin-left:-24px; }
+
+/* center dots */
+.o::after{
+  content:"";
+  position:absolute;
+  width:14px;
+  height:14px;
+  background:#EA4335;
+  border-radius:50%;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+
+/* bounce animation */
+@keyframes bounce {
+  0%,100% { transform:translateY(0); }
+  25% { transform:translateY(-10px); }
+  50% { transform:translateY(0); }
+  75% { transform:translateY(-6px); }
+}
+
+/* staggered bounce */
 .o.left{
-  transform:scaleX(0.88);
-  display:inline-block;
-  margin-right:-6px;
+  animation:bounce 1.6s ease-in-out infinite;
 }
 
 .o.right{
-  transform:scaleX(0.88);
-  display:inline-block;
-  margin-left:-6px;
+  animation:bounce 1.6s ease-in-out infinite 0.2s;
 }
 
 /* SEARCH */
@@ -64,13 +85,10 @@ body{
 
 .search-box input:focus{
   box-shadow:0 1px 6px rgba(32,33,36,.28);
-  border-color:rgba(223,225,229,0);
 }
 
 /* BUTTONS */
-.buttons{
-  margin-top:28px;
-}
+.buttons{ margin-top:28px; }
 
 .buttons button{
   background:#f8f9fa;
@@ -79,7 +97,6 @@ body{
   margin:0 6px;
   border-radius:4px;
   cursor:pointer;
-  font-size:14px;
 }
 
 .buttons button:hover{
@@ -95,7 +112,7 @@ body{
   color:#777;
 }
 
-/* Mobile */
+/* mobile */
 @media(max-width:600px){
   .logo{font-size:64px;}
 }
