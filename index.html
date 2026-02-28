@@ -20,43 +20,31 @@ body{
 /* LOGO */
 .logo{
   font-size:96px;
+  font-weight:500;
   display:flex;
   align-items:baseline;
-  letter-spacing:-2px;
+  letter-spacing:-4px;
   margin-bottom:30px;
 }
 
 /* Google colors */
 .j{color:#4285F4;}
+.o{color:#EA4335;}
 .g{color:#4285F4;}
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-/* O wrapper */
-.boob-wrap{
-  display:flex;
-  align-items:baseline;
-}
-
-/* Base O */
-.o{
-  width:54px;
-  height:60px;
-  border:9px solid #EA4335;
-  border-radius:50%;
-  box-sizing:border-box;
-  background:transparent;
-}
-
-/* Clean squeeze — no overlays */
+/* Cleavage squeeze */
 .o.left{
-  transform:scaleX(0.86);
-  margin-right:-2px;
+  transform:scaleX(0.88);
+  display:inline-block;
+  margin-right:-6px;
 }
 
 .o.right{
-  transform:scaleX(0.86);
-  margin-left:-2px;
+  transform:scaleX(0.88);
+  display:inline-block;
+  margin-left:-6px;
 }
 
 /* SEARCH */
@@ -110,11 +98,6 @@ body{
 /* Mobile */
 @media(max-width:600px){
   .logo{font-size:64px;}
-  .o{
-    width:40px;
-    height:44px;
-    border-width:7px;
-  }
 }
 </style>
 </head>
@@ -123,12 +106,8 @@ body{
 
 <div class="logo">
   <span class="j">J</span>
-
-  <div class="boob-wrap">
-    <span class="o left"></span>
-    <span class="o right"></span>
-  </div>
-
+  <span class="o left">O</span>
+  <span class="o right">O</span>
   <span class="g">g</span>
   <span class="l">l</span>
   <span class="e">e</span>
