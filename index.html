@@ -22,11 +22,11 @@ body{
   font-size:96px;
   display:flex;
   align-items:baseline;
-  letter-spacing:-3px;
+  letter-spacing:-2px;
   margin-bottom:30px;
 }
 
-/* Google-like colors */
+/* Colors */
 .j{color:#4285F4;}
 .g{color:#4285F4;}
 .l{color:#34A853;}
@@ -35,45 +35,40 @@ body{
 /* O wrapper */
 .boob-wrap{
   display:inline-flex;
-  position:relative;
   align-items:baseline;
-  margin:0 -8px;
+  gap:2px; /* small natural gap */
 }
 
-/* Base O shape */
+/* Base O */
 .o{
-  width:60px;
-  height:66px;
-  border:10px solid #EA4335;
+  width:54px;
+  height:60px;
+  border:9px solid #EA4335;
   border-radius:50%;
-  background:transparent;
   box-sizing:border-box;
-  transition:transform .2s ease;
+  background:transparent;
+  position:relative;
 }
 
-/* Left O */
+/* inward squeeze effect (no overlap) */
 .o.left{
-  transform:scaleX(0.95);
-  margin-right:-16px;
-  z-index:2;
+  transform:scaleX(0.88);
 }
 
-/* Right O */
 .o.right{
-  transform:scaleX(0.95);
+  transform:scaleX(0.88);
 }
 
-/* Subtle inner shading for depth */
+/* subtle inner shading */
 .o::after{
   content:"";
   position:absolute;
-  width:60px;
-  height:66px;
+  inset:0;
   border-radius:50%;
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.08);
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.08);
 }
 
-/* SEARCH BOX */
+/* SEARCH */
 .search-box{
   width:560px;
   max-width:90vw;
@@ -121,18 +116,15 @@ body{
   color:#777;
 }
 
-/* Responsive scaling */
+/* Responsive */
 @media(max-width:600px){
   .logo{
     font-size:64px;
   }
   .o{
-    width:42px;
-    height:46px;
-    border-width:8px;
-  }
-  .search-box{
-    width:90%;
+    width:40px;
+    height:44px;
+    border-width:7px;
   }
 }
 </style>
