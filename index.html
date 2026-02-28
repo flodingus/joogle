@@ -4,311 +4,167 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Joogle</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
 body{
   margin:0;
-  font-family:Arial, Helvetica, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   background:#fff;
   display:flex;
   flex-direction:column;
-  align-items:center;
   min-height:100vh;
-}
-
-.main{
-  margin-top:18vh;
-  display:flex;
-  flex-direction:column;
+  justify-content:center;
   align-items:center;
-  width:100%;
 }
 
-/* ===== CLEAN CLEAVAGE LOGO ===== */
-
-.joogle-logo{
-  font-size:64px;
-  font-weight:500;
-  display:inline-flex;
+/* LOGO */
+.logo{
+  font-size:96px;
+  display:flex;
   align-items:baseline;
   letter-spacing:-3px;
   margin-bottom:30px;
 }
 
-/* twin o's */
-.twin-o{
-  display:inline-block;
-  color:#EA4335;
-  animation:bounce 1.6s ease-in-out infinite;
+/* Google-like colors */
+.j{color:#4285F4;}
+.g{color:#4285F4;}
+.l{color:#34A853;}
+.e{color:#EA4335;}
+
+/* O wrapper */
+.boob-wrap{
+  display:inline-flex;
+  position:relative;
+  align-items:baseline;
+  margin:0 -8px;
 }
 
-/* THIS is the squeeze */
-.twin-o + .twin-o{
-  margin-left:-18px; /* strong but clean squeeze */
+/* Base O shape */
+.o{
+  width:60px;
+  height:66px;
+  border:10px solid #EA4335;
+  border-radius:50%;
+  background:transparent;
+  box-sizing:border-box;
+  transition:transform .2s ease;
 }
 
-@keyframes bounce{
-  0%,100%{ transform:translateY(0); }
-  50%{ transform:translateY(-14px); }
+/* Left O */
+.o.left{
+  transform:scaleX(0.95);
+  margin-right:-16px;
+  z-index:2;
 }
 
+/* Right O */
+.o.right{
+  transform:scaleX(0.95);
+}
+
+/* Subtle inner shading for depth */
+.o::after{
+  content:"";
+  position:absolute;
+  width:60px;
+  height:66px;
+  border-radius:50%;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.08);
+}
+
+/* SEARCH BOX */
 .search-box{
-  width:90%;
-  max-width:580px;
-  padding:14px 20px;
-  border-radius:30px;
-  border:1px solid #dadce0;
-  font-size:16px;
+  width:560px;
+  max-width:90vw;
 }
 
-.buttons{ margin-top:25px; }
+.search-box input{
+  width:100%;
+  padding:14px 20px;
+  border-radius:24px;
+  border:1px solid #dcdcdc;
+  font-size:16px;
+  outline:none;
+}
 
-button{
-  margin:5px;
-  padding:10px 18px;
-  border:1px solid #dadce0;
+.search-box input:focus{
+  box-shadow:0 1px 6px rgba(32,33,36,.28);
+  border-color:rgba(223,225,229,0);
+}
+
+/* BUTTONS */
+.buttons{
+  margin-top:28px;
+}
+
+.buttons button{
   background:#f8f9fa;
+  border:1px solid #f8f9fa;
+  padding:10px 18px;
+  margin:0 6px;
   border-radius:4px;
   cursor:pointer;
-}
-
-.feature-card{
-  width:90%;
-  max-width:900px;
-  margin-top:30px;
-}
-
-.map-container{
-  height:380px;
-  border-radius:12px;
-  overflow:hidden;
-  border:1px solid #dadce0;
-}
-
-.place-item{
-  margin-bottom:18px;
-  padding-bottom:12px;
-  border-bottom:1px solid #eee;
-}
-
-.place-links a{
-  margin-right:15px;
   font-size:14px;
 }
 
-.detail-panel{
-  margin-top:20px;
-  padding:15px;
+.buttons button:hover{
   border:1px solid #dadce0;
-  border-radius:12px;
+  box-shadow:0 1px 1px rgba(0,0,0,.1);
 }
 
-.weather-card{
-  border:1px solid #dadce0;
-  border-radius:12px;
-  padding:20px;
-}
-
-.forecast-row{
-  display:flex;
-  justify-content:space-between;
-  margin-top:15px;
-}
-
-.results{
-  margin-top:30px;
-  width:90%;
-  max-width:800px;
-}
-
+/* FOOTER */
 .footer{
-  margin-top:auto;
-  padding:20px;
-  font-size:12px;
-  color:#70757a;
-  text-align:center;
+  position:absolute;
+  bottom:20px;
+  font-size:13px;
+  color:#777;
+}
+
+/* Responsive scaling */
+@media(max-width:600px){
+  .logo{
+    font-size:64px;
+  }
+  .o{
+    width:42px;
+    height:46px;
+    border-width:8px;
+  }
+  .search-box{
+    width:90%;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="main">
+<div class="logo">
+  <span class="j">J</span>
 
-<div class="joogle-logo">
-  <span style="color:#4285F4;">J</span>
-  <span class="twin-o">o</span>
-  <span class="twin-o">o</span>
-  <span style="color:#4285F4;">g</span>
-  <span style="color:#34A853;">l</span>
-  <span style="color:#EA4335;">e</span>
+  <span class="boob-wrap">
+    <span class="o left"></span>
+    <span class="o right"></span>
+  </span>
+
+  <span class="g">g</span>
+  <span class="l">l</span>
+  <span class="e">e</span>
 </div>
 
-<input class="search-box" id="searchInput" placeholder="Search Joogle..." />
+<div class="search-box">
+  <input type="text" placeholder="Search Joogle...">
+</div>
 
 <div class="buttons">
-  <button onclick="search()">Joogle Search</button>
-  <button onclick="imFeelingJoogly()">I'm Feeling Joogly</button>
-</div>
-
-<div class="feature-card" id="featureCard"></div>
-<div class="results" id="results"></div>
-
+  <button>Joogle Search</button>
+  <button>I'm Feeling Joogly</button>
 </div>
 
 <div class="footer">
-Joogle is a parody project created with love.
+  Joogle is a parody project created with love.
 </div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<script>
-const WORKER_URL="https://joogle-proxy.flodingus.workers.dev/";
-
-function imFeelingJoogly(){
-  alert("Joogly Mode Activated 💕");
-}
-
-async function search(){
-  const q=document.getElementById("searchInput").value.trim();
-  if(!q) return;
-
-  document.getElementById("featureCard").innerHTML="";
-  document.getElementById("results").innerHTML="";
-
-  const lower=q.toLowerCase();
-
-  if(lower.includes("weather")){
-    handleWeather(q);
-    return;
-  }
-
-  if(lower.includes("near me")){
-    handleNearMe();
-    return;
-  }
-
-  const res=await fetch(WORKER_URL,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({q})
-  });
-
-  const data=await res.json();
-  renderResults(data.organic||[]);
-}
-
-/* WEATHER */
-
-async function handleWeather(query){
-
-  let location=query.replace(/weather/i,"").trim();
-
-  const geoRes=await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}`
-  );
-
-  const geoData=await geoRes.json();
-  if(!geoData.results) return;
-
-  const lat=geoData.results[0].latitude;
-  const lon=geoData.results[0].longitude;
-
-  const weatherRes=await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&forecast_days=5`
-  );
-
-  const weather=await weatherRes.json();
-
-  let forecastHTML="";
-  weather.daily.time.forEach((d,i)=>{
-    forecastHTML+=`
-      <div>
-        <div>${new Date(d).toLocaleDateString("en-US",{weekday:"short"})}</div>
-        <div>${Math.round(weather.daily.temperature_2m_max[i])}° / ${Math.round(weather.daily.temperature_2m_min[i])}°</div>
-      </div>`;
-  });
-
-  document.getElementById("featureCard").innerHTML=
-    `<div class="weather-card">
-       <div style="font-size:40px;">${Math.round(weather.current_weather.temperature)}°F</div>
-       <div>${geoData.results[0].name}</div>
-       <div class="forecast-row">${forecastHTML}</div>
-     </div>`;
-}
-
-/* MAP */
-
-async function handleNearMe(){
-
-navigator.geolocation.getCurrentPosition(async pos=>{
-
-  const lat=pos.coords.latitude;
-  const lon=pos.coords.longitude;
-
-  document.getElementById("featureCard").innerHTML=
-    `<div class="map-container" id="map"></div>
-     <div id="placeList"></div>
-     <div id="detailPanel"></div>`;
-
-  const map=L.map("map").setView([lat,lon],14);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-
-  const overpass=`
-    [out:json];
-    node["amenity"="restaurant"](around:3000,${lat},${lon});
-    out;
-  `;
-
-  const response=await fetch("https://overpass-api.de/api/interpreter",{
-    method:"POST",
-    body:overpass
-  });
-
-  const data=await response.json();
-  const list=document.getElementById("placeList");
-
-  data.elements.forEach(place=>{
-    if(!place.tags || !place.tags.name) return;
-
-    const directions=
-      `<a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}" target="_blank">
-       Get Directions
-       </a>`;
-
-    const marker=L.marker([place.lat,place.lon]).addTo(map);
-    marker.bindPopup(`<strong>${place.tags.name}</strong><br>${directions}`);
-
-    const item=document.createElement("div");
-    item.className="place-item";
-    item.innerHTML=`
-      <strong>${place.tags.name}</strong>
-      <div class="place-links">${directions}</div>
-    `;
-
-    list.appendChild(item);
-  });
-
-});
-}
-
-function renderResults(results){
-  document.getElementById("results").innerHTML=
-    results.map(r=>`
-      <div style="margin-bottom:20px;">
-        <a href="${r.link}" target="_blank" style="font-size:18px;color:#1a0dab;text-decoration:none;">${r.title}</a>
-        <div style="color:#006621;font-size:14px;">${r.link}</div>
-        <div style="color:#545454;font-size:14px;">${r.snippet||""}</div>
-      </div>
-    `).join("");
-}
-
-document.getElementById("searchInput")
-  .addEventListener("keydown",e=>{
-    if(e.key==="Enter") search();
-  });
-</script>
 
 </body>
 </html>
