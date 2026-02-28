@@ -1,44 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Joogle Preview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joogle</title>
 
 <style>
 body{
   margin:0;
-  height:100vh;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#fff;
   display:flex;
+  flex-direction:column;
+  min-height:100vh;
   justify-content:center;
   align-items:center;
-  background:#fff;
-  font-family:Arial, Helvetica, sans-serif;
 }
 
+/* LOGO */
 .logo{
   font-size:104px;
   font-weight:500;
   display:flex;
   align-items:baseline;
   letter-spacing:-3px;
+  margin-bottom:30px;
 }
 
 .j{color:#4285F4;}
-.o{color:#EA4335; position:relative; display:inline-block;}
 .g{color:#4285F4;}
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-/* SQUEEZE WITHOUT OVERLAP */
-.o.left{ margin-right:-20px; }
-.o.right{ margin-left:-20px; }
+.o{
+  color:#EA4335;
+  position:relative;
+  display:inline-block;
+}
 
-/* center dots */
+/* SQUEEZE (NO OVERLAP) */
+.o.left{ margin-right:-16px; }
+.o.right{ margin-left:-16px; }
+
+/* Center dots */
 .o::after{
   content:"";
   position:absolute;
-  width:12px;
-  height:12px;
+  width:10px;
+  height:10px;
   background:#EA4335;
   border-radius:50%;
   left:50%;
@@ -49,12 +58,63 @@ body{
 /* SYNCHRONIZED BOUNCE */
 @keyframes bounce {
   0%,100% { transform:translateY(0); }
-  40% { transform:translateY(-12px); }
-  60% { transform:translateY(0); }
+  45% { transform:translateY(-10px); }
+  65% { transform:translateY(0); }
 }
 
 .o{
   animation:bounce 1.4s ease-in-out infinite;
+}
+
+/* SEARCH */
+.search-box{
+  width:560px;
+  max-width:90vw;
+}
+
+.search-box input{
+  width:100%;
+  padding:14px 20px;
+  border-radius:24px;
+  border:1px solid #dcdcdc;
+  font-size:16px;
+  outline:none;
+}
+
+.search-box input:focus{
+  box-shadow:0 1px 6px rgba(32,33,36,.28);
+}
+
+/* BUTTONS */
+.buttons{
+  margin-top:28px;
+}
+
+.buttons button{
+  background:#f8f9fa;
+  border:1px solid #f8f9fa;
+  padding:10px 18px;
+  margin:0 6px;
+  border-radius:4px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.buttons button:hover{
+  border:1px solid #dadce0;
+  box-shadow:0 1px 1px rgba(0,0,0,.1);
+}
+
+/* FOOTER */
+.footer{
+  position:absolute;
+  bottom:20px;
+  font-size:13px;
+  color:#777;
+}
+
+@media(max-width:600px){
+  .logo{font-size:64px;}
 }
 </style>
 </head>
@@ -68,6 +128,19 @@ body{
   <span class="g">g</span>
   <span class="l">l</span>
   <span class="e">e</span>
+</div>
+
+<div class="search-box">
+  <input type="text" placeholder="Search Joogle...">
+</div>
+
+<div class="buttons">
+  <button>Joogle Search</button>
+  <button>I'm Feeling Joogly</button>
+</div>
+
+<div class="footer">
+  Joogle is a parody project created with love.
 </div>
 
 </body>
