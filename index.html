@@ -31,9 +31,10 @@ body{
 .e{color:#EA4335;}
 
 .oo{
-  width:120px;
+  display:inline-block;
+  width:92px;
   height:82px;
-  margin:0 6px;
+  margin:0 4px;
   animation:bounce 1.6s ease-in-out infinite;
 }
 
@@ -94,34 +95,23 @@ body{
 <div class="logo">
   <span class="j">J</span>
 
-  <svg class="oo" viewBox="0 0 120 82">
+  <svg class="oo" viewBox="0 0 92 82">
 
-    <!-- Mask to remove harsh overlap seam -->
-    <defs>
-      <mask id="cleavageMask">
-        <rect width="120" height="82" fill="white"/>
-        <!-- small vertical trim to clean center -->
-        <rect x="58" y="0" width="4" height="82" fill="black"/>
-      </mask>
-    </defs>
-
-    <!-- Left O -->
-    <circle cx="40" cy="41" r="32"
+    <!-- LEFT O -->
+    <circle cx="32" cy="41" r="30"
             fill="white"
             stroke="#EA4335"
-            stroke-width="8"
-            mask="url(#cleavageMask)"/>
+            stroke-width="8"/>
 
-    <!-- Right O -->
-    <circle cx="80" cy="41" r="32"
+    <!-- RIGHT O (strong press) -->
+    <circle cx="52" cy="41" r="30"
             fill="white"
             stroke="#EA4335"
-            stroke-width="8"
-            mask="url(#cleavageMask)"/>
+            stroke-width="8"/>
 
-    <!-- Dots -->
-    <circle cx="40" cy="41" r="5" fill="#c62828"/>
-    <circle cx="80" cy="41" r="5" fill="#c62828"/>
+    <!-- DOTS -->
+    <circle cx="32" cy="41" r="5" fill="#c62828"/>
+    <circle cx="52" cy="41" r="5" fill="#c62828"/>
 
   </svg>
 
