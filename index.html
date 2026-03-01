@@ -15,7 +15,7 @@ body{
   align-items:center;
   min-height:100vh;
   overflow-x:hidden;
-  transition:all .6s ease;
+  transition:.6s ease;
 }
 
 /* Animated Julie Background */
@@ -47,7 +47,7 @@ body.julie-active{
   100%{transform:translateY(-110vh); opacity:0;}
 }
 
-/* LOGO (LOCKED STRUCTURE) */
+/* LOCKED LOGO */
 .logo{
   font-size:104px;
   font-weight:500;
@@ -214,8 +214,8 @@ body.julie-active .julie-panel{
 </div>
 
 <div class="buttons">
-  <button onclick="performSearch()">Joogle Search</button>
-  <button onclick="activateJulieMode()">I'm Feeling Joogly</button>
+  <button type="button" id="searchBtn">Joogle Search</button>
+  <button type="button" id="jooglyBtn">I'm Feeling Joogly</button>
 </div>
 
 <div class="julie-panel">
@@ -225,8 +225,7 @@ body.julie-active .julie-panel{
     <iframe style="border-radius:12px"
     src="https://open.spotify.com/embed/search/Every%20Little%20Thing%20She%20Does%20Is%20Magic%20Afghan%20Whigs"
     width="100%" height="80"
-    frameBorder="0"
-    allowfullscreen=""
+    frameborder="0"
     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
     </iframe>
   </div>
@@ -252,10 +251,22 @@ const loveNotes = [
 ];
 
 let messageInterval;
+let heartInterval;
+
+document.getElementById("searchBtn").addEventListener("click", function(e){
+  e.preventDefault();
+  performSearch();
+});
+
+document.getElementById("jooglyBtn").addEventListener("click", function(e){
+  e.preventDefault();
+  activateJulieMode();
+});
 
 document.getElementById("searchInput")
 .addEventListener("keydown", function(e){
   if(e.key === "Enter"){
+    e.preventDefault();
     performSearch();
   }
 });
@@ -267,16 +278,14 @@ document.addEventListener("keydown", function(e){
 });
 
 function performSearch(){
-  const query = document.getElementById("searchInput").value.trim().toLowerCase();
-
-  if(query.includes("julie")){
+  const query = document.getElementById("searchInput").value.trim();
+  if(query.toLowerCase().includes("julie")){
     activateJulieMode();
     return;
   }
-
   window.location.href =
-  "https://www.google.com/search?q=" +
-  encodeURIComponent(query);
+    "https://www.google.com/search?q=" +
+    encodeURIComponent(query);
 }
 
 function activateJulieMode(){
@@ -293,6 +302,7 @@ function deactivateJulieMode(){
   document.body.classList.remove("julie-active");
   document.getElementById("julieImage").style.display="none";
   clearInterval(messageInterval);
+  clearInterval(heartInterval);
 }
 
 function rotateMessages(){
@@ -312,7 +322,7 @@ function updateMessage(){
 }
 
 function spawnHearts(){
-  setInterval(()=>{
+  heartInterval = setInterval(()=>{
     const heart = document.createElement("div");
     heart.className="heart";
     heart.innerHTML="❤";
