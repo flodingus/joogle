@@ -14,8 +14,40 @@ body{
   flex-direction:column;
   align-items:center;
   min-height:100vh;
+  overflow-x:hidden;
+  transition:all .6s ease;
 }
 
+/* Animated Julie Background */
+body.julie-active{
+  background:linear-gradient(-45deg,#fff0f5,#ffe4ec,#fff5f9,#ffe0f0);
+  background-size:400% 400%;
+  animation:gradientFlow 12s ease infinite;
+}
+
+@keyframes gradientFlow{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* Floating Hearts */
+.heart{
+  position:fixed;
+  bottom:-20px;
+  font-size:18px;
+  color:#ff4d88;
+  animation:floatUp 6s linear infinite;
+  opacity:.6;
+  pointer-events:none;
+}
+
+@keyframes floatUp{
+  0%{transform:translateY(0); opacity:.6;}
+  100%{transform:translateY(-110vh); opacity:0;}
+}
+
+/* LOGO (LOCKED STRUCTURE) */
 .logo{
   font-size:104px;
   font-weight:500;
@@ -23,6 +55,17 @@ body{
   align-items:baseline;
   margin-top:120px;
   margin-bottom:30px;
+  transition:.5s ease;
+}
+
+body.julie-active .logo{
+  animation:shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer{
+  0%{filter:brightness(1);}
+  50%{filter:brightness(1.15);}
+  100%{filter:brightness(1);}
 }
 
 .j{color:#4285F4;}
@@ -30,7 +73,6 @@ body{
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-/* LOCKED LOGO */
 .oo-wrapper{
   display:flex;
   margin:0 6px;
@@ -66,6 +108,7 @@ body{
   60% { transform:translateY(0); }
 }
 
+/* Search */
 .search-box{
   width:560px;
   max-width:90vw;
@@ -98,46 +141,50 @@ body{
   font-size:14px;
 }
 
-.buttons button:hover{
-  border:1px solid #dadce0;
-  box-shadow:0 1px 1px rgba(0,0,0,.1);
-}
-
-.weather-card{
-  width:600px;
-  max-width:92vw;
-  margin-top:40px;
-  border:1px solid #dadce0;
-  border-radius:12px;
-  padding:24px;
+/* Julie Panel */
+.julie-panel{
   display:none;
-  box-shadow:0 1px 6px rgba(0,0,0,.08);
-}
-
-.weather-header{
-  font-size:22px;
-  font-weight:500;
-}
-
-.weather-current{
-  font-size:48px;
-  font-weight:500;
-  margin:10px 0;
-}
-
-.weather-condition{
-  color:#5f6368;
-  margin-bottom:20px;
-}
-
-.forecast{
-  display:flex;
-  justify-content:space-between;
-}
-
-.day{
+  margin-top:40px;
   text-align:center;
-  font-size:14px;
+  max-width:720px;
+  padding:30px;
+  border-radius:18px;
+  background:white;
+  box-shadow:0 20px 50px rgba(255,0,100,0.2);
+  animation:fadeIn .6s ease;
+}
+
+body.julie-active .julie-panel{
+  display:block;
+}
+
+.julie-message{
+  font-size:26px;
+  font-weight:600;
+  margin-bottom:25px;
+  color:#d63384;
+  min-height:40px;
+  transition:opacity .4s ease;
+}
+
+.julie-image{
+  width:100%;
+  max-width:650px;
+  border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  margin-top:20px;
+  display:none;
+}
+
+.spotify-embed{
+  margin-top:20px;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
 }
 
 .footer{
@@ -168,14 +215,23 @@ body{
 
 <div class="buttons">
   <button onclick="performSearch()">Joogle Search</button>
-  <button>I'm Feeling Joogly</button>
+  <button onclick="activateJulieMode()">I'm Feeling Joogly</button>
 </div>
 
-<div class="weather-card" id="weatherCard">
-  <div class="weather-header" id="weatherLocation"></div>
-  <div class="weather-current" id="weatherTemp"></div>
-  <div class="weather-condition" id="weatherCondition"></div>
-  <div class="forecast" id="forecast"></div>
+<div class="julie-panel">
+  <div class="julie-message" id="julieMessage"></div>
+
+  <div class="spotify-embed">
+    <iframe style="border-radius:12px"
+    src="https://open.spotify.com/embed/search/Every%20Little%20Thing%20She%20Does%20Is%20Magic%20Afghan%20Whigs"
+    width="100%" height="80"
+    frameBorder="0"
+    allowfullscreen=""
+    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+    </iframe>
+  </div>
+
+  <img src="julie-denim.png" class="julie-image" id="julieImage">
 </div>
 
 <div class="footer">
@@ -184,7 +240,19 @@ body{
 
 <script>
 
-// ENTER KEY SUPPORT
+const loveNotes = [
+"Julie, every little thing you do is magic.",
+"You make ordinary days feel extraordinary.",
+"Somehow, everything is better when you're near.",
+"You’re the calm and the spark at the same time.",
+"I still get that feeling every time I see you.",
+"If magic were real, it would look like you.",
+"Denim & dreams never looked so good.",
+"You light up rooms without even trying."
+];
+
+let messageInterval;
+
 document.getElementById("searchInput")
 .addEventListener("keydown", function(e){
   if(e.key === "Enter"){
@@ -192,69 +260,67 @@ document.getElementById("searchInput")
   }
 });
 
-async function performSearch(){
-  const rawQuery = document.getElementById("searchInput").value.trim();
-  const query = rawQuery.toLowerCase();
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape"){
+    deactivateJulieMode();
+  }
+});
 
-  // WEATHER DETECTION
-  if(query.includes("weather")){
-    const location = rawQuery
-      .replace(/weather/gi,"")
-      .replace(/in/gi,"")
-      .trim();
+function performSearch(){
+  const query = document.getElementById("searchInput").value.trim().toLowerCase();
 
-    showWeather(location);
-  } else {
-    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(rawQuery);
+  if(query.includes("julie")){
+    activateJulieMode();
+    return;
+  }
+
+  window.location.href =
+  "https://www.google.com/search?q=" +
+  encodeURIComponent(query);
+}
+
+function activateJulieMode(){
+  document.body.classList.add("julie-active");
+  rotateMessages();
+  spawnHearts();
+
+  if(Math.random() > 0.4){
+    document.getElementById("julieImage").style.display="block";
   }
 }
 
-async function showWeather(city){
+function deactivateJulieMode(){
+  document.body.classList.remove("julie-active");
+  document.getElementById("julieImage").style.display="none";
+  clearInterval(messageInterval);
+}
 
-  if(!city){
-    alert("Please enter a city.");
-    return;
-  }
+function rotateMessages(){
+  updateMessage();
+  messageInterval = setInterval(updateMessage,4000);
+}
 
-  const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
-  const geoData = await geoRes.json();
+function updateMessage(){
+  const randomNote =
+  loveNotes[Math.floor(Math.random()*loveNotes.length)];
+  const el = document.getElementById("julieMessage");
+  el.style.opacity=0;
+  setTimeout(()=>{
+    el.innerText=randomNote;
+    el.style.opacity=1;
+  },300);
+}
 
-  if(!geoData.results){
-    alert("City not found.");
-    return;
-  }
-
-  const {latitude, longitude, name, admin1} = geoData.results[0];
-
-  const weatherRes = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`
-  );
-
-  const weatherData = await weatherRes.json();
-
-  document.getElementById("weatherLocation").innerText =
-    name + (admin1 ? ", " + admin1 : "");
-
-  document.getElementById("weatherTemp").innerText =
-    weatherData.current_weather.temperature + "°F";
-
-  document.getElementById("weatherCondition").innerText =
-    "Wind " + weatherData.current_weather.windspeed + " mph";
-
-  const forecastEl = document.getElementById("forecast");
-  forecastEl.innerHTML = "";
-
-  weatherData.daily.time.slice(0,5).forEach((day,i)=>{
-    forecastEl.innerHTML += `
-      <div class="day">
-        <div>${new Date(day).toLocaleDateString(undefined,{weekday:'short'})}</div>
-        <div>${Math.round(weatherData.daily.temperature_2m_max[i])}° /
-        ${Math.round(weatherData.daily.temperature_2m_min[i])}°</div>
-      </div>
-    `;
-  });
-
-  document.getElementById("weatherCard").style.display = "block";
+function spawnHearts(){
+  setInterval(()=>{
+    const heart = document.createElement("div");
+    heart.className="heart";
+    heart.innerHTML="❤";
+    heart.style.left=Math.random()*100+"vw";
+    heart.style.fontSize=(14+Math.random()*20)+"px";
+    document.body.appendChild(heart);
+    setTimeout(()=>heart.remove(),6000);
+  },600);
 }
 
 </script>
