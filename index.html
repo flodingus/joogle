@@ -30,23 +30,19 @@ body{
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-/* OO wrapper */
 .oo{
-  display:inline-block;
-  width:110px;
+  width:120px;
   height:82px;
   margin:0 6px;
   animation:bounce 1.6s ease-in-out infinite;
 }
 
-/* Bounce */
 @keyframes bounce {
   0%,100% { transform:translateY(0); }
   40% { transform:translateY(-8px); }
   60% { transform:translateY(0); }
 }
 
-/* SEARCH */
 .search-box{
   width:560px;
   max-width:90vw;
@@ -98,24 +94,34 @@ body{
 <div class="logo">
   <span class="j">J</span>
 
-  <!-- OUTLINED OO (Proper Squeeze) -->
-  <svg class="oo" viewBox="0 0 110 82">
+  <svg class="oo" viewBox="0 0 120 82">
+
+    <!-- Mask to remove harsh overlap seam -->
+    <defs>
+      <mask id="cleavageMask">
+        <rect width="120" height="82" fill="white"/>
+        <!-- small vertical trim to clean center -->
+        <rect x="58" y="0" width="4" height="82" fill="black"/>
+      </mask>
+    </defs>
 
     <!-- Left O -->
-    <circle cx="36" cy="41" r="32"
+    <circle cx="40" cy="41" r="32"
             fill="white"
             stroke="#EA4335"
-            stroke-width="8"/>
+            stroke-width="8"
+            mask="url(#cleavageMask)"/>
 
-    <!-- Right O (squeezed closer) -->
-    <circle cx="66" cy="41" r="32"
+    <!-- Right O -->
+    <circle cx="80" cy="41" r="32"
             fill="white"
             stroke="#EA4335"
-            stroke-width="8"/>
+            stroke-width="8"
+            mask="url(#cleavageMask)"/>
 
     <!-- Dots -->
-    <circle cx="36" cy="41" r="5" fill="#c62828"/>
-    <circle cx="66" cy="41" r="5" fill="#c62828"/>
+    <circle cx="40" cy="41" r="5" fill="#c62828"/>
+    <circle cx="80" cy="41" r="5" fill="#c62828"/>
 
   </svg>
 
