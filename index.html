@@ -17,6 +17,7 @@ body{
   align-items:center;
 }
 
+/* LOGO */
 .logo{
   font-size:104px;
   font-weight:500;
@@ -30,18 +31,60 @@ body{
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-.o-svg{
-  width:150px;
-  height:110px;
-  margin:0 6px;
+/* OO wrapper */
+.oo{
+  position:relative;
+  width:110px;
+  height:84px;
+  margin:0 4px;
   display:inline-block;
+  transform:translateY(10px); /* baseline alignment */
   animation:bounce 1.6s ease-in-out infinite;
 }
 
+/* circles */
+.circle{
+  position:absolute;
+  width:84px;
+  height:84px;
+  border-radius:50%;
+  background:radial-gradient(circle at 45% 40%, #ff5a4e 0%, #EA4335 70%);
+}
+
+/* left */
+.circle.left{
+  left:0;
+}
+
+/* right (slight press) */
+.circle.right{
+  left:50px;
+}
+
+/* dots */
+.dot{
+  position:absolute;
+  width:10px;
+  height:10px;
+  background:#c62828;
+  border-radius:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+
+.dot.left{
+  left:42px;
+}
+
+.dot.right{
+  left:92px;
+}
+
+/* bounce */
 @keyframes bounce {
-  0%,100% { transform:translateY(0); }
-  40% { transform:translateY(-10px); }
-  60% { transform:translateY(0); }
+  0%,100% { transform:translateY(10px); }
+  40% { transform:translateY(0px); }
+  60% { transform:translateY(10px); }
 }
 
 /* SEARCH */
@@ -96,28 +139,12 @@ body{
 <div class="logo">
   <span class="j">J</span>
 
-  <svg class="o-svg" viewBox="0 0 150 110">
-
-    <defs>
-      <radialGradient id="redGrad" cx="50%" cy="45%" r="60%">
-        <stop offset="0%" stop-color="#ff5a4e"/>
-        <stop offset="100%" stop-color="#EA4335"/>
-      </radialGradient>
-    </defs>
-
-    <!-- Left O -->
-    <circle cx="55" cy="55" r="42"
-            fill="url(#redGrad)"/>
-
-    <!-- Right O (slightly overlapping for press) -->
-    <circle cx="95" cy="55" r="42"
-            fill="url(#redGrad)"/>
-
-    <!-- Dots -->
-    <circle cx="55" cy="55" r="6" fill="#c62828"/>
-    <circle cx="95" cy="55" r="6" fill="#c62828"/>
-
-  </svg>
+  <span class="oo">
+    <div class="circle left"></div>
+    <div class="circle right"></div>
+    <div class="dot left"></div>
+    <div class="dot right"></div>
+  </span>
 
   <span class="g">g</span>
   <span class="l">l</span>
