@@ -103,8 +103,6 @@ body{
   box-shadow:0 1px 1px rgba(0,0,0,.1);
 }
 
-/* WEATHER CARD */
-
 .weather-card{
   width:600px;
   max-width:92vw;
@@ -119,12 +117,12 @@ body{
 .weather-header{
   font-size:22px;
   font-weight:500;
-  margin-bottom:8px;
 }
 
 .weather-current{
   font-size:48px;
   font-weight:500;
+  margin:10px 0;
 }
 
 .weather-condition{
@@ -135,7 +133,6 @@ body{
 .forecast{
   display:flex;
   justify-content:space-between;
-  margin-top:16px;
 }
 
 .day{
@@ -186,53 +183,80 @@ body{
 </div>
 
 <script>
-async function performSearch(){
-  const query = document.getElementById("searchInput").value.trim();
 
-  if(query.toLowerCase().includes("weather")){
-    showWeather(query);
+// ENTER KEY SUPPORT
+document.getElementById("searchInput")
+.addEventListener("keydown", function(e){
+  if(e.key === "Enter"){
+    performSearch();
+  }
+});
+
+async function performSearch(){
+  const rawQuery = document.getElementById("searchInput").value.trim();
+  const query = rawQuery.toLowerCase();
+
+  // WEATHER DETECTION
+  if(query.includes("weather")){
+    const location = rawQuery
+      .replace(/weather/gi,"")
+      .replace(/in/gi,"")
+      .trim();
+
+    showWeather(location);
   } else {
-    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(rawQuery);
   }
 }
 
-async function showWeather(query){
+async function showWeather(city){
 
-  const city = query.replace(/weather/i,"").trim();
+  if(!city){
+    alert("Please enter a city.");
+    return;
+  }
 
-  const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`);
-  const geoData = await geo.json();
+  const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+  const geoData = await geoRes.json();
 
   if(!geoData.results){
-    alert("City not found");
+    alert("City not found.");
     return;
   }
 
   const {latitude, longitude, name, admin1} = geoData.results[0];
 
-  const weather = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`);
-  const weatherData = await weather.json();
+  const weatherRes = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`
+  );
 
-  document.getElementById("weatherLocation").innerText = name + ", " + admin1;
-  document.getElementById("weatherTemp").innerText = weatherData.current_weather.temperature + "°F";
-  document.getElementById("weatherCondition").innerText = "Wind " + weatherData.current_weather.windspeed + " mph";
+  const weatherData = await weatherRes.json();
+
+  document.getElementById("weatherLocation").innerText =
+    name + (admin1 ? ", " + admin1 : "");
+
+  document.getElementById("weatherTemp").innerText =
+    weatherData.current_weather.temperature + "°F";
+
+  document.getElementById("weatherCondition").innerText =
+    "Wind " + weatherData.current_weather.windspeed + " mph";
 
   const forecastEl = document.getElementById("forecast");
   forecastEl.innerHTML = "";
 
   weatherData.daily.time.slice(0,5).forEach((day,i)=>{
-    const max = weatherData.daily.temperature_2m_max[i];
-    const min = weatherData.daily.temperature_2m_min[i];
     forecastEl.innerHTML += `
       <div class="day">
         <div>${new Date(day).toLocaleDateString(undefined,{weekday:'short'})}</div>
-        <div>${Math.round(max)}° / ${Math.round(min)}°</div>
+        <div>${Math.round(weatherData.daily.temperature_2m_max[i])}° /
+        ${Math.round(weatherData.daily.temperature_2m_min[i])}°</div>
       </div>
     `;
   });
 
   document.getElementById("weatherCard").style.display = "block";
 }
+
 </script>
 
 </body>
