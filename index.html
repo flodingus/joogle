@@ -11,14 +11,18 @@ body {
   font-family: Arial, sans-serif;
   background:#f2f2f2;
   text-align:center;
-  transition:all .4s ease;
+  transition:background .4s ease;
 }
+
+/* ========================= */
+/* 🔒 LOCKED LOGO — DO NOT TOUCH */
+/* ========================= */
 
 .logo {
   margin-top:120px;
   font-size:90px;
   font-weight:bold;
-  letter-spacing:-6px;
+  letter-spacing:-4px;
 }
 
 .logo .j { color:#4285F4; }
@@ -29,14 +33,14 @@ body {
 .o-wrap {
   display:inline-block;
   position:relative;
-  width:120px;
-  height:70px;
-  margin:0 -8px;
+  width:110px;
+  height:72px;
+  margin:0 -10px;
 }
 
 .o {
-  width:70px;
-  height:70px;
+  width:68px;
+  height:68px;
   border:8px solid #EA4335;
   border-radius:50%;
   position:absolute;
@@ -45,7 +49,9 @@ body {
 }
 
 .o.left { left:0; }
-.o.right { left:45px; }
+.o.right { left:42px; }
+
+/* ========================= */
 
 .search-box {
   margin-top:40px;
@@ -53,6 +59,7 @@ body {
 
 input {
   width:500px;
+  max-width:90%;
   padding:15px;
   border-radius:25px;
   border:1px solid #ccc;
@@ -101,18 +108,6 @@ button:hover {
   margin-bottom:20px;
 }
 
-.hearts {
-  position:fixed;
-  pointer-events:none;
-  font-size:20px;
-  animation:float 6s linear infinite;
-}
-
-@keyframes float {
-  from { transform:translateY(100vh); opacity:1; }
-  to { transform:translateY(-10vh); opacity:0; }
-}
-
 .spotify-embed {
   margin-top:20px;
 }
@@ -121,6 +116,18 @@ button:hover {
   width:100%;
   border-radius:15px;
   margin-top:20px;
+}
+
+.heart {
+  position:fixed;
+  font-size:20px;
+  animation:float 6s linear infinite;
+  pointer-events:none;
+}
+
+@keyframes float {
+  from { transform:translateY(100vh); opacity:1; }
+  to { transform:translateY(-10vh); opacity:0; }
 }
 </style>
 </head>
@@ -182,7 +189,6 @@ function handleSearch() {
   if(document.body.classList.contains("julie-mode")) return;
 
   const query = document.getElementById("searchInput").value.trim();
-
   if(!query) return;
 
   if(query.toLowerCase() === "weather"){
@@ -208,9 +214,9 @@ function activateJulieMode() {
 }
 
 function spawnHearts(){
-  for(let i=0;i<20;i++){
+  for(let i=0;i<15;i++){
     const heart=document.createElement("div");
-    heart.className="hearts";
+    heart.className="heart";
     heart.innerText="❤";
     heart.style.left=Math.random()*100+"vw";
     heart.style.animationDuration=(3+Math.random()*3)+"s";
@@ -228,8 +234,7 @@ async function detectWeather(){
 
     const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto`);
     const data=await res.json();
-
-    showWeather(data);
+    showWeather(data,"Your Location");
   });
 }
 
@@ -244,11 +249,10 @@ async function getWeatherFromQuery(query){
 
   const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto`);
   const data=await res.json();
-
   showWeather(data,name+", "+country);
 }
 
-function showWeather(data,location="Your Location"){
+function showWeather(data,location){
   let html=`<h3>Weather for ${location}</h3>`;
   html+=`<p>Current: ${data.current_weather.temperature}°C</p>`;
   html+="<h4>5 Day Forecast:</h4>";
