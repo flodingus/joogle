@@ -33,7 +33,7 @@ body{
 .oo{
   width:120px;
   height:82px;
-  margin:0 2px;
+  margin:0 4px;
   animation:bounce 1.6s ease-in-out infinite;
 }
 
@@ -96,17 +96,25 @@ body{
 
   <svg class="oo" viewBox="0 0 120 82">
 
-    <!-- LEFT O -->
-    <circle cx="44" cy="41" r="30"
-            fill="white"
-            stroke="#EA4335"
-            stroke-width="8"/>
+    <!-- LEFT O (inner side slightly flattened) -->
+    <path d="
+      M 44 11
+      A 30 30 0 1 1 44 71
+      A 26 30 0 1 0 44 11
+    "
+    fill="white"
+    stroke="#EA4335"
+    stroke-width="8"/>
 
-    <!-- RIGHT O (squeezed closer, NOT overlapping strokes) -->
-    <circle cx="76" cy="41" r="30"
-            fill="white"
-            stroke="#EA4335"
-            stroke-width="8"/>
+    <!-- RIGHT O (mirrored flatten) -->
+    <path d="
+      M 76 11
+      A 30 30 0 1 0 76 71
+      A 26 30 0 1 1 76 11
+    "
+    fill="white"
+    stroke="#EA4335"
+    stroke-width="8"/>
 
     <!-- Dots -->
     <circle cx="44" cy="41" r="5" fill="#c62828"/>
