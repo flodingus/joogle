@@ -17,7 +17,6 @@ body{
   align-items:center;
 }
 
-/* LOGO */
 .logo{
   font-size:104px;
   font-weight:500;
@@ -31,16 +30,14 @@ body{
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-/* SVG OO block */
 .o-svg{
-  width:140px;
+  width:150px;
   height:110px;
   margin:0 6px;
   display:inline-block;
   animation:bounce 1.6s ease-in-out infinite;
 }
 
-/* Bounce (same feel as mockup) */
 @keyframes bounce {
   0%,100% { transform:translateY(0); }
   40% { transform:translateY(-10px); }
@@ -66,7 +63,6 @@ body{
   box-shadow:0 1px 6px rgba(32,33,36,.28);
 }
 
-/* BUTTONS */
 .buttons{
   margin-top:28px;
 }
@@ -86,7 +82,6 @@ body{
   box-shadow:0 1px 1px rgba(0,0,0,.1);
 }
 
-/* FOOTER */
 .footer{
   position:absolute;
   bottom:20px;
@@ -101,22 +96,26 @@ body{
 <div class="logo">
   <span class="j">J</span>
 
-  <!-- Perfect geometric OO -->
-  <svg class="o-svg" viewBox="0 0 140 110">
+  <svg class="o-svg" viewBox="0 0 150 110">
+
+    <defs>
+      <radialGradient id="redGrad" cx="50%" cy="45%" r="60%">
+        <stop offset="0%" stop-color="#ff5a4e"/>
+        <stop offset="100%" stop-color="#EA4335"/>
+      </radialGradient>
+    </defs>
 
     <!-- Left O -->
-    <circle cx="50" cy="55" r="42"
-            fill="none"
-            stroke="#EA4335"
-            stroke-width="10"/>
-    <circle cx="50" cy="55" r="6" fill="#EA4335"/>
+    <circle cx="55" cy="55" r="42"
+            fill="url(#redGrad)"/>
 
-    <!-- Right O (slightly pressed, no crossing) -->
-    <circle cx="88" cy="55" r="42"
-            fill="none"
-            stroke="#EA4335"
-            stroke-width="10"/>
-    <circle cx="88" cy="55" r="6" fill="#EA4335"/>
+    <!-- Right O (slightly overlapping for press) -->
+    <circle cx="95" cy="55" r="42"
+            fill="url(#redGrad)"/>
+
+    <!-- Dots -->
+    <circle cx="55" cy="55" r="6" fill="#c62828"/>
+    <circle cx="95" cy="55" r="6" fill="#c62828"/>
 
   </svg>
 
