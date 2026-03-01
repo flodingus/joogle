@@ -1,264 +1,338 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Joogle</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joogle</title>
 
 <style>
-body {
+body{
   margin:0;
-  font-family: Arial, sans-serif;
-  background:#f2f2f2;
-  text-align:center;
-  transition:all .4s ease;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  overflow-x:hidden;
+  transition:.6s ease;
 }
 
-.logo {
+/* Animated Julie Background */
+body.julie-active{
+  background:linear-gradient(-45deg,#fff0f5,#ffe4ec,#fff5f9,#ffe0f0);
+  background-size:400% 400%;
+  animation:gradientFlow 12s ease infinite;
+}
+
+@keyframes gradientFlow{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* Floating Hearts */
+.heart{
+  position:fixed;
+  bottom:-20px;
+  font-size:18px;
+  color:#ff4d88;
+  animation:floatUp 6s linear infinite;
+  opacity:.6;
+  pointer-events:none;
+}
+
+@keyframes floatUp{
+  0%{transform:translateY(0); opacity:.6;}
+  100%{transform:translateY(-110vh); opacity:0;}
+}
+
+/* LOCKED LOGO */
+.logo{
+  font-size:104px;
+  font-weight:500;
+  display:flex;
+  align-items:baseline;
   margin-top:120px;
-  font-size:90px;
-  font-weight:bold;
-  letter-spacing:-6px;
+  margin-bottom:30px;
+  transition:.5s ease;
 }
 
-.logo .j { color:#4285F4; }
-.logo .g { color:#4285F4; }
-.logo .l { color:#34A853; }
-.logo .e { color:#EA4335; }
-
-.o-wrap {
-  display:inline-block;
-  position:relative;
-  width:120px;
-  height:70px;
-  margin:0 -8px;
+body.julie-active .logo{
+  animation:shimmer 3s ease-in-out infinite;
 }
 
-.o {
-  width:70px;
-  height:70px;
+@keyframes shimmer{
+  0%{filter:brightness(1);}
+  50%{filter:brightness(1.15);}
+  100%{filter:brightness(1);}
+}
+
+.j{color:#4285F4;}
+.g{color:#4285F4;}
+.l{color:#34A853;}
+.e{color:#EA4335;}
+
+.oo-wrapper{
+  display:flex;
+  margin:0 6px;
+  animation:bounce 1.6s ease-in-out infinite;
+}
+
+.o{
+  width:54px;
+  height:54px;
   border:8px solid #EA4335;
   border-radius:50%;
+  background:white;
+  position:relative;
+  margin:0 -10px;
+  transform:scaleX(0.88);
+}
+
+.o::after{
+  content:"";
+  width:9px;
+  height:9px;
+  background:#c62828;
+  border-radius:50%;
   position:absolute;
-  top:0;
-  background:white;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
 }
 
-.o.left { left:0; }
-.o.right { left:45px; }
-
-.search-box {
-  margin-top:40px;
+@keyframes bounce {
+  0%,100% { transform:translateY(0); }
+  40% { transform:translateY(-8px); }
+  60% { transform:translateY(0); }
 }
 
-input {
-  width:500px;
-  padding:15px;
-  border-radius:25px;
-  border:1px solid #ccc;
+/* Search */
+.search-box{
+  width:560px;
+  max-width:90vw;
+}
+
+.search-box input{
+  width:100%;
+  padding:14px 20px;
+  border-radius:24px;
+  border:1px solid #dcdcdc;
   font-size:16px;
+  outline:none;
 }
 
-.buttons {
-  margin-top:20px;
+.search-box input:focus{
+  box-shadow:0 1px 6px rgba(32,33,36,.28);
 }
 
-button {
-  padding:10px 20px;
-  margin:5px;
-  border:none;
+.buttons{
+  margin-top:28px;
+}
+
+.buttons button{
   background:#f8f9fa;
-  border-radius:5px;
+  border:1px solid #f8f9fa;
+  padding:10px 18px;
+  margin:0 6px;
+  border-radius:4px;
   cursor:pointer;
+  font-size:14px;
 }
 
-button:hover {
-  background:#e8e8e8;
-}
-
-#weatherBox {
+/* Julie Panel */
+.julie-panel{
+  display:none;
   margin-top:40px;
-  font-size:18px;
-}
-
-.julie-mode {
-  background:linear-gradient(to bottom, #ffd6e8, #fff);
-}
-
-.julie-panel {
-  margin:50px auto;
-  max-width:700px;
+  text-align:center;
+  max-width:720px;
+  padding:30px;
+  border-radius:18px;
   background:white;
-  padding:40px;
-  border-radius:20px;
-  box-shadow:0 10px 30px rgba(0,0,0,.1);
+  box-shadow:0 20px 50px rgba(255,0,100,0.2);
+  animation:fadeIn .6s ease;
+}
+
+body.julie-active .julie-panel{
+  display:block;
+}
+
+.julie-message{
+  font-size:26px;
+  font-weight:600;
+  margin-bottom:25px;
+  color:#d63384;
+  min-height:40px;
+  transition:opacity .4s ease;
+}
+
+.julie-image{
+  width:100%;
+  max-width:650px;
+  border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  margin-top:20px;
   display:none;
 }
 
-.julie-note {
-  font-size:26px;
-  color:#d63384;
-  margin-bottom:20px;
-}
-
-.hearts {
-  position:fixed;
-  pointer-events:none;
-  font-size:20px;
-  animation:float 6s linear infinite;
-}
-
-@keyframes float {
-  from { transform:translateY(100vh); opacity:1; }
-  to { transform:translateY(-10vh); opacity:0; }
-}
-
-.spotify-embed {
+.spotify-embed{
   margin-top:20px;
+  border-radius:12px;
+  overflow:hidden;
 }
 
-.julie-img {
-  width:100%;
-  border-radius:15px;
-  margin-top:20px;
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.footer{
+  margin-top:auto;
+  padding:20px;
+  font-size:13px;
+  color:#777;
 }
 </style>
 </head>
+
 <body>
 
 <div class="logo">
   <span class="j">J</span>
-  <span class="o-wrap">
-    <div class="o left"></div>
-    <div class="o right"></div>
-  </span>
+  <div class="oo-wrapper">
+    <div class="o"></div>
+    <div class="o"></div>
+  </div>
   <span class="g">g</span>
   <span class="l">l</span>
   <span class="e">e</span>
 </div>
 
 <div class="search-box">
-  <input id="searchInput" placeholder="Search Joogle...">
+  <input id="searchInput" type="text" placeholder="Search Joogle...">
 </div>
 
 <div class="buttons">
-  <button onclick="handleSearch()">Joogle Search</button>
-  <button onclick="activateJulieMode()">I'm Feeling Joogly</button>
+  <button type="button" id="searchBtn">Joogle Search</button>
+  <button type="button" id="jooglyBtn">I'm Feeling Joogly</button>
 </div>
 
-<div id="weatherBox"></div>
-
-<div class="julie-panel" id="juliePanel">
-  <div class="julie-note" id="julieNote"></div>
+<div class="julie-panel">
+  <div class="julie-message" id="julieMessage"></div>
 
   <div class="spotify-embed">
     <iframe style="border-radius:12px"
-      src="https://open.spotify.com/embed/track/2qG3T0rV8kCzFZp2uF5nKf"
-      width="100%" height="80"
-      frameborder="0"
-      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+    src="https://open.spotify.com/embed/search/Every%20Little%20Thing%20She%20Does%20Is%20Magic%20Afghan%20Whigs"
+    width="100%" height="80"
+    frameborder="0"
+    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
     </iframe>
   </div>
 
-  <img src="80sjulie.png" class="julie-img">
+  <img src="julie-denim.png" class="julie-image" id="julieImage">
+</div>
+
+<div class="footer">
+  Joogle is a parody project created with love.
 </div>
 
 <script>
+
 const loveNotes = [
+"Julie, every little thing you do is magic.",
 "You make ordinary days feel extraordinary.",
+"Somehow, everything is better when you're near.",
+"You’re the calm and the spark at the same time.",
+"I still get that feeling every time I see you.",
+"If magic were real, it would look like you.",
 "Denim & dreams never looked so good.",
-"I still get butterflies.",
-"You are magic.",
-"You are my favorite hello."
+"You light up rooms without even trying."
 ];
 
-document.getElementById("searchInput").addEventListener("keydown", function(e){
+let messageInterval;
+let heartInterval;
+
+document.getElementById("searchBtn").addEventListener("click", function(e){
+  e.preventDefault();
+  performSearch();
+});
+
+document.getElementById("jooglyBtn").addEventListener("click", function(e){
+  e.preventDefault();
+  activateJulieMode();
+});
+
+document.getElementById("searchInput")
+.addEventListener("keydown", function(e){
   if(e.key === "Enter"){
-    handleSearch();
+    e.preventDefault();
+    performSearch();
   }
 });
 
-function handleSearch() {
-  if(document.body.classList.contains("julie-mode")) return;
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape"){
+    deactivateJulieMode();
+  }
+});
 
+function performSearch(){
   const query = document.getElementById("searchInput").value.trim();
-
-  if(!query) return;
-
-  if(query.toLowerCase() === "weather"){
-    detectWeather();
+  if(query.toLowerCase().includes("julie")){
+    activateJulieMode();
     return;
   }
-
-  if(query.toLowerCase().includes("weather")){
-    getWeatherFromQuery(query);
-    return;
-  }
-
-  window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(query);
+  window.location.href =
+    "https://www.google.com/search?q=" +
+    encodeURIComponent(query);
 }
 
-function activateJulieMode() {
-  document.body.classList.add("julie-mode");
-  document.getElementById("juliePanel").style.display = "block";
-  document.getElementById("julieNote").innerText =
-    loveNotes[Math.floor(Math.random()*loveNotes.length)];
-
+function activateJulieMode(){
+  document.body.classList.add("julie-active");
+  rotateMessages();
   spawnHearts();
+
+  if(Math.random() > 0.4){
+    document.getElementById("julieImage").style.display="block";
+  }
+}
+
+function deactivateJulieMode(){
+  document.body.classList.remove("julie-active");
+  document.getElementById("julieImage").style.display="none";
+  clearInterval(messageInterval);
+  clearInterval(heartInterval);
+}
+
+function rotateMessages(){
+  updateMessage();
+  messageInterval = setInterval(updateMessage,4000);
+}
+
+function updateMessage(){
+  const randomNote =
+  loveNotes[Math.floor(Math.random()*loveNotes.length)];
+  const el = document.getElementById("julieMessage");
+  el.style.opacity=0;
+  setTimeout(()=>{
+    el.innerText=randomNote;
+    el.style.opacity=1;
+  },300);
 }
 
 function spawnHearts(){
-  for(let i=0;i<20;i++){
-    const heart=document.createElement("div");
-    heart.className="hearts";
-    heart.innerText="❤";
+  heartInterval = setInterval(()=>{
+    const heart = document.createElement("div");
+    heart.className="heart";
+    heart.innerHTML="❤";
     heart.style.left=Math.random()*100+"vw";
-    heart.style.animationDuration=(3+Math.random()*3)+"s";
+    heart.style.fontSize=(14+Math.random()*20)+"px";
     document.body.appendChild(heart);
     setTimeout(()=>heart.remove(),6000);
-  }
+  },600);
 }
 
-async function detectWeather(){
-  if(!navigator.geolocation) return;
-
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    const lat=pos.coords.latitude;
-    const lon=pos.coords.longitude;
-
-    const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto`);
-    const data=await res.json();
-
-    showWeather(data);
-  });
-}
-
-async function getWeatherFromQuery(query){
-  const location=query.replace("weather","").trim();
-
-  const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${location}`);
-  const geoData=await geo.json();
-  if(!geoData.results) return;
-
-  const {latitude,longitude,name,country}=geoData.results[0];
-
-  const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto`);
-  const data=await res.json();
-
-  showWeather(data,name+", "+country);
-}
-
-function showWeather(data,location="Your Location"){
-  let html=`<h3>Weather for ${location}</h3>`;
-  html+=`<p>Current: ${data.current_weather.temperature}°C</p>`;
-  html+="<h4>5 Day Forecast:</h4>";
-
-  for(let i=0;i<5;i++){
-    html+=`<p>Day ${i+1}: High ${data.daily.temperature_2m_max[i]}°C / Low ${data.daily.temperature_2m_min[i]}°C</p>`;
-  }
-
-  document.getElementById("weatherBox").innerHTML=html;
-}
 </script>
 
 </body>
