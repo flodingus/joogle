@@ -23,7 +23,6 @@ body{
   font-weight:500;
   display:flex;
   align-items:baseline;
-  letter-spacing:-3px;
   margin-bottom:30px;
 }
 
@@ -32,38 +31,20 @@ body{
 .l{color:#34A853;}
 .e{color:#EA4335;}
 
-.o{
-  color:#EA4335;
-  position:relative;
+/* SVG OO block */
+.o-svg{
+  width:140px;
+  height:110px;
+  margin:0 6px;
   display:inline-block;
+  animation:bounce 1.6s ease-in-out infinite;
 }
 
-/* SQUEEZE (NO OVERLAP) */
-.o.left{ margin-right:-16px; }
-.o.right{ margin-left:-16px; }
-
-/* Center dots */
-.o::after{
-  content:"";
-  position:absolute;
-  width:10px;
-  height:10px;
-  background:#EA4335;
-  border-radius:50%;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-}
-
-/* SYNCHRONIZED BOUNCE */
+/* Bounce (same feel as mockup) */
 @keyframes bounce {
   0%,100% { transform:translateY(0); }
-  45% { transform:translateY(-10px); }
-  65% { transform:translateY(0); }
-}
-
-.o{
-  animation:bounce 1.4s ease-in-out infinite;
+  40% { transform:translateY(-10px); }
+  60% { transform:translateY(0); }
 }
 
 /* SEARCH */
@@ -112,10 +93,6 @@ body{
   font-size:13px;
   color:#777;
 }
-
-@media(max-width:600px){
-  .logo{font-size:64px;}
-}
 </style>
 </head>
 
@@ -123,8 +100,26 @@ body{
 
 <div class="logo">
   <span class="j">J</span>
-  <span class="o left">O</span>
-  <span class="o right">O</span>
+
+  <!-- Perfect geometric OO -->
+  <svg class="o-svg" viewBox="0 0 140 110">
+
+    <!-- Left O -->
+    <circle cx="50" cy="55" r="42"
+            fill="none"
+            stroke="#EA4335"
+            stroke-width="10"/>
+    <circle cx="50" cy="55" r="6" fill="#EA4335"/>
+
+    <!-- Right O (slightly pressed, no crossing) -->
+    <circle cx="88" cy="55" r="42"
+            fill="none"
+            stroke="#EA4335"
+            stroke-width="10"/>
+    <circle cx="88" cy="55" r="6" fill="#EA4335"/>
+
+  </svg>
+
   <span class="g">g</span>
   <span class="l">l</span>
   <span class="e">e</span>
