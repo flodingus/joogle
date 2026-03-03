@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Joogle</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
@@ -13,6 +16,12 @@
   --text:#222;
   --card:#ffffff;
   --shadow:rgba(0,0,0,.15);
+  --footer-text:#777;
+  --input-border:#ccc;
+  --btn-bg:#f8f9fa;
+  --btn-border:#f8f9fa;
+  --btn-text:#222;
+  --subtext:#555;
 }
 
 body.dark{
@@ -20,11 +29,17 @@ body.dark{
   --text:#e4e4e4;
   --card:#1e1e1e;
   --shadow:rgba(0,0,0,.6);
+  --footer-text:#888;
+  --input-border:#444;
+  --btn-bg:#2a2a2a;
+  --btn-border:#2a2a2a;
+  --btn-text:#e4e4e4;
+  --subtext:#aaa;
 }
 
 body{
   margin:0;
-  font-family:Arial, Helvetica, sans-serif;
+  font-family:'Google Sans', Arial, Helvetica, sans-serif;
   background:var(--bg);
   color:var(--text);
   display:flex;
@@ -99,34 +114,83 @@ body.julie-active{
 .search-box{
   width:560px;
   max-width:90vw;
+  position:relative;
 }
 
 .search-box input{
   width:100%;
-  padding:14px 20px;
+  padding:14px 48px 14px 20px;
   border-radius:24px;
-  border:1px solid #ccc;
+  border:1px solid var(--input-border);
   font-size:16px;
+  background:var(--bg);
+  color:var(--text);
+  font-family:inherit;
+  box-sizing:border-box;
+  outline:none;
+  transition:.2s;
+}
+
+.search-box input:focus{
+  border-color:#4285F4;
+  box-shadow:0 0 0 3px rgba(66,133,244,.15);
+}
+
+.search-clear{
+  position:absolute;
+  right:16px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  font-size:18px;
+  color:var(--subtext);
+  display:none;
+  background:none;
+  border:none;
+  padding:4px;
+  line-height:1;
+}
+
+.search-clear.visible{
+  display:block;
 }
 
 .buttons{
   margin-top:24px;
+  display:flex;
+  gap:12px;
 }
 
 .buttons button{
-  background:#f8f9fa;
-  border:1px solid #f8f9fa;
+  background:var(--btn-bg);
+  border:1px solid var(--btn-border);
   padding:10px 18px;
-  margin:0 6px;
   border-radius:4px;
   cursor:pointer;
   font-size:14px;
+  color:var(--btn-text);
+  font-family:inherit;
+  transition:.15s;
 }
 
-body.dark .buttons button{
-  background:#2a2a2a;
-  border:1px solid #2a2a2a;
-  color:#e4e4e4;
+.buttons button:hover{
+  box-shadow:0 1px 4px var(--shadow);
+  border-color:#ccc;
+}
+
+.spinner{
+  display:none;
+  width:36px;
+  height:36px;
+  border:4px solid var(--input-border);
+  border-top-color:#4285F4;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  margin:30px auto;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg);}
 }
 
 .results{
@@ -139,6 +203,8 @@ body.dark .buttons button{
   box-shadow:0 20px 50px var(--shadow);
   padding:20px;
   animation:fadeIn .4s ease forwards;
+  box-sizing:border-box;
+  color:var(--text);
 }
 
 @keyframes fadeIn{
@@ -158,12 +224,20 @@ body.dark .buttons button{
   font-size:48px;
   font-weight:bold;
   margin:15px 0;
+  color:var(--text);
+}
+
+.weather-label{
+  color:var(--subtext);
+  font-size:15px;
+  margin-bottom:4px;
 }
 
 .forecast-row{
   display:flex;
   justify-content:space-between;
   flex-wrap:wrap;
+  margin-top:16px;
 }
 
 .forecast-day{
@@ -171,6 +245,50 @@ body.dark .buttons button{
   min-width:100px;
   text-align:center;
   padding:10px;
+  border-radius:8px;
+  background:var(--bg);
+  margin:4px;
+  color:var(--text);
+}
+
+.forecast-day .day-name{
+  font-weight:500;
+  margin-bottom:6px;
+}
+
+.forecast-day .day-icon{
+  font-size:22px;
+  margin-bottom:4px;
+}
+
+.place-list{
+  margin-top:12px;
+}
+
+.place-item{
+  padding:10px 0;
+  border-bottom:1px solid var(--input-border);
+  color:var(--text);
+}
+
+.place-item:last-child{
+  border-bottom:none;
+}
+
+.place-name{
+  font-weight:500;
+}
+
+.place-type{
+  font-size:13px;
+  color:var(--subtext);
+  text-transform:capitalize;
+}
+
+.no-results{
+  text-align:center;
+  padding:30px;
+  color:var(--subtext);
 }
 
 .julie-panel{
@@ -178,6 +296,11 @@ body.dark .buttons button{
   margin-top:30px;
   text-align:center;
   max-width:700px;
+  width:90%;
+}
+
+.julie-panel h2{
+  color:var(--text);
 }
 
 .julie-panel img{
@@ -185,6 +308,24 @@ body.dark .buttons button{
   border-radius:12px;
   margin-top:15px;
   box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
+.julie-close{
+  display:inline-block;
+  margin-top:20px;
+  padding:10px 24px;
+  background:rgba(255,77,136,.15);
+  color:#ff4d88;
+  border:1px solid #ff4d88;
+  border-radius:20px;
+  cursor:pointer;
+  font-size:14px;
+  font-family:inherit;
+  transition:.2s;
+}
+
+.julie-close:hover{
+  background:rgba(255,77,136,.25);
 }
 
 .heart{
@@ -209,23 +350,27 @@ body.dark .buttons button{
   cursor:pointer;
   font-size:18px;
   background:var(--card);
+  color:var(--text);
   padding:8px 12px;
   border-radius:20px;
   box-shadow:0 5px 15px var(--shadow);
+  border:none;
+  font-family:inherit;
+  transition:.3s;
 }
 
 .footer{
   margin-top:auto;
   padding:20px;
   font-size:13px;
-  color:#777;
+  color:var(--footer-text);
 }
 </style>
 </head>
 
 <body>
 
-<div class="toggle" onclick="toggleDark()">🌙</div>
+<button class="toggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
 
 <div class="logo" id="logo">
   <span class="j">J</span>
@@ -239,7 +384,8 @@ body.dark .buttons button{
 </div>
 
 <div class="search-box">
-  <input id="searchInput" type="text" placeholder="Search Joogle...">
+  <input id="searchInput" type="text" placeholder="Search Joogle..." autocomplete="off">
+  <button class="search-clear" id="clearBtn" onclick="clearSearch()" title="Clear">✕</button>
 </div>
 
 <div class="buttons">
@@ -247,17 +393,21 @@ body.dark .buttons button{
   <button onclick="activateJulie()">I'm Feeling Joogly</button>
 </div>
 
-<div class="results" id="resultsContainer"></div>
+<div class="results" id="resultsContainer">
+  <div class="spinner" id="spinner"></div>
+</div>
 
 <div class="julie-panel" id="juliePanel">
   <h2 id="julieMessage"></h2>
-  <img src="julie-denim.png">
+  <img src="julie-denim.png" alt="Julie">
   <iframe style="border-radius:12px;margin-top:15px;"
     src="https://open.spotify.com/embed/track/5nNmj1cLH3r4aA4XDJ2bgY"
     width="100%" height="80"
     frameborder="0"
     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
   </iframe>
+  <br>
+  <button class="julie-close" onclick="exitJulie()">✕ Close</button>
 </div>
 
 <div class="footer">Joogle Hybrid Engine – Locked Master</div>
@@ -269,10 +419,23 @@ if(localStorage.getItem("darkMode")==="true"){
   document.body.classList.add("dark");
 }
 
+const saved = sessionStorage.getItem("lastQuery");
+if(saved) document.getElementById("searchInput").value = saved;
+
 function toggleDark(){
   document.body.classList.toggle("dark");
-  localStorage.setItem("darkMode",
-    document.body.classList.contains("dark"));
+  localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+}
+
+document.getElementById("searchInput").addEventListener("input", e=>{
+  document.getElementById("clearBtn").classList.toggle("visible", e.target.value.length > 0);
+});
+
+function clearSearch(){
+  const input = document.getElementById("searchInput");
+  input.value = "";
+  input.focus();
+  document.getElementById("clearBtn").classList.remove("visible");
 }
 
 document.getElementById("searchInput").addEventListener("keydown", e=>{
@@ -281,106 +444,203 @@ document.getElementById("searchInput").addEventListener("keydown", e=>{
 });
 
 const loveNotes=[
-"Julie, every little thing you do is magic.",
-"You light up rooms without trying.",
-"You’re my favorite search result.",
-"Everything is better with you."
+  "Julie, every little thing you do is magic.",
+  "You light up rooms without trying.",
+  "You're my favorite search result.",
+  "Everything is better with you."
 ];
 
-function performSearch(){
-  const query=document.getElementById("searchInput").value.trim().toLowerCase();
+function weatherIcon(code){
+  if(code===0) return "☀️";
+  if(code<=2) return "⛅";
+  if(code<=3) return "☁️";
+  if(code<=48) return "🌫️";
+  if(code<=57) return "🌧️";
+  if(code<=67) return "🌨️";
+  if(code<=77) return "❄️";
+  if(code<=82) return "🌧️";
+  if(code<=86) return "🌨️";
+  if(code<=99) return "⛈️";
+  return "🌡️";
+}
 
-  if(query.match(/julie|christopher|chris/)){
+function performSearch(){
+  const query = document.getElementById("searchInput").value.trim();
+  const lower = query.toLowerCase();
+
+  sessionStorage.setItem("lastQuery", query);
+
+  if(lower.match(/julie|christopher|chris/)){
     activateJulie();
     return;
   }
 
-  if(query.match(/restaurant|coffee|gas|library|bar|grocery/)){
-    handleNearMe(query);
+  if(lower.match(/restaurant|coffee|gas|library|bar|grocery|cafe|pharmacy|hospital|park/)){
+    handleNearMe(lower);
     return;
   }
 
-  if(query.includes("weather")){
-    handleWeather(query);
+  if(lower.includes("weather")){
+    handleWeather(lower);
     return;
   }
 
-  window.location.href="https://www.google.com/search?q="+encodeURIComponent(query);
+  window.open("https://www.google.com/search?q="+encodeURIComponent(query), "_blank");
+}
+
+function showSpinner(){
+  showResults();
+  document.getElementById("resultsContainer").innerHTML =
+    '<div class="spinner" id="spinner" style="display:block"></div>';
 }
 
 function handleWeather(query){
-  const cleaned=query.replace("weather","").trim();
-  showResults();
+  const cleaned = query.replace("weather","").trim();
+  showSpinner();
 
   if(cleaned===""){
     navigator.geolocation.getCurrentPosition(pos=>{
-      fetchWeather(pos.coords.latitude,pos.coords.longitude,"Your Location");
+      fetchWeather(pos.coords.latitude, pos.coords.longitude, "Your Location");
+    }, ()=>{
+      document.getElementById("resultsContainer").innerHTML=
+        '<p class="no-results">Location access denied. Try searching "weather [city name]".</p>';
     });
   } else {
-    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${cleaned}&count=1`)
+    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1`)
     .then(res=>res.json())
     .then(data=>{
-      if(!data.results){
-        document.getElementById("resultsContainer").innerHTML="Location not found.";
+      if(!data.results || data.results.length===0){
+        document.getElementById("resultsContainer").innerHTML=
+          '<p class="no-results">Location not found. Try a different city name.</p>';
         return;
       }
-      fetchWeather(data.results[0].latitude,data.results[0].longitude,data.results[0].name);
+      fetchWeather(data.results[0].latitude, data.results[0].longitude, data.results[0].name);
+    })
+    .catch(()=>{
+      document.getElementById("resultsContainer").innerHTML=
+        '<p class="no-results">Network error. Please try again.</p>';
     });
   }
 }
 
-function fetchWeather(lat,lon,label){
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`)
+function fetchWeather(lat, lon, label){
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&temperature_unit=fahrenheit&timezone=auto`)
   .then(res=>res.json())
   .then(data=>{
-    let html=`<h2>Weather for ${label}</h2>
-    <div class="weather-current">${Math.round(data.current_weather.temperature)}°F ☀️</div>
+    const cw = data.current_weather;
+    const icon = weatherIcon(cw.weathercode);
+
+    let html=`<h2 style="color:var(--text);margin-top:0">Weather for ${label}</h2>
+    <div class="weather-label">Current conditions</div>
+    <div class="weather-current">${icon} ${Math.round(cw.temperature)}°F</div>
     <div class="forecast-row">`;
 
+    const days = data.daily;
     for(let i=0;i<5;i++){
+      const d = new Date(days.time[i] + "T12:00:00");
+      const dayName = i===0 ? "Today" : d.toLocaleDateString('en-US',{weekday:'short'});
+      const dayIcon = weatherIcon(days.weathercode[i]);
       html+=`<div class="forecast-day">
-        <div>${data.daily.time[i]}</div>
-        <div>${Math.round(data.daily.temperature_2m_max[i])}° / ${Math.round(data.daily.temperature_2m_min[i])}°</div>
+        <div class="day-name">${dayName}</div>
+        <div class="day-icon">${dayIcon}</div>
+        <div>${Math.round(days.temperature_2m_max[i])}° / ${Math.round(days.temperature_2m_min[i])}°</div>
       </div>`;
     }
 
     html+="</div>";
     document.getElementById("resultsContainer").innerHTML=html;
+  })
+  .catch(()=>{
+    document.getElementById("resultsContainer").innerHTML=
+      '<p class="no-results">Could not fetch weather. Please try again.</p>';
   });
 }
 
-function handleNearMe(){
-  showResults();
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const lat=pos.coords.latitude;
-    const lon=pos.coords.longitude;
+const amenityMap = {
+  restaurant: "restaurant",
+  coffee: "cafe",
+  cafe: "cafe",
+  gas: "fuel",
+  library: "library",
+  bar: "bar",
+  grocery: "supermarket",
+  pharmacy: "pharmacy",
+  hospital: "hospital",
+  park: "park"
+};
 
-    fetch(`https://overpass-api.de/api/interpreter?data=[out:json];node[amenity](around:3000,${lat},${lon});out;`)
+function handleNearMe(query){
+  showSpinner();
+
+  let amenity = null;
+  for(const [keyword, type] of Object.entries(amenityMap)){
+    if(query.includes(keyword)){
+      amenity = type;
+      break;
+    }
+  }
+
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    const amenityFilter = amenity ? `[amenity=${amenity}]` : "[amenity]";
+    const overpassQuery = `[out:json];node${amenityFilter}(around:3000,${lat},${lon});out 30;`;
+
+    fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`)
     .then(res=>res.json())
     .then(data=>{
-      renderMap(lat,lon,data.elements);
+      renderMap(lat, lon, data.elements, amenity);
+    })
+    .catch(()=>{
+      document.getElementById("resultsContainer").innerHTML=
+        '<p class="no-results">Could not load map data. Please try again.</p>';
     });
+  }, ()=>{
+    document.getElementById("resultsContainer").innerHTML=
+      '<p class="no-results">Location access denied. Please allow location access and try again.</p>';
   });
 }
 
-function renderMap(lat,lon,places){
-  let html=`<div class="map-container" id="map"></div>`;
-  places.slice(0,20).forEach(p=>{
-    if(p.tags && p.tags.name){
-      html+=`<div><strong>${p.tags.name}</strong></div>`;
-    }
+function renderMap(lat, lon, places, amenity){
+  const label = amenity ? amenity.charAt(0).toUpperCase()+amenity.slice(1)+"s" : "Places";
+  const named = places.filter(p=>p.tags && p.tags.name);
+
+  let html=`<h2 style="color:var(--text);margin-top:0">Nearby ${label}</h2>
+  <div class="map-container" id="map"></div>
+  <div class="place-list">`;
+
+  named.slice(0,20).forEach(p=>{
+    const type = p.tags.amenity || "";
+    const addr = p.tags["addr:street"] ? p.tags["addr:housenumber"]+" "+p.tags["addr:street"] : "";
+    html+=`<div class="place-item">
+      <div class="place-name">${p.tags.name}</div>
+      ${type ? `<div class="place-type">${type.replace(/_/g,' ')}${addr ? " · "+addr : ""}</div>` : ""}
+    </div>`;
   });
 
+  if(named.length===0){
+    html+=`<p class="no-results">No results found nearby. Try a broader search.</p>`;
+  }
+
+  html+="</div>";
   document.getElementById("resultsContainer").innerHTML=html;
 
-  const map=L.map('map').setView([lat,lon],13);
+  const map = L.map('map').setView([lat,lon],14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'© OpenStreetMap'
   }).addTo(map);
 
-  places.slice(0,20).forEach(p=>{
+  L.circleMarker([lat,lon],{
+    radius:8, fillColor:"#4285F4", color:"#fff",
+    weight:2, fillOpacity:1
+  }).addTo(map).bindPopup("You are here");
+
+  named.slice(0,20).forEach(p=>{
     if(p.lat && p.lon){
-      L.marker([p.lat,p.lon]).addTo(map);
+      L.marker([p.lat,p.lon])
+        .addTo(map)
+        .bindPopup(`<strong>${p.tags.name}</strong>`);
     }
   });
 }
