@@ -455,7 +455,7 @@ body.julie-active{ background:var(--bg); }
 
 .tv-frame{
   position:relative;
-  width:min(92vw, calc((100vh - 100px) * 4/3), 800px);
+  width:min(86vw, calc((100vh - 170px) * 4/3), 600px);
   aspect-ratio:4/3;
   background:#111;
   border-radius:18px;
@@ -649,7 +649,7 @@ body.julie-active{ background:var(--bg); }
   align-items:center;
   gap:14px;
   margin-top:16px;
-  width:min(92vw, calc((100vh - 100px) * 4/3), 800px);
+  width:min(86vw, calc((100vh - 170px) * 4/3), 600px);
 }
 .julie-close-btn{
   flex:1;
@@ -1067,7 +1067,6 @@ const newsFeeds = {
 };
 
 async function handleNews(query){
-  // Strip noise words to find topic
   let topic = query
     .replace(/\b(news|headlines?|breaking|latest|today)\b/gi,'')
     .replace(/\babout\b/gi,'')
@@ -1075,7 +1074,6 @@ async function handleNews(query){
 
   showSpinner();
 
-  // Pick feed
   let feedUrl = newsFeeds.default;
   let sourceLabel = 'BBC News';
   for(const [key, url] of Object.entries(newsFeeds)){
@@ -1089,7 +1087,6 @@ async function handleNews(query){
 
     let items = data.items;
 
-    // Client-side filter if topic exists
     if(topic.length > 2){
       const filtered = items.filter(item=>
         item.title.toLowerCase().includes(topic.toLowerCase()) ||
@@ -1254,21 +1251,19 @@ const amenityMap={
   hotel:"hotel", bank:"bank", atm:"atm", school:"school"
 };
 
-// OSM cuisine/category icons
 const amenityIcon={
   restaurant:"🍽️", cafe:"☕", fuel:"⛽", library:"📚", bar:"🍺",
   supermarket:"🛒", pharmacy:"💊", hospital:"🏥", park:"🌳",
   fast_food:"🍔", hotel:"🏨", bank:"🏦", atm:"🏧", school:"🏫"
 };
 
-// Haversine distance in miles
 function haversine(lat1, lon1, lat2, lon2){
   const R=3958.8, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
   const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-let _nearMeMap = null; // keep map instance so we can pan
+let _nearMeMap = null;
 
 function handleNearMe(query){
   showSpinner();
@@ -1278,12 +1273,10 @@ function handleNearMe(query){
   }
   navigator.geolocation.getCurrentPosition(pos=>{
     const {latitude:lat, longitude:lon} = pos.coords;
-    // Search both nodes and ways, bigger radius
     const filter = amenity ? `[amenity=${amenity}]` : "[amenity~\"restaurant|cafe|bar|fast_food\"]";
     const oq = `[out:json][timeout:15];(node${filter}(around:5000,${lat},${lon});way${filter}(around:5000,${lat},${lon}););out center 40;`;
     fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(oq)}`)
     .then(r=>r.json()).then(data=>{
-      // ways have center coords; normalise
       const elements = data.elements.map(e=>{
         if(e.type==='way' && e.center){ return {...e, lat:e.center.lat, lon:e.center.lon}; }
         return e;
@@ -1300,7 +1293,6 @@ function renderMap(userLat, userLon, places, amenity, query){
     : "Nearby Places";
   const icon = amenityIcon[amenity] || "📍";
 
-  // Filter named, compute distance, sort
   let named = places.filter(p=>p.tags?.name && p.lat && p.lon);
   named = named.map(p=>({
     ...p,
@@ -1319,7 +1311,6 @@ function renderMap(userLat, userLon, places, amenity, query){
 
   document.getElementById("resultsContainer").innerHTML = html;
 
-  // Build map
   if(_nearMeMap){ _nearMeMap.remove(); _nearMeMap=null; }
   const map = L.map('map').setView([userLat, userLon], 14);
   _nearMeMap = map;
@@ -1327,12 +1318,10 @@ function renderMap(userLat, userLon, places, amenity, query){
     attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>'
   }).addTo(map);
 
-  // "You" marker
   L.circleMarker([userLat,userLon],{
     radius:10, fillColor:"#4285F4", color:"#fff", weight:3, fillOpacity:1
   }).addTo(map).bindPopup("<strong>📍 You are here</strong>");
 
-  // Custom place marker
   const markerSvg = (n) => L.divIcon({
     className:'',
     html:`<div style="background:#EA4335;color:#fff;border:2px solid #fff;border-radius:50% 50% 50% 0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,.35);transform:rotate(-45deg)"><span style="transform:rotate(45deg)">${n}</span></div>`,
@@ -1366,7 +1355,6 @@ function renderMap(userLat, userLon, places, amenity, query){
     marker.bindPopup(popupHtml);
     leafletMarkers.push(marker);
 
-    // Build list card
     const distStr = p.dist < 0.1 ? `${Math.round(p.dist*5280)} ft` : `${p.dist.toFixed(1)} mi`;
     const hoursRaw = p.tags.opening_hours||'';
     const hoursHtml = hoursRaw ? `<div class="place-hours">${escHtml(hoursRaw.slice(0,50))}</div>` : '';
@@ -1389,11 +1377,9 @@ function renderMap(userLat, userLon, places, amenity, query){
       </div>`;
 
     card.addEventListener('click', (e)=>{
-      if(e.target.tagName==='A') return; // don't intercept link clicks
-      // Highlight card
+      if(e.target.tagName==='A') return;
       document.querySelectorAll('.place-card').forEach(c=>c.classList.remove('active'));
       card.classList.add('active');
-      // Pan map and open popup
       map.setView([p.lat, p.lon], 16, {animate:true});
       leafletMarkers[i].openPopup();
     });
@@ -1481,7 +1467,6 @@ async function runPing(){
   appendTerminal(`PING ${host} — HTTPS latency probe (4 packets)`,'t-yellow');
   appendTerminal(`Resolving ${host}...`,'t-gray');
 
-  // First do a DNS lookup to get the IP
   let resolvedIP = host;
   try{
     const dns = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`).then(r=>r.json());
@@ -1506,7 +1491,7 @@ async function runPing(){
         appendTerminal(`Request timeout for icmp_seq ${i}`,'t-red');
         await sleep(800); continue;
       }
-      success = true; // CORS error = server was reached
+      success = true;
     }
     if(success){
       const ms = Math.round(performance.now()-start);
@@ -1607,7 +1592,6 @@ async function runWhois(){
 
     if(d.status?.length) appendTerminal(`Status:        ${d.status.join(', ')}`,'t-cyan');
 
-    // Events (dates)
     (d.events||[]).forEach(ev=>{
       const label = {
         registration:'Created',
@@ -1618,14 +1602,12 @@ async function runWhois(){
       appendTerminal(`${label.padEnd(15)}${date}`,'t-green');
     });
 
-    // Nameservers
     if(d.nameservers?.length){
       appendTerminal('');
       appendTerminal('Name Servers:','t-yellow');
       d.nameservers.forEach(ns=> appendTerminal(`  ${ns.ldhName}`,'t-white'));
     }
 
-    // Entities (registrant, registrar)
     if(d.entities?.length){
       appendTerminal('');
       appendTerminal('Entities:','t-yellow');
@@ -1659,7 +1641,6 @@ async function runTraceroute(){
   appendTerminal('   Showing estimated hop information via DNS path analysis instead...','t-gray');
   appendTerminal('');
 
-  // Simulate a few hops as placeholder
   appendTerminal(' 1  gateway (192.168.1.1)   ~1 ms','t-green');
   appendTerminal(' 2  * * *','t-gray');
   appendTerminal(' 3  * * *','t-gray');
@@ -1690,7 +1671,6 @@ async function runNslookup(){
   appendTerminal(`Address:  8.8.8.8#53`,'t-yellow');
   appendTerminal('');
 
-  // A record
   try{
     const resA = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`).then(r=>r.json());
     if(resA.Answer?.length){
@@ -1702,7 +1682,6 @@ async function runNslookup(){
     }
   } catch(e){ appendTerminal(`Error: ${e.message}`,'t-red'); }
 
-  // AAAA
   try{
     const resAAAA = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=AAAA`).then(r=>r.json());
     if(resAAAA.Answer?.length){
@@ -1721,7 +1700,6 @@ async function runReverseDns(){
   appendTerminal('');
   appendTerminal(`Reverse DNS lookup: ${host}`,'t-yellow');
 
-  // Convert IP to PTR format: 1.2.3.4 → 4.3.2.1.in-addr.arpa
   const parts = host.split('.');
   if(parts.length !== 4 || parts.some(p=>isNaN(parseInt(p)))){
     appendTerminal('Error: please enter a valid IPv4 address (e.g. 8.8.8.8)','t-red');
@@ -1744,8 +1722,6 @@ async function runReverseDns(){
 
 /* ══════════════════════════════════════════════════════════
    DENIM & DREAMS — 90s Cartoon  (v2 — Sedona Edition)
-   Julie + Chris | Snoopy Rock + Bell Rock backdrop
-   Internal canvas: 480 × 360  (4:3)
 ══════════════════════════════════════════════════════════ */
 
 const CW = 480, CH = 360;
@@ -1798,7 +1774,6 @@ function fo(ctx,fill,w=2.2){ctx.fillStyle=fill;ctx.fill();ol(ctx,w);}
 function ell(ctx,cx,cy,rx,ry,fill,w=2.2){ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,PI2);fo(ctx,fill,w);}
 function fillOnly(ctx,fill){ctx.fillStyle=fill;ctx.fill();}
 
-/* draw a round-rect helper */
 function rr(ctx,x,y,w,h,r){
   ctx.beginPath();
   ctx.moveTo(x+r,y);
@@ -1822,20 +1797,16 @@ function star5(ctx,cx,cy,r,fill=C.gold){
 ══════════════════════════════════════════════════════════ */
 
 function drawSedonaSky(ctx, t){
-  /* gradient sky */
   const g=ctx.createLinearGradient(0,0,0,CH*0.55);
   g.addColorStop(0,'#2E6FA8'); g.addColorStop(0.45,'#87CEEB'); g.addColorStop(1,'#C8E8F8');
   ctx.fillStyle=g; ctx.fillRect(0,0,CW,CH*0.55);
 
-  /* Sun */
   const SX=CW*0.82, SY=CH*0.12;
-  /* corona */
   ctx.save(); ctx.globalAlpha=0.18;
   ctx.fillStyle=C.sunYell;
   ctx.beginPath(); ctx.arc(SX,SY,54,0,PI2); ctx.fill();
   ctx.globalAlpha=0.12; ctx.beginPath(); ctx.arc(SX,SY,72,0,PI2); ctx.fill();
   ctx.globalAlpha=1;
-  /* rays */
   for(let i=0;i<12;i++){
     const a=i/12*PI2+t*0.25;
     ctx.save(); ctx.translate(SX,SY); ctx.rotate(a);
@@ -1845,14 +1816,12 @@ function drawSedonaSky(ctx, t){
     ctx.beginPath(); ctx.moveTo(-4,32); ctx.lineTo(4,32); ctx.lineTo(2,62); ctx.lineTo(-2,62); ctx.closePath();
     ctx.fill(); ctx.restore();
   }
-  /* disk */
   const sg=ctx.createRadialGradient(SX-4,SY-4,2,SX,SY,26);
   sg.addColorStop(0,'#FFFDE7'); sg.addColorStop(0.6,C.sunYell); sg.addColorStop(1,C.sunOrange);
   ctx.beginPath(); ctx.arc(SX,SY,26,0,PI2);
   ctx.fillStyle=sg; ctx.fill();
   ctx.strokeStyle='#E65100'; ctx.lineWidth=1.8; ctx.stroke();
 
-  /* clouds */
   function cloud(cx,cy,sc,to){
     const ox=Math.sin(t*0.15+to)*10;
     const cg=ctx.createRadialGradient(cx+ox,cy-sc*8,sc*2,cx+ox,cy,sc*22);
@@ -1861,7 +1830,6 @@ function drawSedonaSky(ctx, t){
       ctx.beginPath(); ctx.ellipse(cx+dx+ox,cy+dy,rx,ry,0,0,PI2);
       ctx.fillStyle=C.cloud; ctx.fill();
     });
-    /* subtle shadow base */
     ctx.beginPath(); ctx.ellipse(cx+ox,cy+8*sc,22*sc,6*sc,0,0,PI2);
     ctx.fillStyle=C.cloudSh; ctx.fill();
   }
@@ -1869,13 +1837,10 @@ function drawSedonaSky(ctx, t){
 }
 
 function drawBellRock(ctx){
-  /* Bell Rock — right side, classic bell/butte shape */
-  /* Shadow */
   ctx.save(); ctx.globalAlpha=0.22;
   ctx.beginPath(); ctx.ellipse(CW*0.82,CH*0.68,68,10,0,0,PI2); ctx.fillStyle='#000'; ctx.fill();
   ctx.globalAlpha=1;
 
-  /* Main mass */
   ctx.beginPath();
   ctx.moveTo(CW*0.62,CH*0.68);
   ctx.lineTo(CW*0.65,CH*0.50);
@@ -1888,7 +1853,6 @@ function drawBellRock(ctx){
   bg.addColorStop(0,C.rockHi); bg.addColorStop(0.35,C.rock1); bg.addColorStop(1,C.rock2);
   fo(ctx,bg,1.5);
 
-  /* Striation lines */
   ctx.save(); ctx.globalAlpha=0.22;
   ctx.strokeStyle=C.rock3; ctx.lineWidth=1.2;
   [[CW*0.68,CH*0.52,CW*0.92,CH*0.52],[CW*0.67,CH*0.44,CW*0.88,CH*0.45],[CW*0.70,CH*0.36,CW*0.85,CH*0.37]].forEach(([x1,y1,x2,y2])=>{
@@ -1896,7 +1860,6 @@ function drawBellRock(ctx){
   });
   ctx.restore();
 
-  /* Highlight face */
   ctx.beginPath();
   ctx.moveTo(CW*0.73,CH*0.26); ctx.bezierCurveTo(CW*0.74,CH*0.22,CW*0.78,CH*0.21,CW*0.80,CH*0.26);
   ctx.bezierCurveTo(CW*0.82,CH*0.32,CW*0.80,CH*0.46,CW*0.75,CH*0.52);
@@ -1907,11 +1870,8 @@ function drawBellRock(ctx){
 }
 
 function drawSnoopyRock(ctx){
-  /* Snoopy Rock — left-center. Base mesa + Snoopy silhouette on top.
-     Classic profile: big round "head" (snout to the right), body lying back-left */
   ctx.save();
 
-  /* Base mesa */
   ctx.beginPath();
   ctx.moveTo(CW*0.12,CH*0.68);
   ctx.lineTo(CW*0.10,CH*0.56);
@@ -1925,42 +1885,35 @@ function drawSnoopyRock(ctx){
   mg.addColorStop(0,C.rockHi); mg.addColorStop(0.4,C.rock1); mg.addColorStop(1,C.rock2);
   fo(ctx,mg,1.5);
 
-  /* Striation */
-  ctx.save(); ctx.globalAlpha=0.18; ctx.strokeStyle=C.rock3; ctx.lineWidth=1.2;
+  ctx.save(); ctx.globalAlpha=0.18;
+  ctx.strokeStyle=C.rock3; ctx.lineWidth=1.2;
   [[CW*0.13,CH*0.52,CW*0.44,CH*0.52],[CW*0.14,CH*0.46,CW*0.44,CH*0.47]].forEach(([x1,y1,x2,y2])=>{
     ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
   });
   ctx.restore();
 
-  /* Snoopy silhouette on top of mesa — body lies left, big round head + snout right */
-  const BX=CW*0.28, BY=CH*0.36; /* base anchor */
+  const BX=CW*0.28, BY=CH*0.36;
 
-  /* body */
   ctx.beginPath();
   ctx.moveTo(BX-62,BY+2);
   ctx.bezierCurveTo(BX-62,BY-18,BX-38,BY-28,BX-14,BY-22);
   ctx.bezierCurveTo(BX+2,BY-18,BX+10,BY-8,BX+8,BY+2);
   ctx.closePath(); fo(ctx,'#F8F0E0',1.8);
 
-  /* ear (left flop) */
   ctx.beginPath();
   ctx.moveTo(BX-18,BY-22); ctx.bezierCurveTo(BX-28,BY-42,BX-46,BY-44,BX-52,BY-28);
   ctx.bezierCurveTo(BX-50,BY-14,BX-36,BY-18,BX-18,BY-22);
   ctx.closePath(); fo(ctx,'#D4B896',1.8);
 
-  /* head */
   ctx.beginPath(); ctx.ellipse(BX+6,BY-14,22,20,0,0,PI2);
   fo(ctx,'#F8F0E0',1.8);
 
-  /* snout */
   ctx.beginPath(); ctx.ellipse(BX+25,BY-6,10,7,0.1,0,PI2);
   fo(ctx,'#F5E0C8',1.5);
 
-  /* nose */
   ctx.beginPath(); ctx.ellipse(BX+32,BY-8,4,3,0,0,PI2);
   ctx.fillStyle='#222'; ctx.fill();
 
-  /* eye */
   ctx.beginPath(); ctx.arc(BX+12,BY-18,3.5,0,PI2); ctx.fillStyle='#111'; ctx.fill();
   ctx.beginPath(); ctx.arc(BX+10.5,BY-19.5,1.2,0,PI2); ctx.fillStyle='#fff'; ctx.fill();
 
@@ -1968,15 +1921,12 @@ function drawSnoopyRock(ctx){
 }
 
 function drawDesertFloor(ctx){
-  /* Sandy ground gradient */
   const g=ctx.createLinearGradient(0,CH*0.65,0,CH);
   g.addColorStop(0,C.sand); g.addColorStop(0.4,C.sandSh); g.addColorStop(1,'#8B5E20');
   ctx.fillStyle=g; ctx.fillRect(0,CH*0.65,CW,CH*0.35);
-  /* ground line */
   ctx.strokeStyle='#8B5020'; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(0,CH*0.65); ctx.lineTo(CW,CH*0.65); ctx.stroke();
 
-  /* scrub brush patches */
   function scrub(x,y,sc){
     [[0,0,18*sc,8*sc],[8*sc,-4*sc,14*sc,7*sc],[-10*sc,-3*sc,12*sc,6*sc]].forEach(([dx,dy,rx,ry])=>{
       ctx.beginPath(); ctx.ellipse(x+dx,y+dy,rx,ry,0,0,PI2);
@@ -1987,7 +1937,6 @@ function drawDesertFloor(ctx){
   }
   scrub(38,CH*0.68,0.9); scrub(170,CH*0.71,0.7); scrub(330,CH*0.69,0.85); scrub(420,CH*0.72,0.75);
 
-  /* small pebbles */
   ctx.save(); ctx.globalAlpha=0.35;
   [[60,CH*0.74,3,2],[150,CH*0.76,2.5,1.8],[280,CH*0.73,3.5,2.2],[390,CH*0.75,2.8,1.8]].forEach(([x,y,rx,ry])=>{
     ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0.2,0,PI2);
@@ -2000,33 +1949,28 @@ function drawCactus(ctx,x,y,h,t){
   const sw=1+Math.sin(t*0.4+x)*0.015;
   ctx.save(); ctx.translate(x,y); ctx.scale(sw,1);
 
-  /* Main trunk */
   ctx.beginPath();
   ctx.moveTo(-7,0); ctx.lineTo(-6,-h); ctx.lineTo(6,-h); ctx.lineTo(7,0); ctx.closePath();
   const cg=ctx.createLinearGradient(-7,0,7,0);
   cg.addColorStop(0,C.cactus); cg.addColorStop(0.45,C.cactusHi); cg.addColorStop(1,C.cactus);
   fo(ctx,cg,1.8);
 
-  /* Ribs */
   ctx.save(); ctx.globalAlpha=0.28; ctx.strokeStyle='#2A5A2A'; ctx.lineWidth=1.2;
   for(let i=0;i<5;i++){const ry=-h*0.15-i*(h*0.17);ctx.beginPath();ctx.moveTo(-6,ry);ctx.lineTo(6,ry);ctx.stroke();}
   ctx.restore();
 
-  /* Left arm */
   ctx.beginPath();
   ctx.moveTo(-7,-h*0.42); ctx.bezierCurveTo(-28,-h*0.42,-34,-h*0.6,-32,-h*0.78);
   ctx.bezierCurveTo(-32,-h*0.9,-28,-h*0.95,-24,-h*0.9);
   ctx.bezierCurveTo(-20,-h*0.86,-20,-h*0.62,-7,-h*0.52);
   ctx.closePath(); fo(ctx,C.cactusHi,1.8);
 
-  /* Right arm */
   ctx.beginPath();
   ctx.moveTo(7,-h*0.55); ctx.bezierCurveTo(26,-h*0.55,30,-h*0.70,28,-h*0.84);
   ctx.bezierCurveTo(26,-h*0.94,22,-h*0.96,18,-h*0.9);
   ctx.bezierCurveTo(15,-h*0.84,14,-h*0.65,7,-h*0.66);
   ctx.closePath(); fo(ctx,C.cactus,1.8);
 
-  /* Top cap */
   ctx.beginPath(); ctx.ellipse(0,-h,6.5,5,0,0,PI2); fo(ctx,C.cactusHi,1.5);
 
   ctx.restore();
@@ -2037,9 +1981,9 @@ function drawSedonaBackground(ctx, t){
   drawBellRock(ctx);
   drawSnoopyRock(ctx);
   drawDesertFloor(ctx);
-  drawCactus(ctx, CW*0.08, CH*0.86, 52, t);
-  drawCactus(ctx, CW*0.55, CH*0.84, 44, t);
-  drawCactus(ctx, CW*0.91, CH*0.87, 48, t);
+  drawCactus(ctx, CW*0.08, CH*0.78, 44, t);
+  drawCactus(ctx, CW*0.55, CH*0.76, 38, t);
+  drawCactus(ctx, CW*0.91, CH*0.79, 42, t);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -2047,30 +1991,23 @@ function drawSedonaBackground(ctx, t){
 ══════════════════════════════════════════════════════════ */
 
 function drawEyeJ(ctx, ex, ey, openness, facingX, t){
-  /* eyelid openness 0=shut 1=open */
   const ew=10, eh=Math.max(0.3, 9*clamp(openness,0,1));
-  /* whites */
   ctx.beginPath(); ctx.ellipse(ex,ey,ew,eh,0,0,PI2);
   fo(ctx,'#FAFCFA',1.5);
   if(openness>0.2){
     const ir=Math.min(6, eh*0.92);
-    /* iris gradient */
     const ig=ctx.createRadialGradient(ex+facingX,ey-1,0.5,ex+facingX,ey,ir);
     ig.addColorStop(0,'#8B5E3C'); ig.addColorStop(0.5,C.jEye); ig.addColorStop(1,'#2A1A08');
     ctx.beginPath(); ctx.ellipse(ex+facingX*1.2,ey,ir,Math.min(ir,eh*0.96),0,0,PI2);
     ctx.fillStyle=ig; ctx.fill(); ctx.strokeStyle=C.outline; ctx.lineWidth=1.2; ctx.stroke();
-    /* pupil */
     ctx.beginPath(); ctx.ellipse(ex+facingX*1.5,ey,ir*0.5,Math.min(ir*0.5,eh*0.78),0,0,PI2);
     ctx.fillStyle='#0D0D0D'; ctx.fill();
-    /* catchlights */
     ctx.beginPath(); ctx.arc(ex+facingX+3.5,ey-ir*0.38,ir*0.22,0,PI2); ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fill();
     ctx.beginPath(); ctx.arc(ex+facingX+1,ey+ir*0.28,ir*0.14,0,PI2); ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.fill();
-    /* top eyelid crease */
     if(openness>0.4){
       ctx.strokeStyle='rgba(180,100,60,0.4)'; ctx.lineWidth=1;
       ctx.beginPath(); ctx.arc(ex,ey,ew*0.85,Math.PI,0); ctx.stroke();
     }
-    /* lashes */
     if(openness>0.35){
       ctx.strokeStyle=C.outline; ctx.lineWidth=1.6; ctx.lineCap='round';
       for(let i=0;i<6;i++){
@@ -2081,13 +2018,11 @@ function drawEyeJ(ctx, ex, ey, openness, facingX, t){
       }
     }
   }
-  /* lower lid line */
   ctx.strokeStyle='rgba(180,100,60,0.25)'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.arc(ex,ey,ew*0.9,0,Math.PI); ctx.stroke();
 }
 
 function drawEyeC(ctx, ex, ey, openness, facingX){
-  /* Chris's eye — slightly narrower, more tired-looking */
   const ew=9, eh=Math.max(0.3, 7.5*clamp(openness,0,1));
   ctx.beginPath(); ctx.ellipse(ex,ey,ew,eh,0,0,PI2); fo(ctx,'#FAFCFA',1.5);
   if(openness>0.2){
@@ -2099,7 +2034,6 @@ function drawEyeC(ctx, ex, ey, openness, facingX){
     ctx.beginPath(); ctx.ellipse(ex+facingX*1.3,ey,ir*0.5,Math.min(ir*0.5,eh*0.75),0,0,PI2);
     ctx.fillStyle='#0D0D0D'; ctx.fill();
     ctx.beginPath(); ctx.arc(ex+facingX+3,ey-ir*0.35,ir*0.2,0,PI2); ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
-    /* eyebrow crinkle lines (Chris is expressive) */
     ctx.save(); ctx.globalAlpha=0.22; ctx.strokeStyle=C.outline; ctx.lineWidth=0.9;
     ctx.beginPath(); ctx.moveTo(ex-5,ey-eh-3); ctx.lineTo(ex+5,ey-eh-3); ctx.stroke();
     ctx.restore();
@@ -2107,23 +2041,17 @@ function drawEyeC(ctx, ex, ey, openness, facingX){
 }
 
 function drawGlasses(ctx, gx, gy, w){
-  /* Rectangular frame matching the photo */
   const fw=w*0.46, fh=w*0.23, gap=fw*0.08, iy=gy*1.02;
   const lx=gx-fw*0.56, rx=gx+fw*0.08;
-  /* lens fills */
   rr(ctx,lx,iy-fh*0.5,fw*0.86,fh,4); ctx.fillStyle=C.cLens; ctx.fill();
   rr(ctx,rx,iy-fh*0.5,fw*0.86,fh,4); ctx.fillStyle=C.cLens; ctx.fill();
-  /* frames */
   rr(ctx,lx,iy-fh*0.5,fw*0.86,fh,4); ctx.strokeStyle=C.cGlasses; ctx.lineWidth=2.8; ctx.stroke();
   rr(ctx,rx,iy-fh*0.5,fw*0.86,fh,4); ctx.strokeStyle=C.cGlasses; ctx.lineWidth=2.8; ctx.stroke();
-  /* bridge */
   ctx.beginPath(); ctx.moveTo(lx+fw*0.86,iy); ctx.lineTo(rx,iy);
   ctx.strokeStyle=C.cGlasses; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke();
-  /* temple arms */
   ctx.beginPath(); ctx.moveTo(lx,iy); ctx.lineTo(lx-14,iy+2);
   ctx.moveTo(rx+fw*0.86,iy); ctx.lineTo(rx+fw*0.86+14,iy+2);
   ctx.strokeStyle=C.cGlasses; ctx.lineWidth=2; ctx.stroke();
-  /* glare on lenses */
   ctx.save(); ctx.globalAlpha=0.35;
   ctx.strokeStyle='#A0C8FF'; ctx.lineWidth=1.2; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(lx+fw*0.15,iy-fh*0.22); ctx.lineTo(lx+fw*0.28,iy-fh*0.36); ctx.stroke();
@@ -2136,7 +2064,6 @@ function drawHeadJ(ctx, hx, hy, t, expr, blinkT, tilt, scale){
   const s=scale||1;
   ctx.save(); ctx.translate(hx,hy); ctx.rotate(tilt||0); ctx.scale(s,s);
 
-  /* Head shape — slightly wider at cheeks */
   ctx.beginPath();
   ctx.moveTo(-34,-40);
   ctx.bezierCurveTo(-50,-28,-52,8,-46,28);
@@ -2149,57 +2076,45 @@ function drawHeadJ(ctx, hx, hy, t, expr, blinkT, tilt, scale){
   skinG.addColorStop(0,C.jSkinHi); skinG.addColorStop(0.5,C.jSkin); skinG.addColorStop(1,C.jSkinSh);
   fo(ctx,skinG,2.2);
 
-  /* Forehead highlight */
   ctx.save(); ctx.globalAlpha=0.18;
   ctx.beginPath(); ctx.ellipse(-5,-28,20,14,0,0,PI2); ctx.fillStyle=C.white; ctx.fill();
   ctx.restore();
 
-  /* Cheek blush */
   ctx.save(); ctx.globalAlpha=0.42;
   ctx.beginPath(); ctx.ellipse(-33,14,14,9,-0.2,0,PI2); ctx.fillStyle='#FF9090'; ctx.fill();
   ctx.beginPath(); ctx.ellipse(33,14,14,9,0.2,0,PI2); ctx.fillStyle='#FF9090'; ctx.fill();
   ctx.restore();
 
-  /* Brows */
   const brLift= expr==='surprised'?-9:(expr==='squint'?3:0);
   const brArchL= expr==='confused'?-4:0;
   ctx.strokeStyle='#5C2010'; ctx.lineWidth=2.8; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(-34,-20+brLift); ctx.quadraticCurveTo(-22,-30+brLift+brArchL,-8,-20+brLift); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(8,-20+brLift); ctx.quadraticCurveTo(22,-30+brLift,-34+68,-20+brLift); ctx.stroke();
-  /* Brow sheen */
   ctx.save(); ctx.globalAlpha=0.18; ctx.strokeStyle='#CC6030'; ctx.lineWidth=1.2;
   ctx.beginPath(); ctx.moveTo(-34,-22+brLift); ctx.quadraticCurveTo(-22,-32+brLift,-8,-22+brLift); ctx.stroke();
   ctx.restore();
 
-  /* Eyes */
   const blink=blinkT||0;
   const eyeOpen= expr==='squint'?0.28:(1-blink*0.97);
   drawEyeJ(ctx,-22,-6,eyeOpen,1,t);
   drawEyeJ(ctx,22,-6,eyeOpen,-1,t);
 
-  /* Nose */
   ctx.strokeStyle=C.jSkinSh; ctx.lineWidth=2; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(-2,-4); ctx.bezierCurveTo(-6,8,-7,16,-8,20);
   ctx.moveTo(-10,22); ctx.quadraticCurveTo(-4,27,0,22); ctx.quadraticCurveTo(4,27,10,22); ctx.stroke();
   ctx.beginPath(); ctx.ellipse(0,18,4,3.5,0,0,PI2); ctx.strokeStyle='rgba(180,100,60,0.22)'; ctx.lineWidth=1; ctx.stroke();
 
-  /* Mouth */
   const my=34;
   if(expr==='happy'||expr==='dance'||expr==='woo'){
-    /* Open smile with teeth */
     ctx.beginPath();
     ctx.moveTo(-20,my);
     ctx.bezierCurveTo(-22,my-2,22,my-2,20,my);
     ctx.bezierCurveTo(24,my+8,22,my+20,0,my+20);
     ctx.bezierCurveTo(-22,my+20,-24,my+8,-20,my);
     ctx.closePath(); fo(ctx,C.jLip,2);
-    /* Teeth */
     ctx.fillStyle='#F8F8F8'; ctx.fillRect(-17,my,34,10);
     ctx.strokeStyle='rgba(180,180,180,0.5)'; ctx.lineWidth=0.8;
     for(let tx=-5;tx<=5;tx+=6){ctx.beginPath();ctx.moveTo(tx,my);ctx.lineTo(tx,my+10);ctx.stroke();}
-    ctx.strokeStyle='rgba(180,180,180,0.3)'; ctx.lineWidth=0.8;
-    ctx.beginPath(); ctx.moveTo(-17,my); ctx.lineTo(17,my); ctx.stroke();
-    /* Lip highlight */
     ctx.save(); ctx.globalAlpha=0.4; ctx.strokeStyle=C.jLipHi; ctx.lineWidth=1.8;
     ctx.beginPath(); ctx.moveTo(-14,my-1); ctx.bezierCurveTo(-6,my-4,6,my-4,14,my-1); ctx.stroke();
     ctx.restore();
@@ -2225,7 +2140,6 @@ function drawHeadC(ctx, hx, hy, t, expr, blinkT, tilt, scale){
   const s=scale||1;
   ctx.save(); ctx.translate(hx,hy); ctx.rotate(tilt||0); ctx.scale(s,s);
 
-  /* Head shape — wider, more square jaw with beard */
   ctx.beginPath();
   ctx.moveTo(-30,-38);
   ctx.bezierCurveTo(-48,-24,-50,12,-44,30);
@@ -2238,7 +2152,6 @@ function drawHeadC(ctx, hx, hy, t, expr, blinkT, tilt, scale){
   skinG.addColorStop(0,C.cSkinHi); skinG.addColorStop(0.5,C.cSkin); skinG.addColorStop(1,C.cSkinSh);
   fo(ctx,skinG,2.2);
 
-  /* 5 o'clock shadow */
   ctx.save(); ctx.globalAlpha=0.28;
   ctx.beginPath();
   ctx.moveTo(-42,18); ctx.bezierCurveTo(-44,34,-36,52,-18,58);
@@ -2247,7 +2160,6 @@ function drawHeadC(ctx, hx, hy, t, expr, blinkT, tilt, scale){
   ctx.closePath(); ctx.fillStyle=C.cBeard; ctx.fill();
   ctx.restore();
 
-  /* Beard — fuller around chin & jaw */
   ctx.beginPath();
   ctx.moveTo(-40,24);
   ctx.bezierCurveTo(-44,36,-38,54,-18,60);
@@ -2257,7 +2169,6 @@ function drawHeadC(ctx, hx, hy, t, expr, blinkT, tilt, scale){
   const beardG=ctx.createLinearGradient(0,24,0,60);
   beardG.addColorStop(0,'rgba(40,40,40,0.5)'); beardG.addColorStop(0.5,'rgba(50,50,50,0.7)'); beardG.addColorStop(1,'rgba(35,35,35,0.8)');
   ctx.fillStyle=beardG; ctx.fill();
-  /* gray flecks in beard */
   ctx.save(); ctx.globalAlpha=0.35;
   ctx.fillStyle=C.cBeardGray;
   [[-20,46,4,2,0.1],[-8,52,5,2.5,-0.1],[6,50,4,2,0.2],[18,46,4.5,2,-0.15],[-30,40,3.5,1.8,0.3],[28,40,4,1.8,-0.2]].forEach(([x,y,rx,ry,ro])=>{
@@ -2265,7 +2176,6 @@ function drawHeadC(ctx, hx, hy, t, expr, blinkT, tilt, scale){
   });
   ctx.restore();
 
-  /* Mustache */
   ctx.beginPath();
   ctx.moveTo(-18,26); ctx.bezierCurveTo(-20,22,-16,18,-8,20);
   ctx.bezierCurveTo(-2,21,0,22,0,22);
@@ -2276,12 +2186,10 @@ function drawHeadC(ctx, hx, hy, t, expr, blinkT, tilt, scale){
   const muG=ctx.createLinearGradient(0,18,0,34);
   muG.addColorStop(0,C.cBeard); muG.addColorStop(1,'#1A1A1A');
   fo(ctx,muG,1.2);
-  /* mustache gray */
   ctx.save(); ctx.globalAlpha=0.3; ctx.strokeStyle=C.cBeardGray; ctx.lineWidth=1.2;
   ctx.beginPath(); ctx.moveTo(-14,22); ctx.bezierCurveTo(-6,24,6,24,14,22); ctx.stroke();
   ctx.restore();
 
-  /* Forehead wrinkle (Chris has expressive brows from photo) */
   if(expr==='surprised'||expr==='bug'){
     ctx.save(); ctx.globalAlpha=0.22; ctx.strokeStyle=C.cSkinSh; ctx.lineWidth=1.2;
     ctx.beginPath(); ctx.moveTo(-22,-24); ctx.lineTo(22,-24); ctx.stroke();
@@ -2289,17 +2197,14 @@ function drawHeadC(ctx, hx, hy, t, expr, blinkT, tilt, scale){
     ctx.restore();
   }
 
-  /* Brows — thick, slightly unruly */
   const brLift= expr==='surprised'||expr==='bug'?-10:(expr==='squint'?2:0);
   ctx.strokeStyle='#1A1A1A'; ctx.lineWidth=3.5; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(-32,-20+brLift); ctx.bezierCurveTo(-24,-28+brLift,-14,-27+brLift,-8,-20+brLift); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(8,-20+brLift); ctx.bezierCurveTo(14,-27+brLift,24,-28+brLift,32,-20+brLift); ctx.stroke();
-  /* gray in brows */
   ctx.save(); ctx.globalAlpha=0.4; ctx.strokeStyle=C.cHairGray; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(-30,-20+brLift); ctx.bezierCurveTo(-26,-27+brLift,-18,-27+brLift,-12,-20+brLift); ctx.stroke();
   ctx.restore();
 
-  /* Eyes */
   const blink=blinkT||0;
   const eyeOpen=1-blink*0.97;
   const widened= expr==='surprised'||expr==='bug'?1.25:1;
@@ -2308,13 +2213,11 @@ function drawHeadC(ctx, hx, hy, t, expr, blinkT, tilt, scale){
   drawEyeC(ctx,21,-8/widened,eyeOpen,-1);
   ctx.restore();
 
-  /* Nose — broad, friendly */
   ctx.strokeStyle=C.cSkinSh; ctx.lineWidth=2.2; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(-2,-5); ctx.bezierCurveTo(-7,8,-8,18,-10,22);
   ctx.moveTo(-12,24); ctx.quadraticCurveTo(-4,30,0,24); ctx.quadraticCurveTo(4,30,12,24); ctx.stroke();
   ctx.beginPath(); ctx.ellipse(0,20,5,4,0,0,PI2); ctx.strokeStyle='rgba(160,80,40,0.18)'; ctx.lineWidth=1; ctx.stroke();
 
-  /* Mouth */
   const my=40;
   if(expr==='happy'||expr==='laugh'){
     ctx.beginPath(); ctx.moveTo(-16,my);
@@ -2341,7 +2244,6 @@ function drawHairJ(ctx, hx, hy, swing, windT){
   const sw=swing||0, wt=windT||0;
   ctx.save(); ctx.translate(hx,hy);
 
-  /* Left flowing wave */
   ctx.beginPath();
   ctx.moveTo(-30,-34);
   ctx.bezierCurveTo(-55+sw*0.5,-10,-65+sw,50,-55+sw*0.7,110);
@@ -2350,7 +2252,6 @@ function drawHairJ(ctx, hx, hy, swing, windT){
   ctx.fillStyle=C.jHair; ctx.fill();
   ol(ctx,2);
 
-  /* Right flowing wave */
   ctx.beginPath();
   ctx.moveTo(30,-34);
   ctx.bezierCurveTo(55-sw*0.5,-10,65-sw,50,55-sw*0.7,110);
@@ -2359,7 +2260,6 @@ function drawHairJ(ctx, hx, hy, swing, windT){
   ctx.fillStyle=C.jHair; ctx.fill();
   ol(ctx,2);
 
-  /* Top/crown cap */
   ctx.beginPath();
   ctx.moveTo(-44,-2);
   ctx.bezierCurveTo(-56,-44,-32,-74,0,-76);
@@ -2370,14 +2270,12 @@ function drawHairJ(ctx, hx, hy, swing, windT){
   hg.addColorStop(0,C.jHairMid); hg.addColorStop(0.5,C.jHair); hg.addColorStop(1,'#4A1A08');
   fo(ctx,hg,2.2);
 
-  /* Highlight streaks */
   ctx.save(); ctx.globalAlpha=0.5; ctx.strokeStyle=C.jHairHi; ctx.lineWidth=2.2; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(-10,-72); ctx.bezierCurveTo(-16,-38,-22,12,-36+sw*0.3,50); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(10,-74); ctx.bezierCurveTo(16,-42,20,8,34-sw*0.3,44); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(-2,-74); ctx.bezierCurveTo(-4,-40,-6,10,-8+sw*0.15,50); ctx.stroke();
   ctx.restore();
 
-  /* Wind wisps */
   if(Math.abs(wt)>0.1){
     ctx.save(); ctx.globalAlpha=0.45; ctx.strokeStyle=C.jHairMid; ctx.lineWidth=1.6; ctx.lineCap='round';
     for(let i=0;i<4;i++){
@@ -2392,8 +2290,6 @@ function drawHairJ(ctx, hx, hy, swing, windT){
 function drawHairC(ctx, hx, hy){
   ctx.save(); ctx.translate(hx,hy);
 
-  /* Short dark hair with gray at temples */
-  /* Main dark cap */
   ctx.beginPath();
   ctx.moveTo(-42,-4);
   ctx.bezierCurveTo(-48,-38,-32,-68,0,-70);
@@ -2404,13 +2300,11 @@ function drawHairC(ctx, hx, hy){
   hg.addColorStop(0,'#1A1A1A'); hg.addColorStop(0.6,C.cHair); hg.addColorStop(1,'#333');
   fo(ctx,hg,2);
 
-  /* Gray temples */
   ctx.save(); ctx.globalAlpha=0.6; ctx.fillStyle=C.cHairGray;
   ctx.beginPath(); ctx.moveTo(-42,-4); ctx.bezierCurveTo(-48,-20,-44,-40,-36,-52); ctx.bezierCurveTo(-32,-42,-30,-20,-32,-2); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(42,-4); ctx.bezierCurveTo(48,-20,44,-40,36,-52); ctx.bezierCurveTo(32,-42,30,-20,32,-2); ctx.closePath(); ctx.fill();
   ctx.restore();
 
-  /* Slight side part / hair direction */
   ctx.save(); ctx.globalAlpha=0.25; ctx.strokeStyle='#444'; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(-4,-70); ctx.bezierCurveTo(-6,-50,-8,-28,-12,-4); ctx.stroke();
   ctx.restore();
@@ -2422,22 +2316,18 @@ function drawHairC(ctx, hx, hy){
    BODY DRAWING
 ══════════════════════════════════════════════════════════ */
 
-/* Julie's arm — slim, sporty */
 function drawArmJ(ctx, side, upperA, lowerA, wave, t){
   ctx.save(); ctx.rotate(upperA);
-  /* Upper arm sleeve */
   ctx.beginPath(); ctx.ellipse(0,20,11,20,0,0,PI2);
   const ag=ctx.createLinearGradient(-11,0,11,0);
   ag.addColorStop(0,C.jTopSh); ag.addColorStop(0.4,C.jTopHi); ag.addColorStop(1,C.jTopSh);
   fo(ctx,ag,2);
   ctx.translate(0,36); ctx.rotate(lowerA);
-  /* Forearm */
   ctx.beginPath(); ctx.ellipse(0,15,8.5,17,0,0,PI2);
   const fg=ctx.createLinearGradient(-9,0,9,0);
   fg.addColorStop(0,C.jSkinSh); fg.addColorStop(0.4,C.jSkinHi); fg.addColorStop(1,C.jSkinSh);
   fo(ctx,fg,2);
   ctx.translate(0,30);
-  /* Hand */
   ctx.beginPath(); ctx.ellipse(0,0,9.5,9,0,0,PI2);
   fo(ctx,C.jSkin,1.8);
   if(wave){
@@ -2446,14 +2336,12 @@ function drawArmJ(ctx, side, upperA, lowerA, wave, t){
       ctx.save(); ctx.translate(-6+fi*4.5,-8); ctx.rotate(wf+(fi-1.5)*0.1);
       ctx.beginPath(); ctx.ellipse(0,-4.5,2.5,5.5,0,0,PI2); fo(ctx,C.jSkin,1); ctx.restore();
     }
-    /* thumb */
     ctx.save(); ctx.translate(9,-2); ctx.rotate(0.5+wf*0.4);
     ctx.beginPath(); ctx.ellipse(0,-3.5,2.2,4,0,0,PI2); fo(ctx,C.jSkin,1); ctx.restore();
   }
   ctx.restore();
 }
 
-/* Chris's arm — broader, heavier */
 function drawArmC(ctx, side, upperA, lowerA, t){
   ctx.save(); ctx.rotate(upperA);
   ctx.beginPath(); ctx.ellipse(0,22,14,22,0,0,PI2);
@@ -2467,7 +2355,6 @@ function drawArmC(ctx, side, upperA, lowerA, t){
   fo(ctx,fg,2);
   ctx.translate(0,31);
   ctx.beginPath(); ctx.ellipse(0,0,11,10,0,0,PI2); fo(ctx,C.cSkin,1.8);
-  /* knuckle dots */
   ctx.save(); ctx.globalAlpha=0.22;
   for(let k=0;k<4;k++){ ctx.beginPath(); ctx.arc(-7+k*5,-3,2,0,PI2); ctx.fillStyle=C.cSkinSh; ctx.fill(); }
   ctx.restore();
@@ -2475,7 +2362,8 @@ function drawArmC(ctx, side, upperA, lowerA, t){
 }
 
 function drawLegJ(ctx, side, thighA, shinA){
-  ctx.save(); ctx.translate(side*16,0); ctx.rotate(thighA);
+  ctx.save();
+  ctx.translate(side*16,0); ctx.rotate(thighA);
   ctx.beginPath(); ctx.ellipse(0,20,12,22,0,0,PI2);
   const g=ctx.createLinearGradient(-12,0,12,0);
   g.addColorStop(0,C.jPantsSh); g.addColorStop(0.4,'#2538B0'); g.addColorStop(1,C.jPantsSh);
@@ -2483,7 +2371,6 @@ function drawLegJ(ctx, side, thighA, shinA){
   ctx.translate(0,38); ctx.rotate(shinA);
   ctx.beginPath(); ctx.ellipse(0,18,10,20,0,0,PI2); fo(ctx,C.jPants,2);
   ctx.translate(0,34);
-  /* Shoe with detail */
   ctx.beginPath(); ctx.ellipse(side*4,0,16,9,0.15*side,0,PI2);
   fo(ctx,C.jShoe,2);
   ctx.save(); ctx.globalAlpha=0.3;
@@ -2494,7 +2381,8 @@ function drawLegJ(ctx, side, thighA, shinA){
 }
 
 function drawLegC(ctx, side, thighA, shinA){
-  ctx.save(); ctx.translate(side*18,0); ctx.rotate(thighA);
+  ctx.save();
+  ctx.translate(side*18,0); ctx.rotate(thighA);
   ctx.beginPath(); ctx.ellipse(0,22,15,24,0,0,PI2);
   const g=ctx.createLinearGradient(-15,0,15,0);
   g.addColorStop(0,C.cPants); g.addColorStop(0.45,'#3A4E60'); g.addColorStop(1,C.cPants);
@@ -2503,7 +2391,6 @@ function drawLegC(ctx, side, thighA, shinA){
   ctx.beginPath(); ctx.ellipse(0,20,13,22,0,0,PI2); fo(ctx,C.cPants,2.2);
   ctx.translate(0,38);
   ctx.beginPath(); ctx.ellipse(side*5,0,18,10,0.12*side,0,PI2); fo(ctx,C.cShoe,2);
-  /* shoe highlight */
   ctx.save(); ctx.globalAlpha=0.25; ctx.strokeStyle='#8D6E63'; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(-6,-4); ctx.lineTo(6,2); ctx.stroke();
   ctx.restore();
@@ -2521,7 +2408,6 @@ function drawJulie(ctx, cx, cy, t, anim){
   let alA=-.18, arA=.18, allA=.08, arlA=-.08;
   let llA=0, rlA=0, wave=false;
 
-  /* Blink */
   const bc=t%3.8;
   if(bc>3.5&&bc<3.62) blink=(bc-3.5)/0.06;
   else if(bc>=3.62&&bc<3.8) blink=1-(bc-3.62)/0.18;
@@ -2560,40 +2446,32 @@ function drawJulie(ctx, cx, cy, t, anim){
       break;
   }
 
-  /* Legs behind body */
   drawLegJ(ctx,-1,llA,llA*-0.28);
   drawLegJ(ctx,1,rlA,rlA*-0.28);
 
-  /* Torso — fitted top */
   ctx.beginPath();
   ctx.moveTo(-42,4); ctx.bezierCurveTo(-50,22,-48,68,-38,88); ctx.lineTo(38,88); ctx.bezierCurveTo(48,68,50,22,42,4);
   ctx.bezierCurveTo(28,0,14,-4,0,-4); ctx.bezierCurveTo(-14,-4,-28,0,-42,4); ctx.closePath();
   const tg=ctx.createLinearGradient(-42,0,42,0);
   tg.addColorStop(0,C.jTopSh); tg.addColorStop(0.3,C.jTop); tg.addColorStop(0.5,C.jTopHi); tg.addColorStop(0.7,C.jTop); tg.addColorStop(1,C.jTopSh);
   fo(ctx,tg,2.2);
-  /* V-neck */
   ctx.beginPath(); ctx.moveTo(-12,0); ctx.lineTo(0,16); ctx.lineTo(12,0); ctx.closePath();
   ctx.fillStyle=C.jSkin; ctx.fill(); ctx.strokeStyle=C.outline; ctx.lineWidth=1.5; ctx.stroke();
-  /* Star badge */
   star5(ctx,0,46,12,C.gold);
-  /* shirt fold */
   ctx.save(); ctx.globalAlpha=0.18; ctx.strokeStyle=C.jTopSh; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(-10,25); ctx.bezierCurveTo(-8,55,-8,75,-10,88); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(10,25); ctx.bezierCurveTo(8,55,8,75,10,88); ctx.stroke();
   ctx.restore();
 
-  /* Arms */
   ctx.save(); ctx.translate(-42,16); drawArmJ(ctx,-1,alA,allA,false,t); ctx.restore();
   ctx.save(); ctx.translate(42,16); drawArmJ(ctx,1,arA,arlA,wave,t); ctx.restore();
 
-  /* Neck */
   ctx.beginPath(); ctx.ellipse(0,2,10,13,0,0,PI2);
   fo(ctx,C.jSkin,1.8);
   ctx.save(); ctx.globalAlpha=0.2; ctx.strokeStyle=C.jSkinSh; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(-5,0); ctx.lineTo(-5,12); ctx.stroke();
   ctx.restore();
 
-  /* Head + hair */
   drawHeadJ(ctx,0,-95,t,expr,blink,tilt,1.0);
   drawHairJ(ctx,0,-95,swing,wind);
 
@@ -2652,34 +2530,27 @@ function drawChris(ctx, cx, cy, t, anim){
       break;
   }
 
-  /* Legs */
   drawLegC(ctx,-1,llA,llA*-0.25);
   drawLegC(ctx,1,rlA,rlA*-0.25);
 
-  /* Torso — stockier than Julie */
   ctx.beginPath();
   ctx.moveTo(-50,4); ctx.bezierCurveTo(-58,24,-56,70,-46,92); ctx.lineTo(46,92); ctx.bezierCurveTo(56,70,58,24,50,4);
   ctx.bezierCurveTo(34,-2,16,-6,0,-6); ctx.bezierCurveTo(-16,-6,-34,-2,-50,4); ctx.closePath();
   const tg=ctx.createLinearGradient(-50,0,50,0);
   tg.addColorStop(0,C.cTopSh); tg.addColorStop(0.3,C.cTop); tg.addColorStop(0.5,C.cTopHi); tg.addColorStop(0.7,C.cTop); tg.addColorStop(1,C.cTopSh);
   fo(ctx,tg,2.5);
-  /* collar */
   ctx.beginPath(); ctx.moveTo(-16,0); ctx.lineTo(-8,10); ctx.lineTo(8,10); ctx.lineTo(16,0); ctx.closePath();
   ctx.fillStyle='#2A2A2A'; ctx.fill(); ctx.strokeStyle=C.outline; ctx.lineWidth=1.5; ctx.stroke();
-  /* shirt texture fold */
   ctx.save(); ctx.globalAlpha=0.14; ctx.strokeStyle=C.cTopHi; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(-12,28); ctx.bezierCurveTo(-10,58,-10,78,-12,92); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(12,28); ctx.bezierCurveTo(10,58,10,78,12,92); ctx.stroke();
   ctx.restore();
 
-  /* Arms */
   ctx.save(); ctx.translate(-50,18); drawArmC(ctx,-1,alA,allA,t); ctx.restore();
   ctx.save(); ctx.translate(50,18); drawArmC(ctx,1,arA,arlA,t); ctx.restore();
 
-  /* Neck */
   ctx.beginPath(); ctx.ellipse(0,2,13,15,0,0,PI2); fo(ctx,C.cSkin,2);
 
-  /* Head + hair */
   drawHeadC(ctx,0,-100,t,expr,blink,tilt,1.0);
   drawHairC(ctx,0,-100);
   drawGlasses(ctx,0,-108,96);
@@ -2695,7 +2566,6 @@ function drawNameplate(ctx, name, role, alpha){
   if(alpha<=0) return;
   ctx.save(); ctx.globalAlpha=alpha;
   const bh=54, by=CH-bh-8;
-  /* gradient bar */
   const bg=ctx.createLinearGradient(0,by,0,by+bh);
   bg.addColorStop(0,'rgba(6,0,20,0.95)'); bg.addColorStop(1,'rgba(20,0,50,0.95)');
   ctx.fillStyle=bg; ctx.fillRect(0,by,CW,bh);
@@ -2713,7 +2583,6 @@ function drawNameplate(ctx, name, role, alpha){
 function drawTitleCard(ctx, t, alpha){
   if(alpha<=0) return;
   ctx.save(); ctx.globalAlpha=alpha;
-  /* starburst */
   ctx.save(); ctx.translate(CW/2,CH/2);
   for(let i=0;i<20;i++){
     const a=i/20*PI2, r=Math.min(CW,CH)*0.52;
@@ -2724,7 +2593,6 @@ function drawTitleCard(ctx, t, alpha){
   ctx.restore();
   ctx.fillStyle='rgba(4,0,16,0.58)'; ctx.fillRect(0,0,CW,CH);
 
-  /* DENIM & DREAMS */
   const sc=bounce(Math.min(1,t*2.5));
   ctx.save(); ctx.translate(CW/2,CH/2-22); ctx.scale(sc,sc);
   ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -2732,12 +2600,10 @@ function drawTitleCard(ctx, t, alpha){
   ctx.strokeStyle='#6B0030'; ctx.lineWidth=9; ctx.strokeText('DENIM &',0,-30); ctx.strokeText('DREAMS',0,30);
   ctx.fillStyle='#FF1A6E'; ctx.fillText('DENIM &',0,-30);
   ctx.fillStyle='#FF80BB'; ctx.fillText('DREAMS',0,30);
-  /* subtitle glow */
   ctx.shadowColor=C.gold; ctx.shadowBlur=6;
   ctx.font='bold 18px Arial,sans-serif'; ctx.fillStyle=C.gold;
   if(t>0.5){ ctx.fillText('✦ SEDONA EDITION ✦',0,68); }
   ctx.shadowBlur=0;
-  /* stars around */
   if(t>0.45){ star5(ctx,-138,-22,16); star5(ctx,138,-22,14,C.gold); star5(ctx,-126,28,10); star5(ctx,128,26,12,C.gold); }
   ctx.restore();
   if(t>0.75){
@@ -2758,7 +2624,6 @@ function drawSpeechBubble(ctx, text, tx, ty, side, alpha){
   const bx=tx-bw*(side<0?0.1:0.9), by=ty-bh-14;
   rr(ctx,bx,by,bw,bh,9); ctx.fillStyle='#FFFDE7'; ctx.fill();
   ctx.strokeStyle=C.outline; ctx.lineWidth=2; ctx.stroke();
-  /* tail */
   const tx2=tx<CW/2?bx+bw*0.2:bx+bw*0.8;
   ctx.beginPath(); ctx.moveTo(tx2-7,by+bh); ctx.lineTo(tx,ty); ctx.lineTo(tx2+7,by+bh); ctx.closePath();
   ctx.fillStyle='#FFFDE7'; ctx.fill(); ctx.strokeStyle=C.outline; ctx.lineWidth=2; ctx.stroke();
@@ -2807,19 +2672,16 @@ function drawVHSHUD(ctx, t, fn){
     ctx.fillStyle='#CC0000'; ctx.beginPath(); ctx.arc(CW-46,CH*0.048,6,0,PI2); ctx.fill();
     ctx.fillStyle='rgba(255,80,80,0.85)'; ctx.fillText('REC',CW-36,10);
   }
-  /* Glitch flash */
   if(Math.sin(t*11.3)>0.96){
     ctx.globalAlpha=0.5; ctx.fillStyle=Math.random()>0.5?'#fff':'#444';
     ctx.fillRect(Math.random()*CW*0.6,Math.random()*CH,Math.random()*120+30,2);
   }
-  /* Scanlines */
   ctx.globalAlpha=0.07;
   for(let y=0;y<CH;y+=3){ ctx.fillStyle='#000'; ctx.fillRect(0,y,CW,1); }
   ctx.restore();
 }
 
 function drawStaticBars(ctx, fn){
-  /* Random noise */
   for(let y=0;y<CH;y+=2){
     for(let x=0;x<CW;x+=2){
       const v=(Math.random()*255)|0;
@@ -2852,7 +2714,6 @@ function renderCartoonFrame(ctx, W, H, t){
 
   const lp=t%LOOP_DUR;
 
-  /* Scene timeline */
   let scene, sT;
   if(lp<0.7)             {scene='static';    sT=lp/0.7;}
   else if(lp<1.5)        {scene='bars';      sT=(lp-0.7)/0.8;}
@@ -2863,7 +2724,6 @@ function renderCartoonFrame(ctx, W, H, t){
   else if(lp<25.0)       {scene='dance';     sT=(lp-19.5)/5.5;}
   else                   {scene='finale';    sT=(lp-25.0)/7.0;}
 
-  /* ── SCENE RENDERS ── */
   if(scene==='static'){
     drawStaticBars(ctx,_cFn);
 
@@ -2871,20 +2731,17 @@ function renderCartoonFrame(ctx, W, H, t){
     drawColorBars(ctx);
 
   } else if(scene==='title'){
-    /* background fades from bars to purple stars */
     if(sT<0.2){
       drawColorBars(ctx);
       ctx.fillStyle=`rgba(10,0,30,${sT/0.2})`; ctx.fillRect(0,0,CW,CH);
     } else {
       ctx.fillStyle='#0A001E'; ctx.fillRect(0,0,CW,CH);
-      /* stars */
       for(let i=0;i<55;i++){
         const sx=((i*73.1+9)%1)*CW, sy=((i*41.3+3)%1)*CH;
         ctx.globalAlpha=0.3+0.7*sin01(t*2.2+i*1.9);
         ctx.fillStyle='#fff'; ctx.fillRect(sx,sy,1.5,1.5);
       }
       ctx.globalAlpha=1;
-      /* Julie peeks from bottom at 0.4 */
       if(sT>0.38){
         const pk=eout(sm(0.38,0.62,sT));
         const py=CH+5-pk*138;
@@ -2895,15 +2752,12 @@ function renderCartoonFrame(ctx, W, H, t){
     drawTitleCard(ctx,(sT-0.18)/0.82, sm(0.18,0.32,sT));
 
   } else if(scene==='arrive'){
-    /* Both characters walk in from opposite sides to meet center */
     drawSedonaBackground(ctx,lp);
-    /* Chris from left, Julie from right */
     const arrived=sT>0.48;
     const cx_c=arrived?lerp(-80,CW*0.3,1):lerp(-80,CW*0.3,sm(0,0.48,sT));
     const cx_j=arrived?lerp(CW+80,CW*0.62,1):lerp(CW+80,CW*0.62,sm(0,0.48,sT));
-    const groundY=CH-14;
+    const groundY=CH-100;
 
-    /* Speed lines */
     if(!arrived && sT<0.42){
       ctx.save(); ctx.globalAlpha=0.18;
       for(let sl=0;sl<6;sl++){
@@ -2922,15 +2776,13 @@ function renderCartoonFrame(ctx, W, H, t){
     if(sT>0.62) drawNameplate(ctx,'Julie & Christopher','First Sedona Adventure! ☀️',sm(0.62,0.76,sT));
 
   } else if(scene==='rocks'){
-    /* Both characters looking at/pointing at the rocks */
     drawSedonaBackground(ctx,lp);
-    const groundY=CH-14;
+    const groundY=CH-100;
     const jx=CW*0.62, cx2=CW*0.3;
 
     drawChris(ctx,cx2,groundY,lp,{scene:'point'});
     drawJulie(ctx,jx,groundY,lp,{scene:'point'});
 
-    /* Exclamation burst */
     if(Math.sin(lp*3)>0.5) drawPopWord(ctx,'WOW!',CW*0.5,CH*0.14,lp,C.gold);
 
     if(sT>0.2&&sT<0.55) drawSpeechBubble(ctx,"That's Snoopy Rock!",jx,groundY-148,1,sm(0.2,0.32,sT)*sm(0.55,0.45,1-(0.55-sT)/0.1));
@@ -2939,15 +2791,13 @@ function renderCartoonFrame(ctx, W, H, t){
     if(sT>0.35) drawNameplate(ctx,'Snoopy Rock & Bell Rock','Sedona, Arizona ✨',sm(0.35,0.48,sT));
 
   } else if(scene==='together'){
-    /* Side-by-side idle, big Sedona vista */
     drawSedonaBackground(ctx,lp);
-    const groundY=CH-14;
+    const groundY=CH-100;
     const jx=CW*0.6, cx2=CW*0.35;
 
     drawChris(ctx,cx2,groundY,lp,{scene:'pose'});
     drawJulie(ctx,jx,groundY,lp,{scene:'idle'});
 
-    /* Heart between them */
     if(sT>0.3){
       const ha=sm(0.3,0.45,sT);
       ctx.save(); ctx.globalAlpha=ha;
@@ -2961,35 +2811,29 @@ function renderCartoonFrame(ctx, W, H, t){
     if(sT>0.55) drawNameplate(ctx,'Julie & Christopher','Adventure Buddies 💕',sm(0.55,0.68,sT));
 
   } else if(scene==='dance'){
-    /* Dance party on Sedona */
     drawSedonaBackground(ctx,lp);
-    /* Stage gradient overlay */
     ctx.save(); ctx.globalAlpha=0.35;
     const dg=ctx.createRadialGradient(CW/2,CH,0,CW/2,CH*0.4,220);
     dg.addColorStop(0,'rgba(255,100,0,0.5)'); dg.addColorStop(1,'transparent');
     ctx.fillStyle=dg; ctx.fillRect(0,0,CW,CH); ctx.restore();
     drawConfetti(ctx,lp);
-    /* Music notes */
     ctx.font='24px Arial'; ctx.textAlign='center';
     ctx.fillText('♪',CW*0.16+Math.sin(lp*2.4)*12,(CH*0.3-(lp*0.7%1)*40));
     ctx.fillText('♫',CW*0.82+Math.cos(lp*2.1)*12,(CH*0.26-(lp*0.55%1)*38));
     ctx.fillText('♩',CW*0.5+Math.sin(lp*3.1)*8,(CH*0.22-(lp*0.62%1)*36));
-    const groundY=CH-14;
+    const groundY=CH-100;
     drawChris(ctx,CW*0.34,groundY,lp,{scene:'dance'});
     drawJulie(ctx,CW*0.63,groundY,lp,{scene:'dance'});
     if(sT>0.3) drawNameplate(ctx,'Julie & Chris','SEDONA DANCE PARTY 🎉',sm(0.3,0.45,sT));
 
   } else if(scene==='finale'){
-    /* Freeze-frame pose on Sedona with full title */
     drawSedonaBackground(ctx,lp);
-    const groundY=CH-14;
+    const groundY=CH-100;
     drawChris(ctx,CW*0.34,groundY,lp,{scene:'pose'});
     drawJulie(ctx,CW*0.63,groundY,lp,{scene:'pose'});
-    /* White flash at start */
     if(sT<0.18){
       ctx.fillStyle=`rgba(255,255,255,${(1-sT/0.18)*0.7})`; ctx.fillRect(0,0,CW,CH);
     }
-    /* Title */
     const ta=sm(0.15,0.36,sT);
     if(ta>0){
       ctx.save(); ctx.globalAlpha=ta;
@@ -3003,14 +2847,11 @@ function renderCartoonFrame(ctx, W, H, t){
       ctx.fillStyle=C.gold; ctx.fillText('SEDONA EDITION  ·  SEASON 1',CW/2,68);
       ctx.restore();
     }
-    /* Name plate */
     if(sT>0.4) drawNameplate(ctx,'Julie & Christopher','Starring as Themselves ☀️',sm(0.4,0.58,sT));
-    /* Stars */
     if(sT>0.5){
       star5(ctx,18,32,10,C.gold); star5(ctx,CW-18,32,10,C.gold);
       star5(ctx,14,58,7); star5(ctx,CW-14,58,7);
     }
-    /* Fade out at end */
     if(sT>0.82){ ctx.fillStyle=`rgba(0,0,0,${sm(0.82,1.0,sT)})`; ctx.fillRect(0,0,CW,CH); }
   }
 
@@ -3064,7 +2905,6 @@ function playJulieTheme(){
       osc.connect(g); g.connect(dest); osc.start(s); osc.stop(e+0.05);
     }
 
-    // Melody (square lead)
     const ML=[
       [880,0,2],[659,2,1],[784,3,1],[880,4,2],[784,6,1],[659,7,1],
       [740,8,2],[659,10,1],[587,11,1],[659,12,2],[587,14,2],
@@ -3076,7 +2916,6 @@ function playJulieTheme(){
     ];
     ML.forEach(([f,s,d])=>{ note(f,s,d,'square',0.20,dry); note(f,s,d,'square',0.07,wet); note(f*0.749,s+0.02,d,'sawtooth',0.07,dry); });
 
-    // Bass
     [[110,0,4],[138,4,4],[147,8,4],[110,12,4],[165,16,4],[147,20,4],[138,24,4],[110,28,4],
      [110,32,4],[138,36,4],[147,40,4],[110,44,4],[138,48,4],[165,52,4],[110,56,4]].forEach(([f,s,d])=>{
       const st=now+s*b, en=st+d*b*0.9;
@@ -3088,13 +2927,11 @@ function playJulieTheme(){
       osc.connect(filt); filt.connect(g); g.connect(dry); osc.start(st); osc.stop(en+0.05);
     });
 
-    // Pad chords
     [[220,277,330,0,8],[185,233,277,8,8],[196,247,294,16,8],[220,277,330,24,8],
      [175,220,262,32,8],[196,247,294,40,8],[220,277,330,48,8]].forEach(([a,b2,c,s,d])=>{
       [a,b2,c].forEach(f=>{ note(f,s,d,'sawtooth',0.052,wet); note(f*1.005,s,d,'sawtooth',0.038,wet); });
     });
 
-    // Drums
     const totalBeats=Math.floor(30/b);
     function kick(t){ const o=ctx.createOscillator(),g=ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(30,t+0.18); g.gain.setValueAtTime(0.65,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.22); o.connect(g);g.connect(dry);o.start(t);o.stop(t+0.25); }
     function snare(t){ const sz=ctx.sampleRate*0.14,buf=ctx.createBuffer(1,sz,ctx.sampleRate),d2=buf.getChannelData(0); for(let i=0;i<sz;i++)d2[i]=Math.random()*2-1; const src=ctx.createBufferSource(),filt=ctx.createBiquadFilter(),g=ctx.createGain(); src.buffer=buf;filt.type='bandpass';filt.frequency.value=1500;filt.Q.value=0.9;g.gain.setValueAtTime(0.26,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.14);src.connect(filt);filt.connect(g);g.connect(dry);src.start(t);src.stop(t+0.16); }
@@ -3130,7 +2967,6 @@ function activateJulie(){
     if(!_jStart) _jStart = ts;
     const elapsed = (ts - _jStart) / 1000;
     const ctx = canvas.getContext('2d');
-    // Match canvas resolution to its displayed size
     const W = canvas.offsetWidth  || 400;
     const H = canvas.offsetHeight || 300;
     if(canvas.width !== W || canvas.height !== H){
@@ -3141,7 +2977,6 @@ function activateJulie(){
   }
   _jAnimId = requestAnimationFrame(loop);
 
-  // Floating hearts
   heartInterval = setInterval(()=>{
     const h = document.createElement('div');
     h.className = 'heart';
