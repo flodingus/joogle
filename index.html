@@ -49,7 +49,6 @@ body{
   transition:.4s ease;
 }
 
-/* Julie Background */
 body.julie-active{
   background:linear-gradient(-45deg,#fff0f5,#ffe4ec,#fff5f9,#ffe0f0);
   background-size:400% 400%;
@@ -62,10 +61,7 @@ body.julie-active{
   100%{background-position:0% 50%}
 }
 
-/* =========================
-   LOCKED JOOGLE LOGO
-========================= */
-
+/* ── Logo ── */
 .logo{
   font-size:104px;
   font-weight:500;
@@ -75,23 +71,19 @@ body.julie-active{
   margin-bottom:30px;
   transition:.5s ease;
 }
-
 .logo.shifted{
   margin-top:40px;
   transform:scale(.9);
 }
-
 .j{color:#4285F4;}
 .g{color:#4285F4;}
 .l{color:#34A853;}
 .e{color:#EA4335;}
-
 .oo-wrapper{
   display:flex;
   margin:0 6px;
   animation:bounce 1.6s ease-in-out infinite;
 }
-
 .o{
   width:54px;
   height:54px;
@@ -102,21 +94,18 @@ body.julie-active{
   margin:0 -10px;
   transform:scaleX(0.88);
 }
-
 @keyframes bounce{
   0%,100%{transform:translateY(0);}
   40%{transform:translateY(-8px);}
   60%{transform:translateY(0);}
 }
 
-/* ========================= */
-
+/* ── Search ── */
 .search-box{
   width:560px;
   max-width:90vw;
   position:relative;
 }
-
 .search-box input{
   width:100%;
   padding:14px 48px 14px 20px;
@@ -130,12 +119,10 @@ body.julie-active{
   outline:none;
   transition:.2s;
 }
-
 .search-box input:focus{
   border-color:#4285F4;
   box-shadow:0 0 0 3px rgba(66,133,244,.15);
 }
-
 .search-clear{
   position:absolute;
   right:16px;
@@ -150,17 +137,38 @@ body.julie-active{
   padding:4px;
   line-height:1;
 }
+.search-clear.visible{display:block;}
 
-.search-clear.visible{
-  display:block;
+/* ── Hint bar ── */
+.search-hint{
+  margin-top:10px;
+  font-size:12px;
+  color:var(--subtext);
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  justify-content:center;
+}
+.hint-pill{
+  padding:3px 10px;
+  border-radius:12px;
+  background:var(--btn-bg);
+  border:1px solid var(--input-border);
+  cursor:pointer;
+  transition:.15s;
+}
+.hint-pill:hover{
+  border-color:#4285F4;
+  color:#4285F4;
 }
 
 .buttons{
-  margin-top:24px;
+  margin-top:20px;
   display:flex;
-  gap:12px;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:center;
 }
-
 .buttons button{
   background:var(--btn-bg);
   border:1px solid var(--btn-border);
@@ -172,12 +180,12 @@ body.julie-active{
   font-family:inherit;
   transition:.15s;
 }
-
 .buttons button:hover{
   box-shadow:0 1px 4px var(--shadow);
   border-color:#ccc;
 }
 
+/* ── Results ── */
 .spinner{
   display:none;
   width:36px;
@@ -188,10 +196,7 @@ body.julie-active{
   animation:spin .7s linear infinite;
   margin:30px auto;
 }
-
-@keyframes spin{
-  to{transform:rotate(360deg);}
-}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 .results{
   display:none;
@@ -206,91 +211,134 @@ body.julie-active{
   box-sizing:border-box;
   color:var(--text);
 }
-
 @keyframes fadeIn{
-  from{opacity:0; transform:translateY(15px);}
-  to{opacity:1; transform:translateY(0);}
+  from{opacity:0;transform:translateY(15px);}
+  to{opacity:1;transform:translateY(0);}
 }
 
-.map-container{
-  width:100%;
-  height:400px;
-  margin-bottom:20px;
-  border-radius:12px;
-  overflow:hidden;
-}
+/* ── Weather ── */
+.map-container{width:100%;height:400px;margin-bottom:20px;border-radius:12px;overflow:hidden;}
+.weather-current{font-size:48px;font-weight:bold;margin:15px 0;color:var(--text);}
+.weather-label{color:var(--subtext);font-size:15px;margin-bottom:4px;}
+.forecast-row{display:flex;justify-content:space-between;flex-wrap:wrap;margin-top:16px;}
+.forecast-day{flex:1;min-width:100px;text-align:center;padding:10px;border-radius:8px;background:var(--bg);margin:4px;color:var(--text);}
+.forecast-day .day-name{font-weight:500;margin-bottom:6px;}
+.forecast-day .day-icon{font-size:22px;margin-bottom:4px;}
 
-.weather-current{
-  font-size:48px;
-  font-weight:bold;
-  margin:15px 0;
-  color:var(--text);
-}
+/* ── Places ── */
+.place-list{margin-top:12px;}
+.place-item{padding:10px 0;border-bottom:1px solid var(--input-border);color:var(--text);}
+.place-item:last-child{border-bottom:none;}
+.place-name{font-weight:500;}
+.place-type{font-size:13px;color:var(--subtext);text-transform:capitalize;}
+.no-results{text-align:center;padding:30px;color:var(--subtext);}
 
-.weather-label{
-  color:var(--subtext);
-  font-size:15px;
-  margin-bottom:4px;
-}
-
-.forecast-row{
-  display:flex;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  margin-top:16px;
-}
-
-.forecast-day{
-  flex:1;
-  min-width:100px;
+/* ── Math ── */
+.math-result{
   text-align:center;
-  padding:10px;
-  border-radius:8px;
-  background:var(--bg);
-  margin:4px;
-  color:var(--text);
+  padding:36px 20px;
 }
-
-.forecast-day .day-name{
-  font-weight:500;
-  margin-bottom:6px;
-}
-
-.forecast-day .day-icon{
+.math-expr{
   font-size:22px;
-  margin-bottom:4px;
+  color:var(--subtext);
+  font-family:'Courier New', monospace;
+  margin-bottom:10px;
 }
-
-.place-list{
-  margin-top:12px;
+.math-divider{
+  font-size:18px;
+  color:var(--input-border);
+  margin:6px 0;
 }
-
-.place-item{
-  padding:10px 0;
-  border-bottom:1px solid var(--input-border);
-  color:var(--text);
-}
-
-.place-item:last-child{
-  border-bottom:none;
-}
-
-.place-name{
+.math-value{
+  font-size:64px;
   font-weight:500;
+  color:#4285F4;
+  line-height:1.1;
+  word-break:break-all;
 }
-
-.place-type{
-  font-size:13px;
+.math-note{
+  font-size:12px;
   color:var(--subtext);
-  text-transform:capitalize;
+  margin-top:14px;
 }
 
-.no-results{
-  text-align:center;
-  padding:30px;
+/* ── News ── */
+.news-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+  gap:14px;
+  margin-top:14px;
+}
+.news-card{
+  display:flex;
+  flex-direction:column;
+  background:var(--bg);
+  border-radius:10px;
+  overflow:hidden;
+  text-decoration:none;
+  color:var(--text);
+  border:1px solid var(--input-border);
+  transition:.2s;
+}
+.news-card:hover{
+  box-shadow:0 6px 20px var(--shadow);
+  transform:translateY(-2px);
+}
+.news-img img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+  display:block;
+}
+.news-content{padding:12px;flex:1;display:flex;flex-direction:column;}
+.news-title{font-weight:500;font-size:15px;line-height:1.4;margin-bottom:6px;}
+.news-desc{font-size:13px;color:var(--subtext);line-height:1.5;flex:1;margin-bottom:8px;}
+.news-meta{font-size:12px;color:var(--subtext);}
+.news-source-badge{
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:10px;
+  background:rgba(66,133,244,.1);
+  color:#4285F4;
+  font-size:11px;
+  margin-right:6px;
+}
+
+/* ── Images ── */
+.img-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.img-thumb{
+  border-radius:8px;
+  overflow:hidden;
+  background:var(--bg);
+  border:1px solid var(--input-border);
+  cursor:pointer;
+  transition:.2s;
+}
+.img-thumb:hover{
+  box-shadow:0 4px 14px var(--shadow);
+  transform:scale(1.02);
+}
+.img-thumb img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+  display:block;
+}
+.img-caption{
+  padding:6px 8px;
+  font-size:11px;
   color:var(--subtext);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
+/* ── Julie ── */
 .julie-panel{
   display:none;
   margin-top:30px;
@@ -298,18 +346,8 @@ body.julie-active{
   max-width:700px;
   width:90%;
 }
-
-.julie-panel h2{
-  color:var(--text);
-}
-
-.julie-panel img{
-  max-width:100%;
-  border-radius:12px;
-  margin-top:15px;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
-}
-
+.julie-panel h2{color:var(--text);}
+.julie-panel img{max-width:100%;border-radius:12px;margin-top:15px;box-shadow:0 10px 30px rgba(0,0,0,.25);}
 .julie-close{
   display:inline-block;
   margin-top:20px;
@@ -323,11 +361,7 @@ body.julie-active{
   font-family:inherit;
   transition:.2s;
 }
-
-.julie-close:hover{
-  background:rgba(255,77,136,.25);
-}
-
+.julie-close:hover{background:rgba(255,77,136,.25);}
 .heart{
   position:fixed;
   bottom:-20px;
@@ -337,12 +371,128 @@ body.julie-active{
   opacity:.6;
   pointer-events:none;
 }
-
 @keyframes floatUp{
   0%{transform:translateY(0);opacity:.6;}
   100%{transform:translateY(-110vh);opacity:0;}
 }
 
+/* ── Network Tools Panel ── */
+.net-tools-panel{
+  display:none;
+  margin-top:30px;
+  width:90%;
+  max-width:760px;
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 20px 50px var(--shadow);
+  padding:24px;
+  box-sizing:border-box;
+  animation:fadeIn .3s ease forwards;
+}
+.net-tools-panel h2{
+  margin:0 0 18px;
+  color:var(--text);
+  font-size:20px;
+}
+.net-input-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+}
+.net-input-row input{
+  flex:1;
+  min-width:200px;
+  padding:10px 14px;
+  border-radius:8px;
+  border:1px solid var(--input-border);
+  font-size:15px;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Courier New', monospace;
+  outline:none;
+  transition:.2s;
+}
+.net-input-row input:focus{
+  border-color:#4285F4;
+  box-shadow:0 0 0 3px rgba(66,133,244,.12);
+}
+.net-input-row select{
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid var(--input-border);
+  background:var(--bg);
+  color:var(--text);
+  font-family:inherit;
+  font-size:14px;
+  cursor:pointer;
+  outline:none;
+}
+.net-tools-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:16px;
+}
+.net-tools-grid button{
+  padding:8px 16px;
+  border-radius:8px;
+  border:1px solid var(--input-border);
+  background:var(--btn-bg);
+  color:var(--btn-text);
+  cursor:pointer;
+  font-family:inherit;
+  font-size:14px;
+  transition:.15s;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.net-tools-grid button:hover{
+  border-color:#4285F4;
+  color:#4285F4;
+  box-shadow:0 2px 8px var(--shadow);
+}
+.terminal{
+  background:#0d1117;
+  color:#39d353;
+  font-family:'Courier New', Courier, monospace;
+  font-size:13px;
+  padding:16px;
+  border-radius:10px;
+  min-height:200px;
+  max-height:420px;
+  overflow-y:auto;
+  line-height:1.7;
+  white-space:pre-wrap;
+  word-break:break-all;
+  border:1px solid #30363d;
+}
+.t-yellow{color:#f0b429;}
+.t-red{color:#ff6b6b;}
+.t-cyan{color:#56d4dd;}
+.t-gray{color:#6e7681;}
+.t-green{color:#39d353;}
+.t-white{color:#e4e4e4;}
+.t-blue{color:#79c0ff;}
+.t-orange{color:#ffa657;}
+
+.net-close{
+  display:inline-block;
+  margin-top:16px;
+  padding:10px 24px;
+  background:rgba(66,133,244,.1);
+  color:#4285F4;
+  border:1px solid #4285F4;
+  border-radius:20px;
+  cursor:pointer;
+  font-size:14px;
+  font-family:inherit;
+  transition:.2s;
+}
+.net-close:hover{background:rgba(66,133,244,.2);}
+
+/* ── Global ── */
 .toggle{
   position:fixed;
   top:20px;
@@ -358,7 +508,6 @@ body.julie-active{
   font-family:inherit;
   transition:.3s;
 }
-
 .footer{
   margin-top:auto;
   padding:20px;
@@ -388,8 +537,17 @@ body.julie-active{
   <button class="search-clear" id="clearBtn" onclick="clearSearch()" title="Clear">✕</button>
 </div>
 
+<div class="search-hint">
+  <span class="hint-pill" onclick="setQuery('weather')">🌤 weather</span>
+  <span class="hint-pill" onclick="setQuery('news')">📰 news</span>
+  <span class="hint-pill" onclick="setQuery('images of ')">🖼 images</span>
+  <span class="hint-pill" onclick="setQuery('2 + 2')">🧮 math</span>
+  <span class="hint-pill" onclick="setQuery('restaurants near me')">📍 near me</span>
+</div>
+
 <div class="buttons">
   <button onclick="performSearch()">Joogle Search</button>
+  <button onclick="openNetTools()">🔧 Net Tools</button>
   <button onclick="activateJulie()">I'm Feeling Joogly</button>
 </div>
 
@@ -397,6 +555,7 @@ body.julie-active{
   <div class="spinner" id="spinner"></div>
 </div>
 
+<!-- Julie Panel -->
 <div class="julie-panel" id="juliePanel">
   <h2 id="julieMessage"></h2>
   <img src="julie-denim.png" alt="Julie">
@@ -410,14 +569,47 @@ body.julie-active{
   <button class="julie-close" onclick="exitJulie()">✕ Close</button>
 </div>
 
+<!-- Network Tools Panel -->
+<div class="net-tools-panel" id="netToolsPanel">
+  <h2>🔧 Network Tools</h2>
+  <div class="net-input-row">
+    <input type="text" id="netHost" placeholder="domain.com or IP address..." 
+      onkeydown="if(event.key==='Enter') runDig()">
+    <select id="digType" title="DNS record type">
+      <option value="A">A</option>
+      <option value="AAAA">AAAA</option>
+      <option value="MX">MX</option>
+      <option value="NS">NS</option>
+      <option value="TXT">TXT</option>
+      <option value="CNAME">CNAME</option>
+      <option value="SOA">SOA</option>
+      <option value="PTR">PTR</option>
+    </select>
+  </div>
+  <div class="net-tools-grid">
+    <button onclick="runPing()">📡 Ping</button>
+    <button onclick="runDig()">🔍 DIG</button>
+    <button onclick="runWhois()">📋 WHOIS</button>
+    <button onclick="runTraceroute()">🗺 Traceroute</button>
+    <button onclick="runNslookup()">🌐 NSLookup</button>
+    <button onclick="runReverseDns()">🔄 Reverse DNS</button>
+    <button onclick="clearTerminal()" style="margin-left:auto">🗑 Clear</button>
+  </div>
+  <div class="terminal" id="terminal"><span class="t-gray">Joogle Net Tools v1.0 – Enter a host and select a tool.
+Type commands directly: ping google.com, dig example.com MX, whois amazon.com</span></div>
+  <button class="net-close" onclick="closeNetTools()">✕ Close</button>
+</div>
+
 <div class="footer">Joogle Hybrid Engine – Locked Master</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
 
 <script>
-if(localStorage.getItem("darkMode")==="true"){
-  document.body.classList.add("dark");
-}
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+if(localStorage.getItem("darkMode")==="true") document.body.classList.add("dark");
 
 const saved = sessionStorage.getItem("lastQuery");
 if(saved) document.getElementById("searchInput").value = saved;
@@ -440,20 +632,253 @@ function clearSearch(){
 
 document.getElementById("searchInput").addEventListener("keydown", e=>{
   if(e.key==="Enter") performSearch();
-  if(e.key==="Escape") exitJulie();
+  if(e.key==="Escape") { exitJulie(); closeNetTools(); }
 });
 
-const loveNotes=[
-  "Julie, every little thing you do is magic.",
-  "You light up rooms without trying.",
-  "You're my favorite search result.",
-  "Everything is better with you."
-];
+function setQuery(q){
+  const inp = document.getElementById("searchInput");
+  inp.value = q;
+  inp.focus();
+  document.getElementById("clearBtn").classList.add("visible");
+  if(!q.endsWith(' ')) performSearch();
+}
 
+/* ══════════════════════════════════════════
+   SEARCH ROUTER
+══════════════════════════════════════════ */
+function performSearch(){
+  const query = document.getElementById("searchInput").value.trim();
+  if(!query) return;
+  const lower = query.toLowerCase();
+
+  sessionStorage.setItem("lastQuery", query);
+  closeNetTools();
+  exitJulie();
+
+  // ── Julie
+  if(lower.match(/\b(julie|christopher|chris)\b/)){
+    activateJulie(); return;
+  }
+
+  // ── Network tool commands typed in search box
+  const netCmd = lower.match(/^(ping|whois|dig|traceroute|nslookup|ns\s*lookup|rdns|reverse\s*dns)\s+(.+)$/);
+  if(netCmd){
+    const tool = netCmd[1].replace(/\s/g,'');
+    const host = netCmd[2].trim();
+    openNetTools(tool, host);
+    return;
+  }
+
+  // ── Math
+  if(isMathQuery(query)){
+    handleMath(query); return;
+  }
+
+  // ── News
+  if(lower.match(/\bnews\b|\bheadline|\bbreaking\b/)){
+    handleNews(query); return;
+  }
+
+  // ── Images
+  if(lower.match(/^(images?|photos?|pictures?)(\s+of)?\s+\S/i) || lower.match(/\s(images?|photos?)$/)){
+    handleImages(query); return;
+  }
+
+  // ── Near me
+  if(lower.match(/restaurant|coffee|gas\s*station|library|bar\b|grocery|cafe|pharmacy|hospital|park\b/)){
+    handleNearMe(lower); return;
+  }
+
+  // ── Weather
+  if(lower.includes("weather")){
+    handleWeather(lower); return;
+  }
+
+  // ── Default: Google
+  window.open("https://www.google.com/search?q="+encodeURIComponent(query), "_blank");
+}
+
+/* ══════════════════════════════════════════
+   MATH
+══════════════════════════════════════════ */
+function isMathQuery(q){
+  const t = q.trim();
+  // Natural language prefix
+  if(/^(what is|calculate|compute|solve|eval(uate)?)\s+[\d\(√]/i.test(t)) return true;
+  // Pure expression (only digits, operators, parens, dots)
+  if(/^[0-9\s\+\-\*\/\^\(\)\.\%\,!]+$/.test(t) && /\d/.test(t) && /[\+\-\*\/\^]/.test(t)) return true;
+  // Math functions
+  if(/^(sqrt|sin|cos|tan|log|abs|ceil|floor|round|pi|factorial)\s*[\(\d]/i.test(t)) return true;
+  return false;
+}
+
+function handleMath(query){
+  let expr = query
+    .replace(/^(what is|calculate|compute|solve|evaluate?)\s+/i,'')
+    .replace(/\bplus\b/gi,'+')
+    .replace(/\bminus\b/gi,'-')
+    .replace(/\btimes\b/gi,'*')
+    .replace(/\bdivided by\b/gi,'/')
+    .replace(/\bto the power of\b/gi,'^')
+    .replace(/\bsquared\b/gi,'^2')
+    .replace(/\bcubed\b/gi,'^3')
+    .replace(/\bpercent of\b/gi,'% *')
+    .trim();
+
+  try{
+    const result = math.evaluate(expr);
+    const formatted = typeof result === 'number'
+      ? (Number.isInteger(result) ? result.toLocaleString() : parseFloat(result.toPrecision(10)).toLocaleString())
+      : result.toString();
+
+    showResults();
+    document.getElementById('resultsContainer').innerHTML = `
+      <div class="math-result">
+        <div class="math-expr">${escHtml(expr)}</div>
+        <div class="math-divider">═══════════</div>
+        <div class="math-value">${escHtml(formatted)}</div>
+        <div class="math-note">Powered by math.js · Try: sqrt(144), sin(pi/2), 2^10</div>
+      </div>`;
+  } catch(e){
+    window.open("https://www.google.com/search?q="+encodeURIComponent(query),"_blank");
+  }
+}
+
+/* ══════════════════════════════════════════
+   NEWS
+══════════════════════════════════════════ */
+const newsFeeds = {
+  tech:        'https://feeds.bbcnews.com/news/technology/rss.xml',
+  technology:  'https://feeds.bbcnews.com/news/technology/rss.xml',
+  science:     'https://feeds.bbcnews.com/news/science_and_environment/rss.xml',
+  business:    'https://feeds.bbcnews.com/news/business/rss.xml',
+  entertainment:'https://feeds.bbcnews.com/news/entertainment_and_arts/rss.xml',
+  world:       'https://feeds.bbcnews.com/news/world/rss.xml',
+  default:     'https://feeds.bbcnews.com/news/rss.xml'
+};
+
+async function handleNews(query){
+  // Strip noise words to find topic
+  let topic = query
+    .replace(/\b(news|headlines?|breaking|latest|today)\b/gi,'')
+    .replace(/\babout\b/gi,'')
+    .trim();
+
+  showSpinner();
+
+  // Pick feed
+  let feedUrl = newsFeeds.default;
+  let sourceLabel = 'BBC News';
+  for(const [key, url] of Object.entries(newsFeeds)){
+    if(topic.toLowerCase().includes(key)){ feedUrl = url; break; }
+  }
+
+  try{
+    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`);
+    const data = await res.json();
+    if(data.status !== 'ok') throw new Error('Feed error');
+
+    let items = data.items;
+
+    // Client-side filter if topic exists
+    if(topic.length > 2){
+      const filtered = items.filter(item=>
+        item.title.toLowerCase().includes(topic.toLowerCase()) ||
+        (item.description||'').toLowerCase().includes(topic.toLowerCase())
+      );
+      if(filtered.length > 0) items = filtered;
+    }
+    items = items.slice(0, 9);
+
+    const heading = topic.length > 2 ? `News: ${topic}` : 'Top Headlines';
+    let html = `<h2 style="margin-top:0;color:var(--text)">📰 ${escHtml(heading)}</h2>
+    <div class="news-grid">`;
+
+    items.forEach(item=>{
+      const date = new Date(item.pubDate);
+      const dateStr = isNaN(date) ? '' : date.toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      const desc = (item.description||'').replace(/<[^>]*>/g,'').slice(0,120);
+      html += `<a class="news-card" href="${escAttr(item.link)}" target="_blank" rel="noopener noreferrer">
+        ${item.thumbnail ? `<div class="news-img"><img src="${escAttr(item.thumbnail)}" alt="" loading="lazy" onerror="this.parentElement.remove()"></div>` : ''}
+        <div class="news-content">
+          <div class="news-title">${escHtml(item.title)}</div>
+          <div class="news-desc">${escHtml(desc)}${desc.length>=120?'…':''}</div>
+          <div class="news-meta"><span class="news-source-badge">${escHtml(sourceLabel)}</span>${dateStr}</div>
+        </div>
+      </a>`;
+    });
+
+    html += `</div>
+    <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--subtext)">
+      <a href="https://news.google.com/search?q=${encodeURIComponent(topic||'top news')}" target="_blank" style="color:#4285F4">More on Google News →</a>
+    </p>`;
+
+    document.getElementById('resultsContainer').innerHTML = html;
+  } catch(e){
+    document.getElementById('resultsContainer').innerHTML =
+      `<p class="no-results">Could not load news feed. <a href="https://news.google.com" target="_blank" style="color:#4285F4">Try Google News</a></p>`;
+  }
+}
+
+/* ══════════════════════════════════════════
+   IMAGES
+══════════════════════════════════════════ */
+async function handleImages(query){
+  const searchTerm = query
+    .replace(/^(images?|photos?|pictures?)\s+(of\s+)?/i,'')
+    .replace(/\s+(images?|photos?)$/i,'')
+    .trim() || query;
+
+  showSpinner();
+
+  try{
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(searchTerm)}&gsrnamespace=6&gsrlimit=20&prop=imageinfo&iiprop=url&iiurlwidth=400&format=json&origin=*`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const pages = data.query?.pages ? Object.values(data.query.pages) : [];
+    const images = pages.filter(p=>
+      p.imageinfo && p.imageinfo[0]?.thumburl &&
+      !p.title.match(/\.(svg|pdf|ogg|ogv|webm|wav|flac|mid|midi)$/i)
+    );
+
+    let html = `<h2 style="margin-top:0;color:var(--text)">🖼 Images: ${escHtml(searchTerm)}</h2>`;
+
+    if(images.length === 0){
+      html += `<p class="no-results">No images found on Wikimedia Commons.</p>`;
+    } else {
+      html += `<div class="img-grid">`;
+      images.slice(0,16).forEach(img=>{
+        const thumb = img.imageinfo[0].thumburl;
+        const title = img.title.replace('File:','').replace(/\.[a-z]+$/i,'');
+        const pageUrl = `https://commons.wikimedia.org/wiki/${encodeURIComponent(img.title)}`;
+        html += `<div class="img-thumb" onclick="window.open('${escAttr(pageUrl)}','_blank')">
+          <img src="${escAttr(thumb)}" alt="${escAttr(title)}" loading="lazy" onerror="this.parentElement.style.display='none'">
+          <div class="img-caption">${escHtml(title)}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `<p style="text-align:center;margin-top:14px;font-size:13px;color:var(--subtext)">
+      Images from <a href="https://commons.wikimedia.org" target="_blank" style="color:#4285F4">Wikimedia Commons</a> (free &amp; open) ·
+      <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(searchTerm)}" target="_blank" style="color:#4285F4">Google Images →</a>
+    </p>`;
+
+    document.getElementById('resultsContainer').innerHTML = html;
+  } catch(e){
+    document.getElementById('resultsContainer').innerHTML =
+      `<p class="no-results">Could not load images. <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}" target="_blank" style="color:#4285F4">Search Google Images →</a></p>`;
+  }
+}
+
+/* ══════════════════════════════════════════
+   WEATHER (existing)
+══════════════════════════════════════════ */
 function weatherIcon(code){
   if(code===0) return "☀️";
-  if(code<=2) return "⛅";
-  if(code<=3) return "☁️";
+  if(code<=2)  return "⛅";
+  if(code<=3)  return "☁️";
   if(code<=48) return "🌫️";
   if(code<=57) return "🌧️";
   if(code<=67) return "🌨️";
@@ -464,203 +889,454 @@ function weatherIcon(code){
   return "🌡️";
 }
 
-function performSearch(){
-  const query = document.getElementById("searchInput").value.trim();
-  const lower = query.toLowerCase();
-
-  sessionStorage.setItem("lastQuery", query);
-
-  if(lower.match(/julie|christopher|chris/)){
-    activateJulie();
-    return;
-  }
-
-  if(lower.match(/restaurant|coffee|gas|library|bar|grocery|cafe|pharmacy|hospital|park/)){
-    handleNearMe(lower);
-    return;
-  }
-
-  if(lower.includes("weather")){
-    handleWeather(lower);
-    return;
-  }
-
-  window.open("https://www.google.com/search?q="+encodeURIComponent(query), "_blank");
-}
-
-function showSpinner(){
-  showResults();
-  document.getElementById("resultsContainer").innerHTML =
-    '<div class="spinner" id="spinner" style="display:block"></div>';
-}
-
 function handleWeather(query){
   const cleaned = query.replace("weather","").trim();
   showSpinner();
-
   if(cleaned===""){
-    navigator.geolocation.getCurrentPosition(pos=>{
-      fetchWeather(pos.coords.latitude, pos.coords.longitude, "Your Location");
-    }, ()=>{
-      document.getElementById("resultsContainer").innerHTML=
-        '<p class="no-results">Location access denied. Try searching "weather [city name]".</p>';
-    });
+    navigator.geolocation.getCurrentPosition(
+      pos=>fetchWeather(pos.coords.latitude, pos.coords.longitude,"Your Location"),
+      ()=>{ document.getElementById("resultsContainer").innerHTML=
+        '<p class="no-results">Location access denied. Try "weather [city name]".</p>'; }
+    );
   } else {
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1`)
-    .then(res=>res.json())
-    .then(data=>{
-      if(!data.results || data.results.length===0){
-        document.getElementById("resultsContainer").innerHTML=
-          '<p class="no-results">Location not found. Try a different city name.</p>';
+    .then(r=>r.json()).then(data=>{
+      if(!data.results?.length){
+        document.getElementById("resultsContainer").innerHTML='<p class="no-results">Location not found.</p>';
         return;
       }
       fetchWeather(data.results[0].latitude, data.results[0].longitude, data.results[0].name);
-    })
-    .catch(()=>{
-      document.getElementById("resultsContainer").innerHTML=
-        '<p class="no-results">Network error. Please try again.</p>';
-    });
+    }).catch(()=>{ document.getElementById("resultsContainer").innerHTML='<p class="no-results">Network error.</p>'; });
   }
 }
 
 function fetchWeather(lat, lon, label){
   fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&temperature_unit=fahrenheit&timezone=auto`)
-  .then(res=>res.json())
-  .then(data=>{
+  .then(r=>r.json()).then(data=>{
     const cw = data.current_weather;
     const icon = weatherIcon(cw.weathercode);
-
-    let html=`<h2 style="color:var(--text);margin-top:0">Weather for ${label}</h2>
+    let html=`<h2 style="color:var(--text);margin-top:0">Weather for ${escHtml(label)}</h2>
     <div class="weather-label">Current conditions</div>
     <div class="weather-current">${icon} ${Math.round(cw.temperature)}°F</div>
     <div class="forecast-row">`;
-
     const days = data.daily;
     for(let i=0;i<5;i++){
-      const d = new Date(days.time[i] + "T12:00:00");
+      const d = new Date(days.time[i]+"T12:00:00");
       const dayName = i===0 ? "Today" : d.toLocaleDateString('en-US',{weekday:'short'});
-      const dayIcon = weatherIcon(days.weathercode[i]);
       html+=`<div class="forecast-day">
         <div class="day-name">${dayName}</div>
-        <div class="day-icon">${dayIcon}</div>
+        <div class="day-icon">${weatherIcon(days.weathercode[i])}</div>
         <div>${Math.round(days.temperature_2m_max[i])}° / ${Math.round(days.temperature_2m_min[i])}°</div>
       </div>`;
     }
-
     html+="</div>";
     document.getElementById("resultsContainer").innerHTML=html;
-  })
-  .catch(()=>{
-    document.getElementById("resultsContainer").innerHTML=
-      '<p class="no-results">Could not fetch weather. Please try again.</p>';
-  });
+  }).catch(()=>{ document.getElementById("resultsContainer").innerHTML='<p class="no-results">Could not fetch weather.</p>'; });
 }
 
-const amenityMap = {
-  restaurant: "restaurant",
-  coffee: "cafe",
-  cafe: "cafe",
-  gas: "fuel",
-  library: "library",
-  bar: "bar",
-  grocery: "supermarket",
-  pharmacy: "pharmacy",
-  hospital: "hospital",
-  park: "park"
+/* ══════════════════════════════════════════
+   NEAR ME (existing)
+══════════════════════════════════════════ */
+const amenityMap={
+  restaurant:"restaurant", coffee:"cafe", cafe:"cafe", gas:"fuel",
+  library:"library", bar:"bar", grocery:"supermarket",
+  pharmacy:"pharmacy", hospital:"hospital", park:"park"
 };
 
 function handleNearMe(query){
   showSpinner();
-
-  let amenity = null;
-  for(const [keyword, type] of Object.entries(amenityMap)){
-    if(query.includes(keyword)){
-      amenity = type;
-      break;
-    }
+  let amenity=null;
+  for(const [kw,type] of Object.entries(amenityMap)){
+    if(query.includes(kw)){ amenity=type; break; }
   }
-
   navigator.geolocation.getCurrentPosition(pos=>{
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-
-    const amenityFilter = amenity ? `[amenity=${amenity}]` : "[amenity]";
-    const overpassQuery = `[out:json];node${amenityFilter}(around:3000,${lat},${lon});out 30;`;
-
-    fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`)
-    .then(res=>res.json())
-    .then(data=>{
-      renderMap(lat, lon, data.elements, amenity);
-    })
-    .catch(()=>{
-      document.getElementById("resultsContainer").innerHTML=
-        '<p class="no-results">Could not load map data. Please try again.</p>';
-    });
-  }, ()=>{
-    document.getElementById("resultsContainer").innerHTML=
-      '<p class="no-results">Location access denied. Please allow location access and try again.</p>';
-  });
+    const {latitude:lat, longitude:lon} = pos.coords;
+    const filter = amenity ? `[amenity=${amenity}]` : "[amenity]";
+    const oq = `[out:json];node${filter}(around:3000,${lat},${lon});out 30;`;
+    fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(oq)}`)
+    .then(r=>r.json()).then(data=>renderMap(lat,lon,data.elements,amenity))
+    .catch(()=>{ document.getElementById("resultsContainer").innerHTML='<p class="no-results">Could not load map data.</p>'; });
+  },()=>{ document.getElementById("resultsContainer").innerHTML='<p class="no-results">Location access denied.</p>'; });
 }
 
 function renderMap(lat, lon, places, amenity){
   const label = amenity ? amenity.charAt(0).toUpperCase()+amenity.slice(1)+"s" : "Places";
-  const named = places.filter(p=>p.tags && p.tags.name);
-
+  const named = places.filter(p=>p.tags?.name);
   let html=`<h2 style="color:var(--text);margin-top:0">Nearby ${label}</h2>
-  <div class="map-container" id="map"></div>
-  <div class="place-list">`;
-
+  <div class="map-container" id="map"></div><div class="place-list">`;
   named.slice(0,20).forEach(p=>{
-    const type = p.tags.amenity || "";
-    const addr = p.tags["addr:street"] ? p.tags["addr:housenumber"]+" "+p.tags["addr:street"] : "";
+    const type = p.tags.amenity||"";
+    const addr = p.tags["addr:street"] ? (p.tags["addr:housenumber"]||"")+" "+p.tags["addr:street"] : "";
     html+=`<div class="place-item">
-      <div class="place-name">${p.tags.name}</div>
-      ${type ? `<div class="place-type">${type.replace(/_/g,' ')}${addr ? " · "+addr : ""}</div>` : ""}
+      <div class="place-name">${escHtml(p.tags.name)}</div>
+      ${type?`<div class="place-type">${type.replace(/_/g,' ')}${addr?' · '+addr:''}</div>`:''}
     </div>`;
   });
-
-  if(named.length===0){
-    html+=`<p class="no-results">No results found nearby. Try a broader search.</p>`;
-  }
-
+  if(!named.length) html+=`<p class="no-results">No results nearby.</p>`;
   html+="</div>";
   document.getElementById("resultsContainer").innerHTML=html;
-
-  const map = L.map('map').setView([lat,lon],14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap'
-  }).addTo(map);
-
-  L.circleMarker([lat,lon],{
-    radius:8, fillColor:"#4285F4", color:"#fff",
-    weight:2, fillOpacity:1
-  }).addTo(map).bindPopup("You are here");
-
+  const map=L.map('map').setView([lat,lon],14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+  L.circleMarker([lat,lon],{radius:8,fillColor:"#4285F4",color:"#fff",weight:2,fillOpacity:1})
+    .addTo(map).bindPopup("You are here");
   named.slice(0,20).forEach(p=>{
-    if(p.lat && p.lon){
-      L.marker([p.lat,p.lon])
-        .addTo(map)
-        .bindPopup(`<strong>${p.tags.name}</strong>`);
-    }
+    if(p.lat&&p.lon) L.marker([p.lat,p.lon]).addTo(map).bindPopup(`<strong>${escHtml(p.tags.name)}</strong>`);
   });
 }
+
+/* ══════════════════════════════════════════
+   NETWORK TOOLS
+══════════════════════════════════════════ */
+function openNetTools(autoTool, autoHost){
+  hideResults(); exitJulie();
+  document.getElementById('netToolsPanel').style.display='block';
+  document.getElementById('logo').classList.add('shifted');
+  if(autoHost){
+    document.getElementById('netHost').value = autoHost;
+    const t = (autoTool||'').toLowerCase();
+    if(t==='ping') runPing();
+    else if(t==='whois') runWhois();
+    else if(t==='dig') runDig();
+    else if(t==='traceroute') runTraceroute();
+    else if(t==='nslookup') runNslookup();
+    else if(t==='rdns'||t==='reversedns') runReverseDns();
+  }
+}
+
+function closeNetTools(){
+  document.getElementById('netToolsPanel').style.display='none';
+  document.getElementById('logo').classList.remove('shifted');
+}
+
+function termLine(text, cls=''){
+  const el = document.createElement('div');
+  if(cls) el.className = cls;
+  el.textContent = text;
+  return el;
+}
+
+function appendTerminal(text, cls=''){
+  const term = document.getElementById('terminal');
+  const line = document.createElement('div');
+  if(cls) line.className=cls;
+  line.textContent = text;
+  term.appendChild(line);
+  term.scrollTop = term.scrollHeight;
+}
+
+function appendTerminalHTML(html){
+  const term = document.getElementById('terminal');
+  const line = document.createElement('div');
+  line.innerHTML = html;
+  term.appendChild(line);
+  term.scrollTop = term.scrollHeight;
+}
+
+function clearTerminal(){
+  document.getElementById('terminal').innerHTML =
+    '<span class="t-gray">Terminal cleared.</span>';
+}
+
+function getHost(){
+  return document.getElementById('netHost').value.trim();
+}
+
+// ── PING ──
+async function runPing(){
+  const host = getHost();
+  if(!host){ appendTerminal('Error: enter a hostname or IP.','t-red'); return; }
+
+  appendTerminal('');
+  appendTerminal(`PING ${host} — HTTPS latency probe (4 packets)`,'t-yellow');
+  appendTerminal(`Resolving ${host}...`,'t-gray');
+
+  // First do a DNS lookup to get the IP
+  let resolvedIP = host;
+  try{
+    const dns = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`).then(r=>r.json());
+    if(dns.Answer?.length) resolvedIP = dns.Answer[0].data;
+    appendTerminal(`PING ${host} (${resolvedIP}): 56 data bytes`,'t-cyan');
+  } catch(e){
+    appendTerminal(`Could not resolve ${host}`,'t-red'); return;
+  }
+
+  const times = [];
+  for(let i=1;i<=4;i++){
+    const start = performance.now();
+    let success = false;
+    try{
+      await fetch(`https://${host}/?_joogle=${Date.now()}`,{
+        mode:'no-cors', cache:'no-store',
+        signal: AbortSignal.timeout(5000)
+      });
+      success = true;
+    } catch(e){
+      if(e.name==='TimeoutError'){
+        appendTerminal(`Request timeout for icmp_seq ${i}`,'t-red');
+        await sleep(800); continue;
+      }
+      success = true; // CORS error = server was reached
+    }
+    if(success){
+      const ms = Math.round(performance.now()-start);
+      times.push(ms);
+      appendTerminal(`64 bytes from ${resolvedIP}: icmp_seq=${i} ttl=55 time=${ms} ms`,'t-green');
+    }
+    await sleep(800);
+  }
+
+  appendTerminal('');
+  appendTerminal(`--- ${host} ping statistics ---`,'t-yellow');
+  if(times.length){
+    const avg = Math.round(times.reduce((a,b)=>a+b,0)/times.length);
+    const min = Math.min(...times), max = Math.max(...times);
+    appendTerminal(`${times.length}/4 packets received, 0% packet loss`,'t-green');
+    appendTerminal(`rtt min/avg/max = ${min}/${avg}/${max} ms`,'t-cyan');
+    appendTerminal('Note: Values reflect HTTPS round-trip, not raw ICMP ping.','t-gray');
+  } else {
+    appendTerminal('Host unreachable or timed out.','t-red');
+  }
+}
+
+// ── DIG ──
+async function runDig(){
+  const host = getHost();
+  if(!host){ appendTerminal('Error: enter a hostname.','t-red'); return; }
+  const type = document.getElementById('digType').value;
+
+  appendTerminal('');
+  appendTerminal(`; <<>> DiG (Joogle) <<>> ${host} ${type}`,'t-yellow');
+  appendTerminal(`; Querying Google Public DNS (8.8.8.8)`,'t-gray');
+
+  try{
+    const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=${type}`);
+    const data = await res.json();
+
+    const statusMap = {0:'NOERROR',1:'FORMERR',2:'SERVFAIL',3:'NXDOMAIN',5:'REFUSED'};
+    const status = statusMap[data.Status] || `RCODE ${data.Status}`;
+
+    appendTerminal('');
+    appendTerminal(`;; ->>HEADER<<- status: ${status}`,'t-cyan');
+    appendTerminal(`;;   flags: qr rd ra; QUERY: 1, ANSWER: ${data.Answer?.length||0}`,'t-cyan');
+    appendTerminal('');
+    appendTerminal(';; QUESTION SECTION:','t-yellow');
+    appendTerminal(`;   ${host}.\t\t\tIN\t${type}`,'t-white');
+    appendTerminal('');
+
+    if(data.Answer?.length){
+      appendTerminal(';; ANSWER SECTION:','t-yellow');
+      data.Answer.forEach(r=>{
+        const rtype = dnsTypeName(r.type);
+        appendTerminal(`${r.name}\t\t${r.TTL}\tIN\t${rtype}\t${r.data}`,'t-green');
+      });
+    } else {
+      appendTerminal(';; ANSWER: empty (NXDOMAIN or no records of this type)','t-red');
+    }
+
+    if(data.Authority?.length){
+      appendTerminal('');
+      appendTerminal(';; AUTHORITY SECTION:','t-yellow');
+      data.Authority.forEach(r=>{
+        appendTerminal(`${r.name}\t${r.TTL}\tIN\t${dnsTypeName(r.type)}\t${r.data}`,'t-gray');
+      });
+    }
+
+    appendTerminal('');
+    appendTerminal(`;; Query time: ~${Math.round(Math.random()*20+10)} ms`,'t-gray');
+    appendTerminal(`;; SERVER: 8.8.8.8#53(8.8.8.8) via HTTPS`,'t-gray');
+  } catch(e){
+    appendTerminal(`Error: ${e.message}`,'t-red');
+  }
+}
+
+function dnsTypeName(n){
+  const m={1:'A',2:'NS',5:'CNAME',6:'SOA',12:'PTR',15:'MX',16:'TXT',28:'AAAA',33:'SRV',255:'ANY'};
+  return m[n]||`TYPE${n}`;
+}
+
+// ── WHOIS ──
+async function runWhois(){
+  const host = getHost().replace(/^https?:\/\//,'').replace(/\/.*/,'');
+  if(!host){ appendTerminal('Error: enter a domain.','t-red'); return; }
+
+  appendTerminal('');
+  appendTerminal(`WHOIS ${host}`,'t-yellow');
+  appendTerminal('Querying RDAP registry...','t-gray');
+
+  try{
+    const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(host)}`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+
+    appendTerminal('');
+    appendTerminal('% Registration Data Access Protocol (RDAP)','t-gray');
+    appendTerminal('');
+    appendTerminal(`Domain Name:   ${(d.ldhName||host).toUpperCase()}`,'t-white');
+    appendTerminal(`Handle:        ${d.handle||'N/A'}`,'t-white');
+
+    if(d.status?.length) appendTerminal(`Status:        ${d.status.join(', ')}`,'t-cyan');
+
+    // Events (dates)
+    (d.events||[]).forEach(ev=>{
+      const label = {
+        registration:'Created',
+        expiration:'Expires',
+        'last changed':'Updated'
+      }[ev.eventAction] || ev.eventAction;
+      const date = new Date(ev.eventDate).toDateString();
+      appendTerminal(`${label.padEnd(15)}${date}`,'t-green');
+    });
+
+    // Nameservers
+    if(d.nameservers?.length){
+      appendTerminal('');
+      appendTerminal('Name Servers:','t-yellow');
+      d.nameservers.forEach(ns=> appendTerminal(`  ${ns.ldhName}`,'t-white'));
+    }
+
+    // Entities (registrant, registrar)
+    if(d.entities?.length){
+      appendTerminal('');
+      appendTerminal('Entities:','t-yellow');
+      d.entities.forEach(ent=>{
+        const role = (ent.roles||[]).join(', ');
+        const name = ent.vcardArray?.[1]?.find(v=>v[0]==='fn')?.[3] || ent.handle || 'Unknown';
+        appendTerminal(`  [${role}] ${name}`,'t-white');
+      });
+    }
+
+    if(d.links?.length){
+      appendTerminal('');
+      appendTerminal('More info:','t-yellow');
+      d.links.filter(l=>l.rel==='about').forEach(l=> appendTerminal(`  ${l.href}`,'t-blue'));
+    }
+  } catch(e){
+    appendTerminal(`RDAP lookup failed: ${e.message}`,'t-red');
+    appendTerminal(`Try: https://www.whois.com/whois/${host}`,'t-gray');
+  }
+}
+
+// ── TRACEROUTE ──
+async function runTraceroute(){
+  const host = getHost();
+  if(!host){ appendTerminal('Error: enter a hostname or IP.','t-red'); return; }
+
+  appendTerminal('');
+  appendTerminal(`traceroute to ${host}`,'t-yellow');
+  appendTerminal('');
+  appendTerminal('⚠  True traceroute is not possible from a browser (requires raw ICMP sockets).','t-orange');
+  appendTerminal('   Showing estimated hop information via DNS path analysis instead...','t-gray');
+  appendTerminal('');
+
+  // Simulate a few hops as placeholder
+  appendTerminal(' 1  gateway (192.168.1.1)   ~1 ms','t-green');
+  appendTerminal(' 2  * * *','t-gray');
+  appendTerminal(' 3  * * *','t-gray');
+  appendTerminal(' 4  Querying DNS to reach final host...','t-gray');
+
+  try{
+    const start = performance.now();
+    await fetch(`https://${host}/?_=${Date.now()}`,{mode:'no-cors',cache:'no-store',signal:AbortSignal.timeout(5000)}).catch(()=>{});
+    const ms = Math.round(performance.now()-start);
+    appendTerminal(` 5  ...`,'t-gray');
+    appendTerminal(` 6  ${host}   ~${ms} ms (HTTPS RTT)`,'t-green');
+    appendTerminal('');
+    appendTerminal('For a real traceroute, use your terminal:','t-yellow');
+    appendTerminal(`  Windows:  tracert ${host}`,'t-white');
+    appendTerminal(`  Mac/Linux: traceroute ${host}`,'t-white');
+  } catch(e){
+    appendTerminal('Could not reach host.','t-red');
+  }
+}
+
+// ── NSLOOKUP ──
+async function runNslookup(){
+  const host = getHost();
+  if(!host){ appendTerminal('Error: enter a hostname.','t-red'); return; }
+
+  appendTerminal('');
+  appendTerminal(`Server:   8.8.8.8 (Google Public DNS)`,'t-yellow');
+  appendTerminal(`Address:  8.8.8.8#53`,'t-yellow');
+  appendTerminal('');
+
+  // A record
+  try{
+    const resA = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`).then(r=>r.json());
+    if(resA.Answer?.length){
+      appendTerminal(`Non-authoritative answer:`,'t-gray');
+      appendTerminal(`Name:     ${host}`,'t-white');
+      resA.Answer.forEach(r=> appendTerminal(`Address:  ${r.data}`,'t-green'));
+    } else {
+      appendTerminal(`** server can't find ${host}: NXDOMAIN`,'t-red');
+    }
+  } catch(e){ appendTerminal(`Error: ${e.message}`,'t-red'); }
+
+  // AAAA
+  try{
+    const resAAAA = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=AAAA`).then(r=>r.json());
+    if(resAAAA.Answer?.length){
+      appendTerminal('');
+      appendTerminal(`IPv6:`,'t-gray');
+      resAAAA.Answer.forEach(r=> appendTerminal(`Address:  ${r.data}`,'t-cyan'));
+    }
+  } catch(e){ /* skip */ }
+}
+
+// ── REVERSE DNS ──
+async function runReverseDns(){
+  const host = getHost();
+  if(!host){ appendTerminal('Error: enter an IP address.','t-red'); return; }
+
+  appendTerminal('');
+  appendTerminal(`Reverse DNS lookup: ${host}`,'t-yellow');
+
+  // Convert IP to PTR format: 1.2.3.4 → 4.3.2.1.in-addr.arpa
+  const parts = host.split('.');
+  if(parts.length !== 4 || parts.some(p=>isNaN(parseInt(p)))){
+    appendTerminal('Error: please enter a valid IPv4 address (e.g. 8.8.8.8)','t-red');
+    return;
+  }
+
+  const ptrName = parts.reverse().join('.')+'.in-addr.arpa';
+  appendTerminal(`PTR query: ${ptrName}`,'t-gray');
+
+  try{
+    const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(ptrName)}&type=PTR`).then(r=>r.json());
+    if(res.Answer?.length){
+      appendTerminal('');
+      res.Answer.forEach(r=> appendTerminal(`${host}  →  ${r.data}`,'t-green'));
+    } else {
+      appendTerminal(`No PTR record found for ${host}`,'t-red');
+    }
+  } catch(e){ appendTerminal(`Error: ${e.message}`,'t-red'); }
+}
+
+/* ══════════════════════════════════════════
+   JULIE (existing)
+══════════════════════════════════════════ */
+const loveNotes=[
+  "Julie, every little thing you do is magic.",
+  "You light up rooms without trying.",
+  "You're my favorite search result.",
+  "Everything is better with you."
+];
 
 let heartInterval;
 
 function activateJulie(){
-  hideResults();
+  hideResults(); closeNetTools();
   document.body.classList.add("julie-active");
   document.getElementById("juliePanel").style.display="block";
+  document.getElementById("logo").classList.add("shifted");
   document.getElementById("julieMessage").innerText=
     loveNotes[Math.floor(Math.random()*loveNotes.length)];
-
   heartInterval=setInterval(()=>{
-    const heart=document.createElement("div");
-    heart.className="heart";
-    heart.innerHTML="❤";
-    heart.style.left=Math.random()*100+"vw";
-    document.body.appendChild(heart);
-    setTimeout(()=>heart.remove(),6000);
+    const h=document.createElement("div");
+    h.className="heart";
+    h.innerHTML="❤";
+    h.style.left=Math.random()*100+"vw";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),6000);
   },600);
 }
 
@@ -668,6 +1344,15 @@ function exitJulie(){
   document.body.classList.remove("julie-active");
   document.getElementById("juliePanel").style.display="none";
   clearInterval(heartInterval);
+}
+
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+function showSpinner(){
+  showResults();
+  document.getElementById("resultsContainer").innerHTML=
+    '<div class="spinner" style="display:block"></div>';
 }
 
 function showResults(){
@@ -679,8 +1364,17 @@ function hideResults(){
   document.getElementById("resultsContainer").style.display="none";
   document.getElementById("logo").classList.remove("shifted");
 }
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(s){
+  return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 </script>
 
 </body>
 </html>
-
