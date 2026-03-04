@@ -7,7 +7,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Audiowide&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
@@ -49,17 +49,8 @@ body{
   transition:.4s ease;
 }
 
-body.julie-active{
-  background:linear-gradient(-45deg,#fff0f5,#ffe4ec,#fff5f9,#ffe0f0);
-  background-size:400% 400%;
-  animation:gradientFlow 12s ease infinite;
-}
-
-@keyframes gradientFlow{
-  0%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-  100%{background-position:0% 50%}
-}
+/* julie-active bg kept for compatibility */
+body.julie-active{ background:var(--bg); }
 
 /* ── Logo ── */
 .logo{
@@ -449,30 +440,237 @@ body.julie-active{
   text-overflow:ellipsis;
 }
 
-/* ── Julie ── */
-.julie-panel{
+/* ── Julie 80s Sitcom Intro ── */
+.julie-overlay{
   display:none;
-  margin-top:30px;
-  text-align:center;
-  max-width:700px;
-  width:90%;
+  position:fixed;
+  inset:0;
+  background:#000;
+  z-index:9000;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
 }
-.julie-panel h2{color:var(--text);}
-.julie-panel img{max-width:100%;border-radius:12px;margin-top:15px;box-shadow:0 10px 30px rgba(0,0,0,.25);}
-.julie-close{
-  display:inline-block;
-  margin-top:20px;
-  padding:10px 24px;
+.julie-overlay.active{display:flex;}
+
+.tv-frame{
+  position:relative;
+  width:min(92vw,800px);
+  aspect-ratio:4/3;
+  background:#111;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:
+    0 0 0 6px #222,
+    0 0 0 10px #111,
+    0 0 80px rgba(160,220,255,.25),
+    0 0 160px rgba(100,160,255,.1);
+}
+
+/* The montage image that we pan & zoom */
+#julieImg{
+  position:absolute;
+  width:100%; height:100%;
+  object-fit:cover;
+  transition: transform 2.4s cubic-bezier(.45,.05,.55,.95);
+  transform-origin:center center;
+  image-rendering:auto;
+}
+
+/* Scanlines */
+.scanlines{
+  position:absolute;
+  inset:0;
+  background:repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,.18) 3px,
+    rgba(0,0,0,.18) 4px
+  );
+  pointer-events:none;
+  z-index:10;
+}
+
+/* VHS color aberration layer */
+.vhs-rgb{
+  position:absolute;
+  inset:0;
+  mix-blend-mode:screen;
+  opacity:.04;
+  background:repeating-linear-gradient(
+    90deg,
+    rgba(255,0,0,.3) 0px,
+    rgba(0,255,0,.3) 1px,
+    rgba(0,0,255,.3) 2px
+  );
+  pointer-events:none;
+  z-index:11;
+}
+
+/* Static/noise overlay */
+.tv-static{
+  position:absolute;
+  inset:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+  opacity:0;
+  z-index:20;
+  pointer-events:none;
+  transition:opacity .3s;
+}
+.tv-static.on{opacity:1; animation:staticFlicker .08s steps(1) infinite;}
+@keyframes staticFlicker{
+  0%{opacity:.9;}50%{opacity:.6;}100%{opacity:.8;}
+}
+
+/* Color bars */
+.color-bars{
+  position:absolute;
+  inset:0;
+  display:none;
+  z-index:19;
+  flex-direction:column;
+  justify-content:stretch;
+}
+.color-bars.on{display:flex;}
+.color-bars-row{
+  display:flex;
+  flex:1;
+}
+.color-bars-row div{flex:1;}
+
+/* Title card overlays */
+.scene-card{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  padding-bottom:10%;
+  z-index:30;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .4s ease;
+}
+.scene-card.visible{opacity:1;}
+
+.title-main{
+  font-family:'Audiowide', 'Courier New', monospace;
+  font-size:clamp(22px,5vw,52px);
+  font-weight:700;
+  color:#fff;
+  text-align:center;
+  text-shadow:
+    0 0 10px #ff80c0,
+    0 0 20px #ff40a0,
+    0 0 40px #c000ff,
+    3px 3px 0 #c000ff,
+    -1px -1px 0 #00ffff;
+  letter-spacing:.12em;
+  line-height:1.1;
+  animation:rainbowPulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes rainbowPulse{
+  0%{text-shadow:0 0 10px #ff80c0,0 0 30px #ff40a0,3px 3px 0 #c000ff,-1px -1px 0 #00ffff;}
+  100%{text-shadow:0 0 20px #00ffff,0 0 40px #0080ff,3px 3px 0 #ff00c0,-1px -1px 0 #ffff00;}
+}
+
+.title-sub{
+  font-family:'Audiowide', 'Courier New', monospace;
+  font-size:clamp(12px,2.5vw,24px);
+  color:#ffe060;
+  text-align:center;
+  text-shadow:2px 2px 0 #c06000, 0 0 12px #ff8000;
+  letter-spacing:.2em;
+  margin-top:8px;
+}
+
+.name-card{
+  position:absolute;
+  bottom:12%;
+  left:50%;
+  transform:translateX(-50%);
+  background:linear-gradient(135deg,rgba(20,0,40,.85),rgba(60,0,100,.85));
+  border:2px solid #ff80ff;
+  border-radius:4px;
+  padding:8px 24px;
+  text-align:center;
+  z-index:31;
+  opacity:0;
+  transition:opacity .35s ease;
+  white-space:nowrap;
+  box-shadow:0 0 16px rgba(255,100,255,.5);
+}
+.name-card.visible{opacity:1;}
+.name-card-name{
+  font-family:'Audiowide','Courier New',monospace;
+  font-size:clamp(18px,3.5vw,36px);
+  color:#fff;
+  text-shadow:0 0 8px #ff80ff,0 0 16px #c040ff;
+}
+.name-card-role{
+  font-size:clamp(9px,1.5vw,14px);
+  color:#ffccff;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  margin-top:2px;
+}
+
+/* Stars / sparkles */
+.sparkle{
+  position:absolute;
+  font-size:20px;
+  pointer-events:none;
+  z-index:35;
+  animation:sparklePop .6s ease forwards;
+}
+@keyframes sparklePop{
+  0%{transform:scale(0) rotate(0deg);opacity:1;}
+  60%{transform:scale(1.4) rotate(180deg);opacity:1;}
+  100%{transform:scale(0) rotate(360deg);opacity:0;}
+}
+
+/* Freeze frame effect */
+.freeze-frame{
+  position:absolute;
+  inset:0;
+  z-index:40;
+  opacity:0;
+  pointer-events:none;
+  background:rgba(255,255,255,0);
+  transition:background .1s;
+}
+.freeze-frame.flash{background:rgba(255,255,255,.7);}
+
+/* Bottom bar & close */
+.tv-bottom-bar{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:16px;
+  width:min(92vw,800px);
+}
+.julie-close-btn{
+  flex:1;
   background:rgba(255,77,136,.15);
   color:#ff4d88;
   border:1px solid #ff4d88;
+  padding:10px 20px;
   border-radius:20px;
   cursor:pointer;
   font-size:14px;
   font-family:inherit;
   transition:.2s;
 }
-.julie-close:hover{background:rgba(255,77,136,.25);}
+.julie-close-btn:hover{background:rgba(255,77,136,.3);}
+.julie-credits{
+  font-size:11px;
+  color:#888;
+  font-family:monospace;
+}
+
+/* Floating hearts (kept for post-intro) */
 .heart{
   position:fixed;
   bottom:-20px;
@@ -481,6 +679,7 @@ body.julie-active{
   animation:floatUp 6s linear infinite;
   opacity:.6;
   pointer-events:none;
+  z-index:8999;
 }
 @keyframes floatUp{
   0%{transform:translateY(0);opacity:.6;}
@@ -666,25 +865,45 @@ body.julie-active{
   <div class="spinner" id="spinner"></div>
 </div>
 
-<!-- Julie Panel -->
-<div class="julie-panel" id="juliePanel">
-  <h2 id="julieMessage"></h2>
-  <img src="julie-denim.png" alt="Julie">
-  <iframe style="border-radius:12px;margin-top:15px;"
-    src="https://open.spotify.com/embed/track/6RMExyU7cmo44MItSjxO0e"
-    width="100%" height="80"
-    frameborder="0"
-    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
-  </iframe>
-  <br>
-  <button class="julie-close" onclick="exitJulie()">✕ Close</button>
+<!-- Julie 80s Sitcom Intro Overlay -->
+<div class="julie-overlay" id="julieOverlay">
+  <div class="tv-frame" id="tvFrame">
+    <img src="julie-denim.png" id="julieImg" alt="Julie">
+    <div class="scanlines"></div>
+    <div class="vhs-rgb"></div>
+    <div class="tv-static" id="tvStatic"></div>
+    <div class="color-bars" id="colorBars">
+      <div class="color-bars-row">
+        <div style="background:#fff"></div>
+        <div style="background:#ff0"></div>
+        <div style="background:#0ff"></div>
+        <div style="background:#0f0"></div>
+        <div style="background:#f0f"></div>
+        <div style="background:#f00"></div>
+        <div style="background:#00f"></div>
+      </div>
+    </div>
+    <div class="scene-card" id="sceneCard">
+      <div class="title-main" id="sceneTitle"></div>
+      <div class="title-sub" id="sceneSub"></div>
+    </div>
+    <div class="name-card" id="nameCard">
+      <div class="name-card-name" id="nameCardName"></div>
+      <div class="name-card-role" id="nameCardRole"></div>
+    </div>
+    <div class="freeze-frame" id="freezeFrame"></div>
+  </div>
+  <div class="tv-bottom-bar">
+    <button class="julie-close-btn" onclick="exitJulie()">✕ Close</button>
+    <span class="julie-credits">🎬 DENIM &amp; DREAMS — Original Synth Theme</span>
+  </div>
 </div>
 
 <!-- Network Tools Panel -->
 <div class="net-tools-panel" id="netToolsPanel">
   <h2>🔧 Network Tools</h2>
   <div class="net-input-row">
-    <input type="text" id="netHost" placeholder="domain.com or IP address..."
+    <input type="text" id="netHost" placeholder="domain.com or IP address..." 
       onkeydown="if(event.key==='Enter') runDig()">
     <select id="digType" title="DNS record type">
       <option value="A">A</option>
@@ -814,8 +1033,11 @@ function performSearch(){
 ══════════════════════════════════════════ */
 function isMathQuery(q){
   const t = q.trim();
+  // Natural language prefix
   if(/^(what is|calculate|compute|solve|eval(uate)?)\s+[\d\(√]/i.test(t)) return true;
+  // Pure expression (only digits, operators, parens, dots)
   if(/^[0-9\s\+\-\*\/\^\(\)\.\%\,!]+$/.test(t) && /\d/.test(t) && /[\+\-\*\/\^]/.test(t)) return true;
+  // Math functions
   if(/^(sqrt|sin|cos|tan|log|abs|ceil|floor|round|pi|factorial)\s*[\(\d]/i.test(t)) return true;
   return false;
 }
@@ -866,6 +1088,7 @@ const newsFeeds = {
 };
 
 async function handleNews(query){
+  // Strip noise words to find topic
   let topic = query
     .replace(/\b(news|headlines?|breaking|latest|today)\b/gi,'')
     .replace(/\babout\b/gi,'')
@@ -873,6 +1096,7 @@ async function handleNews(query){
 
   showSpinner();
 
+  // Pick feed
   let feedUrl = newsFeeds.default;
   let sourceLabel = 'BBC News';
   for(const [key, url] of Object.entries(newsFeeds)){
@@ -886,6 +1110,7 @@ async function handleNews(query){
 
     let items = data.items;
 
+    // Client-side filter if topic exists
     if(topic.length > 2){
       const filtered = items.filter(item=>
         item.title.toLowerCase().includes(topic.toLowerCase()) ||
@@ -978,7 +1203,7 @@ async function handleImages(query){
 }
 
 /* ══════════════════════════════════════════
-   WEATHER
+   WEATHER (existing)
 ══════════════════════════════════════════ */
 function weatherIcon(code){
   if(code===0) return "☀️";
@@ -1040,7 +1265,7 @@ function fetchWeather(lat, lon, label){
 }
 
 /* ══════════════════════════════════════════
-   NEAR ME
+   NEAR ME (existing)
 ══════════════════════════════════════════ */
 const amenityMap={
   restaurant:"restaurant", coffee:"cafe", cafe:"cafe", "gas station":"fuel", gas:"fuel",
@@ -1050,19 +1275,21 @@ const amenityMap={
   hotel:"hotel", bank:"bank", atm:"atm", school:"school"
 };
 
+// OSM cuisine/category icons
 const amenityIcon={
   restaurant:"🍽️", cafe:"☕", fuel:"⛽", library:"📚", bar:"🍺",
   supermarket:"🛒", pharmacy:"💊", hospital:"🏥", park:"🌳",
   fast_food:"🍔", hotel:"🏨", bank:"🏦", atm:"🏧", school:"🏫"
 };
 
+// Haversine distance in miles
 function haversine(lat1, lon1, lat2, lon2){
   const R=3958.8, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
   const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-let _nearMeMap = null;
+let _nearMeMap = null; // keep map instance so we can pan
 
 function handleNearMe(query){
   showSpinner();
@@ -1072,10 +1299,12 @@ function handleNearMe(query){
   }
   navigator.geolocation.getCurrentPosition(pos=>{
     const {latitude:lat, longitude:lon} = pos.coords;
+    // Search both nodes and ways, bigger radius
     const filter = amenity ? `[amenity=${amenity}]` : "[amenity~\"restaurant|cafe|bar|fast_food\"]";
     const oq = `[out:json][timeout:15];(node${filter}(around:5000,${lat},${lon});way${filter}(around:5000,${lat},${lon}););out center 40;`;
     fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(oq)}`)
     .then(r=>r.json()).then(data=>{
+      // ways have center coords; normalise
       const elements = data.elements.map(e=>{
         if(e.type==='way' && e.center){ return {...e, lat:e.center.lat, lon:e.center.lon}; }
         return e;
@@ -1092,6 +1321,7 @@ function renderMap(userLat, userLon, places, amenity, query){
     : "Nearby Places";
   const icon = amenityIcon[amenity] || "📍";
 
+  // Filter named, compute distance, sort
   let named = places.filter(p=>p.tags?.name && p.lat && p.lon);
   named = named.map(p=>({
     ...p,
@@ -1110,6 +1340,7 @@ function renderMap(userLat, userLon, places, amenity, query){
 
   document.getElementById("resultsContainer").innerHTML = html;
 
+  // Build map
   if(_nearMeMap){ _nearMeMap.remove(); _nearMeMap=null; }
   const map = L.map('map').setView([userLat, userLon], 14);
   _nearMeMap = map;
@@ -1117,10 +1348,12 @@ function renderMap(userLat, userLon, places, amenity, query){
     attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>'
   }).addTo(map);
 
+  // "You" marker
   L.circleMarker([userLat,userLon],{
     radius:10, fillColor:"#4285F4", color:"#fff", weight:3, fillOpacity:1
   }).addTo(map).bindPopup("<strong>📍 You are here</strong>");
 
+  // Custom place marker
   const markerSvg = (n) => L.divIcon({
     className:'',
     html:`<div style="background:#EA4335;color:#fff;border:2px solid #fff;border-radius:50% 50% 50% 0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,.35);transform:rotate(-45deg)"><span style="transform:rotate(45deg)">${n}</span></div>`,
@@ -1136,6 +1369,7 @@ function renderMap(userLat, userLon, places, amenity, query){
     const addr = buildAddr(p.tags);
     const cuisine = p.tags.cuisine ? p.tags.cuisine.replace(/_/g,' ') : '';
     const phone = p.tags.phone||p.tags['contact:phone']||'';
+    const website = p.tags.website||p.tags['contact:website']||'';
     const gmapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(p.tags.name)}/@${p.lat},${p.lon},17z`;
     const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}&destination_place_name=${encodeURIComponent(p.tags.name)}`;
 
@@ -1153,6 +1387,7 @@ function renderMap(userLat, userLon, places, amenity, query){
     marker.bindPopup(popupHtml);
     leafletMarkers.push(marker);
 
+    // Build list card
     const distStr = p.dist < 0.1 ? `${Math.round(p.dist*5280)} ft` : `${p.dist.toFixed(1)} mi`;
     const hoursRaw = p.tags.opening_hours||'';
     const hoursHtml = hoursRaw ? `<div class="place-hours">${escHtml(hoursRaw.slice(0,50))}</div>` : '';
@@ -1175,9 +1410,11 @@ function renderMap(userLat, userLon, places, amenity, query){
       </div>`;
 
     card.addEventListener('click', (e)=>{
-      if(e.target.tagName==='A') return;
+      if(e.target.tagName==='A') return; // don't intercept link clicks
+      // Highlight card
       document.querySelectorAll('.place-card').forEach(c=>c.classList.remove('active'));
       card.classList.add('active');
+      // Pan map and open popup
       map.setView([p.lat, p.lon], 16, {animate:true});
       leafletMarkers[i].openPopup();
     });
@@ -1223,11 +1460,26 @@ function closeNetTools(){
   document.getElementById('logo').classList.remove('shifted');
 }
 
+function termLine(text, cls=''){
+  const el = document.createElement('div');
+  if(cls) el.className = cls;
+  el.textContent = text;
+  return el;
+}
+
 function appendTerminal(text, cls=''){
   const term = document.getElementById('terminal');
   const line = document.createElement('div');
   if(cls) line.className=cls;
   line.textContent = text;
+  term.appendChild(line);
+  term.scrollTop = term.scrollHeight;
+}
+
+function appendTerminalHTML(html){
+  const term = document.getElementById('terminal');
+  const line = document.createElement('div');
+  line.innerHTML = html;
   term.appendChild(line);
   term.scrollTop = term.scrollHeight;
 }
@@ -1241,6 +1493,7 @@ function getHost(){
   return document.getElementById('netHost').value.trim();
 }
 
+// ── PING ──
 async function runPing(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter a hostname or IP.','t-red'); return; }
@@ -1249,6 +1502,7 @@ async function runPing(){
   appendTerminal(`PING ${host} — HTTPS latency probe (4 packets)`,'t-yellow');
   appendTerminal(`Resolving ${host}...`,'t-gray');
 
+  // First do a DNS lookup to get the IP
   let resolvedIP = host;
   try{
     const dns = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`).then(r=>r.json());
@@ -1273,7 +1527,7 @@ async function runPing(){
         appendTerminal(`Request timeout for icmp_seq ${i}`,'t-red');
         await sleep(800); continue;
       }
-      success = true;
+      success = true; // CORS error = server was reached
     }
     if(success){
       const ms = Math.round(performance.now()-start);
@@ -1296,6 +1550,7 @@ async function runPing(){
   }
 }
 
+// ── DIG ──
 async function runDig(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter a hostname.','t-red'); return; }
@@ -1351,6 +1606,7 @@ function dnsTypeName(n){
   return m[n]||`TYPE${n}`;
 }
 
+// ── WHOIS ──
 async function runWhois(){
   const host = getHost().replace(/^https?:\/\//,'').replace(/\/.*/,'');
   if(!host){ appendTerminal('Error: enter a domain.','t-red'); return; }
@@ -1372,6 +1628,7 @@ async function runWhois(){
 
     if(d.status?.length) appendTerminal(`Status:        ${d.status.join(', ')}`,'t-cyan');
 
+    // Events (dates)
     (d.events||[]).forEach(ev=>{
       const label = {
         registration:'Created',
@@ -1382,12 +1639,14 @@ async function runWhois(){
       appendTerminal(`${label.padEnd(15)}${date}`,'t-green');
     });
 
+    // Nameservers
     if(d.nameservers?.length){
       appendTerminal('');
       appendTerminal('Name Servers:','t-yellow');
       d.nameservers.forEach(ns=> appendTerminal(`  ${ns.ldhName}`,'t-white'));
     }
 
+    // Entities (registrant, registrar)
     if(d.entities?.length){
       appendTerminal('');
       appendTerminal('Entities:','t-yellow');
@@ -1409,6 +1668,7 @@ async function runWhois(){
   }
 }
 
+// ── TRACEROUTE ──
 async function runTraceroute(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter a hostname or IP.','t-red'); return; }
@@ -1420,6 +1680,7 @@ async function runTraceroute(){
   appendTerminal('   Showing estimated hop information via DNS path analysis instead...','t-gray');
   appendTerminal('');
 
+  // Simulate a few hops as placeholder
   appendTerminal(' 1  gateway (192.168.1.1)   ~1 ms','t-green');
   appendTerminal(' 2  * * *','t-gray');
   appendTerminal(' 3  * * *','t-gray');
@@ -1440,6 +1701,7 @@ async function runTraceroute(){
   }
 }
 
+// ── NSLOOKUP ──
 async function runNslookup(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter a hostname.','t-red'); return; }
@@ -1449,6 +1711,7 @@ async function runNslookup(){
   appendTerminal(`Address:  8.8.8.8#53`,'t-yellow');
   appendTerminal('');
 
+  // A record
   try{
     const resA = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`).then(r=>r.json());
     if(resA.Answer?.length){
@@ -1460,6 +1723,7 @@ async function runNslookup(){
     }
   } catch(e){ appendTerminal(`Error: ${e.message}`,'t-red'); }
 
+  // AAAA
   try{
     const resAAAA = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=AAAA`).then(r=>r.json());
     if(resAAAA.Answer?.length){
@@ -1470,6 +1734,7 @@ async function runNslookup(){
   } catch(e){ /* skip */ }
 }
 
+// ── REVERSE DNS ──
 async function runReverseDns(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter an IP address.','t-red'); return; }
@@ -1477,6 +1742,7 @@ async function runReverseDns(){
   appendTerminal('');
   appendTerminal(`Reverse DNS lookup: ${host}`,'t-yellow');
 
+  // Convert IP to PTR format: 1.2.3.4 → 4.3.2.1.in-addr.arpa
   const parts = host.split('.');
   if(parts.length !== 4 || parts.some(p=>isNaN(parseInt(p)))){
     appendTerminal('Error: please enter a valid IPv4 address (e.g. 8.8.8.8)','t-red');
@@ -1498,38 +1764,409 @@ async function runReverseDns(){
 }
 
 /* ══════════════════════════════════════════
-   JULIE
+   JULIE — 80s SITCOM INTRO ENGINE
 ══════════════════════════════════════════ */
-const loveNotes=[
-  "Julie, every little thing you do is magic.",
-  "You light up rooms without trying.",
-  "You're my favorite search result.",
-  "Everything is better with you."
+
+// Camera transforms for each of the 6 panels in the 3×2 montage grid
+// Each entry: CSS transform to zoom/pan to that panel
+const CAM = {
+  full:    'scale(1) translate(0%, 0%)',
+  tl:      'scale(2.6) translate(33%, 25%)',   // top-left  (portrait)
+  tc:      'scale(2.6) translate(0%,  25%)',   // top-center (Julie grinning)
+  tr:      'scale(2.6) translate(-33%, 25%)',  // top-right  (action pose)
+  bl:      'scale(2.6) translate(33%, -25%)',  // bottom-left (winking)
+  bc:      'scale(2.6) translate(0%,  -25%)',  // bottom-center (group)
+  br:      'scale(2.6) translate(-33%, -25%)', // bottom-right (glamour)
+};
+
+// Scene sequence: [camKey, title, sub, nameText, nameRole, durationMs]
+const SCENES = [
+  // startup — handled manually in activateJulie
+  ['full',  '',                '',                '',          '',                  2400],
+  ['tl',   'DENIM',           '& DREAMS',        'Julie',     'STARRING',           2600],
+  ['tc',   '',                '',                'Julie',     'AS HERSELF',         2400],
+  ['tr',   '⚡',              'SHE\'S GOT IT',   '',          '',                   2200],
+  ['bl',   '',                '',                'Julie',     'YOUR DREAM GIRL',    2400],
+  ['bc',   'AND FRIENDS',     '',                '',          '',                   2200],
+  ['br',   'DENIM & DREAMS',  'CREATED WITH LOVE BY CHRISTOPHER', '', '',          2800],
+  ['full', 'DENIM & DREAMS',  '★  SEASON 1  ★',  '',          '',                  2000],
 ];
 
+let _julieAudioCtx = null;
+let _julieSources  = [];
 let heartInterval;
+let _sceneTimer;
+let _sceneIdx = 0;
 
 function activateJulie(){
   hideResults(); closeNetTools();
-  document.body.classList.add("julie-active");
-  document.getElementById("juliePanel").style.display="block";
-  document.getElementById("logo").classList.add("shifted");
-  document.getElementById("julieMessage").innerText=
-    loveNotes[Math.floor(Math.random()*loveNotes.length)];
-  heartInterval=setInterval(()=>{
-    const h=document.createElement("div");
-    h.className="heart";
-    h.innerHTML="❤";
-    h.style.left=Math.random()*100+"vw";
+  const overlay = document.getElementById('julieOverlay');
+  overlay.classList.add('active');
+
+  // Reset image
+  const img = document.getElementById('julieImg');
+  img.style.transition = 'none';
+  img.style.transform = CAM.full;
+
+  // Phase 1: static on
+  const stat = document.getElementById('tvStatic');
+  stat.classList.add('on');
+
+  setTimeout(()=>{
+    // Phase 2: color bars
+    stat.classList.remove('on');
+    const bars = document.getElementById('colorBars');
+    bars.classList.add('on');
+    playColorBarBeep();
+
+    setTimeout(()=>{
+      bars.classList.remove('on');
+      // Phase 3: image appears + music starts
+      img.style.transition = 'transform 2.4s cubic-bezier(.45,.05,.55,.95)';
+      playJulieTheme();
+      _sceneIdx = 0;
+      runScene();
+    }, 800);
+  }, 900);
+
+  // Floating hearts
+  heartInterval = setInterval(()=>{
+    const h = document.createElement('div');
+    h.className = 'heart';
+    h.innerHTML = '❤';
+    h.style.left = Math.random()*100+'vw';
+    h.style.animationDuration = (4+Math.random()*4)+'s';
     document.body.appendChild(h);
-    setTimeout(()=>h.remove(),6000);
-  },600);
+    setTimeout(()=>h.remove(), 8000);
+  }, 700);
+}
+
+function runScene(){
+  if(_sceneIdx >= SCENES.length){
+    // end: freeze frame flash then loop back to scene 1
+    doFreezeFlash();
+    setTimeout(()=>{ _sceneIdx=1; runScene(); }, 700);
+    return;
+  }
+
+  const [cam, title, sub, name, role, dur] = SCENES[_sceneIdx];
+  const img = document.getElementById('julieImg');
+
+  // Pan camera
+  img.style.transform = CAM[cam];
+
+  // Title card
+  const card = document.getElementById('sceneCard');
+  const titleEl = document.getElementById('sceneTitle');
+  const subEl   = document.getElementById('sceneSub');
+  titleEl.textContent = title;
+  subEl.textContent   = sub;
+  if(title || sub){
+    card.classList.add('visible');
+    // sparkles
+    if(title) spawnSparkles(document.getElementById('tvFrame'), 5);
+  } else {
+    card.classList.remove('visible');
+  }
+
+  // Name card
+  const nameCard = document.getElementById('nameCard');
+  const nameEl   = document.getElementById('nameCardName');
+  const roleEl   = document.getElementById('nameCardRole');
+  if(name){
+    nameEl.textContent = name;
+    roleEl.textContent = role;
+    nameCard.classList.add('visible');
+  } else {
+    nameCard.classList.remove('visible');
+  }
+
+  _sceneIdx++;
+  _sceneTimer = setTimeout(()=>{
+    card.classList.remove('visible');
+    nameCard.classList.remove('visible');
+    setTimeout(runScene, 300);
+  }, dur - 300);
+}
+
+function doFreezeFlash(){
+  const ff = document.getElementById('freezeFrame');
+  ff.classList.add('flash');
+  setTimeout(()=>ff.classList.remove('flash'), 120);
+  setTimeout(()=>{ ff.classList.add('flash'); setTimeout(()=>ff.classList.remove('flash'), 80); }, 200);
+}
+
+function spawnSparkles(container, count){
+  const stars = ['⭐','✨','💫','🌟','★'];
+  for(let i=0; i<count; i++){
+    setTimeout(()=>{
+      const s = document.createElement('div');
+      s.className = 'sparkle';
+      s.textContent = stars[Math.floor(Math.random()*stars.length)];
+      s.style.left = (10+Math.random()*80)+'%';
+      s.style.top  = (10+Math.random()*80)+'%';
+      s.style.fontSize = (16+Math.random()*20)+'px';
+      container.appendChild(s);
+      setTimeout(()=>s.remove(), 700);
+    }, i*100);
+  }
 }
 
 function exitJulie(){
-  document.body.classList.remove("julie-active");
-  document.getElementById("juliePanel").style.display="none";
+  document.getElementById('julieOverlay').classList.remove('active');
+  clearTimeout(_sceneTimer);
   clearInterval(heartInterval);
+  stopJulieTheme();
+  // hide cards
+  document.getElementById('sceneCard').classList.remove('visible');
+  document.getElementById('nameCard').classList.remove('visible');
+  // remove floating hearts
+  document.querySelectorAll('.heart').forEach(h=>h.remove());
+}
+
+/* ── 80s Synth Theme (Web Audio API) ── */
+function playColorBarBeep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 1000;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.6);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime+0.7);
+  } catch(e){}
+}
+
+function stopJulieTheme(){
+  if(_julieAudioCtx){
+    try{ _julieAudioCtx.close(); } catch(e){}
+    _julieAudioCtx = null;
+  }
+  _julieSources = [];
+}
+
+function playJulieTheme(){
+  stopJulieTheme();
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    _julieAudioCtx = ctx;
+
+    // Master gain + compressor
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.ratio.value = 4;
+    comp.connect(ctx.destination);
+    const master = ctx.createGain();
+    master.gain.value = 0.55;
+    master.connect(comp);
+
+    // Reverb (simple convolver)
+    const reverb = makeReverb(ctx, 1.8, 0.4);
+    reverb.connect(master);
+    const dryGain = ctx.createGain(); dryGain.gain.value = 0.65; dryGain.connect(master);
+    const wetGain = ctx.createGain(); wetGain.gain.value = 0.35; wetGain.connect(master);
+
+    const BPM = 126;
+    const b = 60/BPM;  // seconds per beat
+    const now = ctx.currentTime + 0.05;
+
+    // ── MELODY (square wave lead) ──
+    // Key: A major — A B C# D E F# G# A
+    // Melody is 8 bars (32 beats), repeating
+    const ML = [
+      // Bar 1-2: opening statement
+      [880,0,1],[659,1,0.5],[784,1.5,0.5],[880,2,1],[784,3,0.5],[659,3.5,0.5],
+      // Bar 3-4
+      [740,4,1],[659,5,0.5],[587,5.5,0.5],[659,6,1],[587,7,1],
+      // Bar 5-6: response phrase
+      [988,8,1],[880,9,0.5],[784,9.5,0.5],[880,10,1],[659,11,1],
+      // Bar 7-8: cadence
+      [784,12,0.5],[880,12.5,0.5],[988,13,0.5],[1047,13.5,0.5],[988,14,1],[880,15,1],
+      // Bar 9-10: bridge
+      [1047,16,1],[988,17,0.5],[880,17.5,0.5],[784,18,1],[880,19,1],
+      // Bar 11-12
+      [659,20,0.5],[784,20.5,0.5],[880,21,1],[988,22,1],[880,23,0.5],[784,23.5,0.5],
+      // Bar 13-14: build
+      [880,24,1],[1047,25,0.5],[988,25.5,0.5],[880,26,1],[784,27,1],
+      // Bar 15-16: ending phrase — land on A
+      [880,28,0.5],[784,28.5,0.5],[659,29,0.5],[587,29.5,0.5],[659,30,1],[880,31,1],
+    ];
+
+    // Harmony line (third below, slightly detuned)
+    const HL = ML.map(([f,s,d])=>[f*0.749,s+0.02,d]);
+
+    function schedMelody(notes, waveType, gainVal, dest){
+      notes.forEach(([freq, startBeat, durBeats])=>{
+        const startT = now + startBeat*b;
+        const endT   = startT + durBeats*b*0.88;
+        const osc = ctx.createOscillator();
+        const g   = ctx.createGain();
+        osc.type = waveType;
+        osc.frequency.value = freq;
+        // slight vibrato
+        const vib = ctx.createOscillator();
+        const vibG = ctx.createGain();
+        vib.frequency.value = 5.5; vibG.gain.value = freq*0.012;
+        vib.connect(vibG); vibG.connect(osc.frequency);
+        vib.start(startT); vib.stop(endT+0.1);
+        // envelope
+        g.gain.setValueAtTime(0, startT);
+        g.gain.linearRampToValueAtTime(gainVal, startT+0.025);
+        g.gain.setValueAtTime(gainVal*0.75, startT+0.12);
+        g.gain.exponentialRampToValueAtTime(0.001, endT);
+        osc.connect(g); g.connect(dest);
+        osc.start(startT); osc.stop(endT+0.05);
+      });
+    }
+
+    // Lead — square wave
+    schedMelody(ML, 'square', 0.22, dryGain);
+    schedMelody(ML, 'square', 0.08, wetGain);
+    // Harmony — sawtooth
+    schedMelody(HL, 'sawtooth', 0.09, dryGain);
+
+    // ── BASS LINE (sawtooth) ──
+    const bassNotes = [
+      // A2 pattern
+      [110,0,1],[110,1,0.5],[165,1.5,0.5],
+      [138,2,1],[138,3,1],
+      [147,4,1],[147,5,0.5],[110,5.5,0.5],
+      [110,6,1],[123,7,1],
+      [165,8,1],[165,9,0.5],[196,9.5,0.5],
+      [185,10,1],[185,11,1],
+      [196,12,0.5],[220,12.5,0.5],[246,13,0.5],[196,13.5,0.5],
+      [185,14,1],[165,15,1],
+      [138,16,1],[138,17,0.5],[165,17.5,0.5],
+      [110,18,1],[123,19,1],
+      [138,20,1],[165,21,0.5],[185,21.5,0.5],
+      [196,22,1],[165,23,1],
+      [185,24,1],[196,25,0.5],[220,25.5,0.5],
+      [246,26,1],[220,27,1],
+      [196,28,0.5],[185,28.5,0.5],[165,29,0.5],[138,29.5,0.5],
+      [110,30,1],[110,31,1],
+    ];
+
+    bassNotes.forEach(([freq, startBeat, durBeats])=>{
+      const startT = now + startBeat*b;
+      const endT   = startT + durBeats*b*0.9;
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      // bass filter
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'lowpass'; filt.frequency.value = 600; filt.Q.value = 1.5;
+      g.gain.setValueAtTime(0, startT);
+      g.gain.linearRampToValueAtTime(0.38, startT+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, endT);
+      osc.connect(filt); filt.connect(g); g.connect(dryGain);
+      osc.start(startT); osc.stop(endT+0.05);
+    });
+
+    // ── DRUMS ──
+    function kick(t){
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.exponentialRampToValueAtTime(30, t+0.18);
+      g.gain.setValueAtTime(0.7, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.22);
+      osc.connect(g); g.connect(dryGain);
+      osc.start(t); osc.stop(t+0.25);
+    }
+    function snare(t){
+      // noise burst
+      const bufSize = ctx.sampleRate*0.15;
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const d   = buf.getChannelData(0);
+      for(let i=0;i<bufSize;i++) d[i]=(Math.random()*2-1);
+      const src   = ctx.createBufferSource();
+      const filt  = ctx.createBiquadFilter();
+      const g     = ctx.createGain();
+      src.buffer  = buf;
+      filt.type   = 'bandpass'; filt.frequency.value = 1500; filt.Q.value = 0.8;
+      g.gain.setValueAtTime(0.28, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.14);
+      src.connect(filt); filt.connect(g); g.connect(dryGain);
+      src.start(t); src.stop(t+0.16);
+    }
+    function hihat(t, vol=0.12){
+      const bufSize = ctx.sampleRate*0.04;
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const d   = buf.getChannelData(0);
+      for(let i=0;i<bufSize;i++) d[i]=(Math.random()*2-1);
+      const src  = ctx.createBufferSource();
+      const filt = ctx.createBiquadFilter();
+      const g    = ctx.createGain();
+      src.buffer = buf;
+      filt.type  = 'highpass'; filt.frequency.value = 8000;
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.04);
+      src.connect(filt); filt.connect(g); g.connect(dryGain);
+      src.start(t); src.stop(t+0.05);
+    }
+
+    // 32-bar drum pattern (4/4, 4 beats per bar)
+    for(let bar=0; bar<32; bar++){
+      const barStart = now + bar*4*b;
+      // kick on 1 and 3
+      kick(barStart);
+      kick(barStart + 2*b);
+      // snare on 2 and 4
+      snare(barStart + b);
+      snare(barStart + 3*b);
+      // 8th note hi-hats
+      for(let e=0;e<8;e++) hihat(barStart + e*0.5*b, e%2===0?0.14:0.09);
+    }
+
+    // ── PAD / CHORD STABS ──
+    const chords = [
+      [[220,277,330], 0, 4],   // A maj
+      [[185,233,277], 4, 4],   // F# min
+      [[196,247,294], 8, 4],   // G maj
+      [[220,277,330], 12, 4],  // A maj
+      [[175,220,262], 16, 4],  // F maj
+      [[196,247,294], 20, 4],  // G maj
+      [[220,277,330], 24, 4],  // A maj
+      [[165,207,247], 28, 4],  // E min
+    ];
+
+    chords.forEach(([notes, startBeat, durBeats])=>{
+      notes.forEach(freq=>{
+        const startT = now + startBeat*b;
+        const endT   = startT + durBeats*b*0.95;
+        const osc  = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const g    = ctx.createGain();
+        osc.type  = 'sawtooth'; osc.frequency.value  = freq;
+        osc2.type = 'sawtooth'; osc2.frequency.value = freq*1.005; // slight detune
+        const filt = ctx.createBiquadFilter();
+        filt.type = 'lowpass'; filt.frequency.value = 1800; filt.Q.value = 0.5;
+        g.gain.setValueAtTime(0, startT);
+        g.gain.linearRampToValueAtTime(0.05, startT+0.08);
+        g.gain.setValueAtTime(0.04, endT-0.1);
+        g.gain.linearRampToValueAtTime(0, endT);
+        osc.connect(filt); osc2.connect(filt); filt.connect(g); g.connect(wetGain);
+        osc.start(startT); osc2.start(startT);
+        osc.stop(endT+0.05); osc2.stop(endT+0.05);
+      });
+    });
+
+  } catch(e){ console.warn('Audio error', e); }
+}
+
+function makeReverb(ctx, duration, decay){
+  const len  = ctx.sampleRate * duration;
+  const buf  = ctx.createBuffer(2, len, ctx.sampleRate);
+  for(let ch=0;ch<2;ch++){
+    const d = buf.getChannelData(ch);
+    for(let i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, decay*8);
+  }
+  const conv = ctx.createConvolver();
+  conv.buffer = buf;
+  return conv;
 }
 
 /* ══════════════════════════════════════════
