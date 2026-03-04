@@ -226,12 +226,123 @@ body.julie-active{
 .forecast-day .day-icon{font-size:22px;margin-bottom:4px;}
 
 /* ── Places ── */
-.place-list{margin-top:12px;}
-.place-item{padding:10px 0;border-bottom:1px solid var(--input-border);color:var(--text);}
-.place-item:last-child{border-bottom:none;}
-.place-name{font-weight:500;}
-.place-type{font-size:13px;color:var(--subtext);text-transform:capitalize;}
+.places-layout{
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:16px;
+  margin-top:14px;
+}
+@media(max-width:700px){
+  .places-layout{grid-template-columns:1fr;}
+}
+.places-map-wrap{
+  border-radius:12px;
+  overflow:hidden;
+  height:480px;
+  border:1px solid var(--input-border);
+}
+.place-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-height:480px;
+  overflow-y:auto;
+  padding-right:4px;
+}
+.place-list::-webkit-scrollbar{width:4px;}
+.place-list::-webkit-scrollbar-track{background:transparent;}
+.place-list::-webkit-scrollbar-thumb{background:var(--input-border);border-radius:4px;}
+
+.place-card{
+  background:var(--bg);
+  border:1px solid var(--input-border);
+  border-radius:10px;
+  padding:12px 14px;
+  cursor:pointer;
+  transition:.15s;
+  color:var(--text);
+}
+.place-card:hover,.place-card.active{
+  border-color:#4285F4;
+  box-shadow:0 2px 10px rgba(66,133,244,.15);
+}
+.place-card.active{
+  background:rgba(66,133,244,.05);
+}
+.place-card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:8px;
+}
+.place-name{font-weight:500;font-size:15px;line-height:1.3;}
+.place-dist{
+  font-size:12px;
+  color:var(--subtext);
+  white-space:nowrap;
+  flex-shrink:0;
+  margin-top:2px;
+}
+.place-type{
+  font-size:12px;
+  color:var(--subtext);
+  text-transform:capitalize;
+  margin-top:3px;
+}
+.place-addr{
+  font-size:12px;
+  color:var(--subtext);
+  margin-top:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.place-hours{
+  font-size:12px;
+  margin-top:4px;
+}
+.place-hours.open{color:#34A853;}
+.place-hours.closed{color:#EA4335;}
+.place-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+.place-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:5px 12px;
+  border-radius:16px;
+  font-size:12px;
+  font-family:inherit;
+  cursor:pointer;
+  border:1px solid var(--input-border);
+  background:var(--bg);
+  color:var(--text);
+  text-decoration:none;
+  transition:.15s;
+  flex:1;
+  justify-content:center;
+}
+.place-btn:hover{box-shadow:0 2px 6px var(--shadow);}
+.place-btn.directions{
+  background:#4285F4;
+  border-color:#4285F4;
+  color:#fff;
+}
+.place-btn.directions:hover{background:#3367d6;}
+.place-btn.gmaps{
+  border-color:#34A853;
+  color:#34A853;
+}
+.place-btn.gmaps:hover{background:rgba(52,168,83,.08);}
 .no-results{text-align:center;padding:30px;color:var(--subtext);}
+.places-summary{
+  font-size:13px;
+  color:var(--subtext);
+  margin-bottom:6px;
+}
 
 /* ── Math ── */
 .math-result{
@@ -573,7 +684,7 @@ body.julie-active{
 <div class="net-tools-panel" id="netToolsPanel">
   <h2>🔧 Network Tools</h2>
   <div class="net-input-row">
-    <input type="text" id="netHost" placeholder="domain.com or IP address..." 
+    <input type="text" id="netHost" placeholder="domain.com or IP address..."
       onkeydown="if(event.key==='Enter') runDig()">
     <select id="digType" title="DNS record type">
       <option value="A">A</option>
@@ -703,11 +814,8 @@ function performSearch(){
 ══════════════════════════════════════════ */
 function isMathQuery(q){
   const t = q.trim();
-  // Natural language prefix
   if(/^(what is|calculate|compute|solve|eval(uate)?)\s+[\d\(√]/i.test(t)) return true;
-  // Pure expression (only digits, operators, parens, dots)
   if(/^[0-9\s\+\-\*\/\^\(\)\.\%\,!]+$/.test(t) && /\d/.test(t) && /[\+\-\*\/\^]/.test(t)) return true;
-  // Math functions
   if(/^(sqrt|sin|cos|tan|log|abs|ceil|floor|round|pi|factorial)\s*[\(\d]/i.test(t)) return true;
   return false;
 }
@@ -758,7 +866,6 @@ const newsFeeds = {
 };
 
 async function handleNews(query){
-  // Strip noise words to find topic
   let topic = query
     .replace(/\b(news|headlines?|breaking|latest|today)\b/gi,'')
     .replace(/\babout\b/gi,'')
@@ -766,7 +873,6 @@ async function handleNews(query){
 
   showSpinner();
 
-  // Pick feed
   let feedUrl = newsFeeds.default;
   let sourceLabel = 'BBC News';
   for(const [key, url] of Object.entries(newsFeeds)){
@@ -780,7 +886,6 @@ async function handleNews(query){
 
     let items = data.items;
 
-    // Client-side filter if topic exists
     if(topic.length > 2){
       const filtered = items.filter(item=>
         item.title.toLowerCase().includes(topic.toLowerCase()) ||
@@ -873,7 +978,7 @@ async function handleImages(query){
 }
 
 /* ══════════════════════════════════════════
-   WEATHER (existing)
+   WEATHER
 ══════════════════════════════════════════ */
 function weatherIcon(code){
   if(code===0) return "☀️";
@@ -935,13 +1040,29 @@ function fetchWeather(lat, lon, label){
 }
 
 /* ══════════════════════════════════════════
-   NEAR ME (existing)
+   NEAR ME
 ══════════════════════════════════════════ */
 const amenityMap={
-  restaurant:"restaurant", coffee:"cafe", cafe:"cafe", gas:"fuel",
+  restaurant:"restaurant", coffee:"cafe", cafe:"cafe", "gas station":"fuel", gas:"fuel",
   library:"library", bar:"bar", grocery:"supermarket",
-  pharmacy:"pharmacy", hospital:"hospital", park:"park"
+  pharmacy:"pharmacy", hospital:"hospital", park:"park",
+  pizza:"restaurant", burger:"fast_food", "fast food":"fast_food",
+  hotel:"hotel", bank:"bank", atm:"atm", school:"school"
 };
+
+const amenityIcon={
+  restaurant:"🍽️", cafe:"☕", fuel:"⛽", library:"📚", bar:"🍺",
+  supermarket:"🛒", pharmacy:"💊", hospital:"🏥", park:"🌳",
+  fast_food:"🍔", hotel:"🏨", bank:"🏦", atm:"🏧", school:"🏫"
+};
+
+function haversine(lat1, lon1, lat2, lon2){
+  const R=3958.8, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+let _nearMeMap = null;
 
 function handleNearMe(query){
   showSpinner();
@@ -951,37 +1072,131 @@ function handleNearMe(query){
   }
   navigator.geolocation.getCurrentPosition(pos=>{
     const {latitude:lat, longitude:lon} = pos.coords;
-    const filter = amenity ? `[amenity=${amenity}]` : "[amenity]";
-    const oq = `[out:json];node${filter}(around:3000,${lat},${lon});out 30;`;
+    const filter = amenity ? `[amenity=${amenity}]` : "[amenity~\"restaurant|cafe|bar|fast_food\"]";
+    const oq = `[out:json][timeout:15];(node${filter}(around:5000,${lat},${lon});way${filter}(around:5000,${lat},${lon}););out center 40;`;
     fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(oq)}`)
-    .then(r=>r.json()).then(data=>renderMap(lat,lon,data.elements,amenity))
+    .then(r=>r.json()).then(data=>{
+      const elements = data.elements.map(e=>{
+        if(e.type==='way' && e.center){ return {...e, lat:e.center.lat, lon:e.center.lon}; }
+        return e;
+      });
+      renderMap(lat, lon, elements, amenity, query);
+    })
     .catch(()=>{ document.getElementById("resultsContainer").innerHTML='<p class="no-results">Could not load map data.</p>'; });
-  },()=>{ document.getElementById("resultsContainer").innerHTML='<p class="no-results">Location access denied.</p>'; });
+  },()=>{ document.getElementById("resultsContainer").innerHTML='<p class="no-results">Location access denied. Please allow location and try again.</p>'; });
 }
 
-function renderMap(lat, lon, places, amenity){
-  const label = amenity ? amenity.charAt(0).toUpperCase()+amenity.slice(1)+"s" : "Places";
-  const named = places.filter(p=>p.tags?.name);
-  let html=`<h2 style="color:var(--text);margin-top:0">Nearby ${label}</h2>
-  <div class="map-container" id="map"></div><div class="place-list">`;
-  named.slice(0,20).forEach(p=>{
-    const type = p.tags.amenity||"";
-    const addr = p.tags["addr:street"] ? (p.tags["addr:housenumber"]||"")+" "+p.tags["addr:street"] : "";
-    html+=`<div class="place-item">
-      <div class="place-name">${escHtml(p.tags.name)}</div>
-      ${type?`<div class="place-type">${type.replace(/_/g,' ')}${addr?' · '+addr:''}</div>`:''}
-    </div>`;
+function renderMap(userLat, userLon, places, amenity, query){
+  const typeLabel = amenity
+    ? (amenity==='fast_food'?'Fast Food Places':amenity.charAt(0).toUpperCase()+amenity.slice(1)+"s")
+    : "Nearby Places";
+  const icon = amenityIcon[amenity] || "📍";
+
+  let named = places.filter(p=>p.tags?.name && p.lat && p.lon);
+  named = named.map(p=>({
+    ...p,
+    dist: haversine(userLat, userLon, p.lat, p.lon)
+  }));
+  named.sort((a,b)=>a.dist-b.dist);
+  named = named.slice(0,20);
+
+  const html=`
+  <h2 style="color:var(--text);margin-top:0">${icon} ${typeLabel} Near You</h2>
+  <p class="places-summary">${named.length} places found within 3 miles · Sorted by distance</p>
+  <div class="places-layout">
+    <div class="places-map-wrap" id="map"></div>
+    <div class="place-list" id="placeList"></div>
+  </div>`;
+
+  document.getElementById("resultsContainer").innerHTML = html;
+
+  if(_nearMeMap){ _nearMeMap.remove(); _nearMeMap=null; }
+  const map = L.map('map').setView([userLat, userLon], 14);
+  _nearMeMap = map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>'
+  }).addTo(map);
+
+  L.circleMarker([userLat,userLon],{
+    radius:10, fillColor:"#4285F4", color:"#fff", weight:3, fillOpacity:1
+  }).addTo(map).bindPopup("<strong>📍 You are here</strong>");
+
+  const markerSvg = (n) => L.divIcon({
+    className:'',
+    html:`<div style="background:#EA4335;color:#fff;border:2px solid #fff;border-radius:50% 50% 50% 0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,.35);transform:rotate(-45deg)"><span style="transform:rotate(45deg)">${n}</span></div>`,
+    iconSize:[28,28], iconAnchor:[14,28], popupAnchor:[0,-30]
   });
-  if(!named.length) html+=`<p class="no-results">No results nearby.</p>`;
-  html+="</div>";
-  document.getElementById("resultsContainer").innerHTML=html;
-  const map=L.map('map').setView([lat,lon],14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
-  L.circleMarker([lat,lon],{radius:8,fillColor:"#4285F4",color:"#fff",weight:2,fillOpacity:1})
-    .addTo(map).bindPopup("You are here");
-  named.slice(0,20).forEach(p=>{
-    if(p.lat&&p.lon) L.marker([p.lat,p.lon]).addTo(map).bindPopup(`<strong>${escHtml(p.tags.name)}</strong>`);
+
+  const leafletMarkers = [];
+
+  named.forEach((p, i)=>{
+    const num = i+1;
+    const marker = L.marker([p.lat,p.lon], {icon: markerSvg(num)}).addTo(map);
+
+    const addr = buildAddr(p.tags);
+    const cuisine = p.tags.cuisine ? p.tags.cuisine.replace(/_/g,' ') : '';
+    const phone = p.tags.phone||p.tags['contact:phone']||'';
+    const gmapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(p.tags.name)}/@${p.lat},${p.lon},17z`;
+    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}&destination_place_name=${encodeURIComponent(p.tags.name)}`;
+
+    const popupHtml = `
+      <div style="font-family:Arial,sans-serif;min-width:160px">
+        <strong>${escHtml(p.tags.name)}</strong><br>
+        ${addr?`<span style="font-size:12px;color:#555">${escHtml(addr)}</span><br>`:''}
+        ${cuisine?`<span style="font-size:12px;color:#555">${escHtml(cuisine)}</span><br>`:''}
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <a href="${directionsUrl}" target="_blank" style="background:#4285F4;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;text-decoration:none">🗺 Directions</a>
+          <a href="${gmapsUrl}" target="_blank" style="border:1px solid #4285F4;color:#4285F4;padding:4px 10px;border-radius:12px;font-size:12px;text-decoration:none">Maps</a>
+        </div>
+      </div>`;
+
+    marker.bindPopup(popupHtml);
+    leafletMarkers.push(marker);
+
+    const distStr = p.dist < 0.1 ? `${Math.round(p.dist*5280)} ft` : `${p.dist.toFixed(1)} mi`;
+    const hoursRaw = p.tags.opening_hours||'';
+    const hoursHtml = hoursRaw ? `<div class="place-hours">${escHtml(hoursRaw.slice(0,50))}</div>` : '';
+
+    const card = document.createElement('div');
+    card.className='place-card';
+    card.id=`place-card-${i}`;
+    card.innerHTML=`
+      <div class="place-card-top">
+        <div class="place-name"><span style="color:#EA4335;font-size:13px;margin-right:6px">${num}</span>${escHtml(p.tags.name)}</div>
+        <div class="place-dist">${distStr}</div>
+      </div>
+      ${cuisine?`<div class="place-type">${escHtml(cuisine)}</div>`:`<div class="place-type">${(amenity||'place').replace(/_/g,' ')}</div>`}
+      ${addr?`<div class="place-addr">📍 ${escHtml(addr)}</div>`:''}
+      ${phone?`<div class="place-addr">📞 ${escHtml(phone)}</div>`:''}
+      ${hoursHtml}
+      <div class="place-actions">
+        <a class="place-btn directions" href="${directionsUrl}" target="_blank" rel="noopener">🗺 Directions</a>
+        <a class="place-btn gmaps" href="${gmapsUrl}" target="_blank" rel="noopener">📌 Google Maps</a>
+      </div>`;
+
+    card.addEventListener('click', (e)=>{
+      if(e.target.tagName==='A') return;
+      document.querySelectorAll('.place-card').forEach(c=>c.classList.remove('active'));
+      card.classList.add('active');
+      map.setView([p.lat, p.lon], 16, {animate:true});
+      leafletMarkers[i].openPopup();
+    });
+
+    document.getElementById('placeList').appendChild(card);
   });
+
+  if(!named.length){
+    document.getElementById('placeList').innerHTML=
+      '<p class="no-results">No named places found nearby. Try a broader search.</p>';
+  }
+}
+
+function buildAddr(tags){
+  const parts=[];
+  if(tags['addr:housenumber']) parts.push(tags['addr:housenumber']);
+  if(tags['addr:street']) parts.push(tags['addr:street']);
+  if(tags['addr:city']) parts.push(tags['addr:city']);
+  return parts.join(' ');
 }
 
 /* ══════════════════════════════════════════
@@ -1008,26 +1223,11 @@ function closeNetTools(){
   document.getElementById('logo').classList.remove('shifted');
 }
 
-function termLine(text, cls=''){
-  const el = document.createElement('div');
-  if(cls) el.className = cls;
-  el.textContent = text;
-  return el;
-}
-
 function appendTerminal(text, cls=''){
   const term = document.getElementById('terminal');
   const line = document.createElement('div');
   if(cls) line.className=cls;
   line.textContent = text;
-  term.appendChild(line);
-  term.scrollTop = term.scrollHeight;
-}
-
-function appendTerminalHTML(html){
-  const term = document.getElementById('terminal');
-  const line = document.createElement('div');
-  line.innerHTML = html;
   term.appendChild(line);
   term.scrollTop = term.scrollHeight;
 }
@@ -1041,7 +1241,6 @@ function getHost(){
   return document.getElementById('netHost').value.trim();
 }
 
-// ── PING ──
 async function runPing(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter a hostname or IP.','t-red'); return; }
@@ -1050,7 +1249,6 @@ async function runPing(){
   appendTerminal(`PING ${host} — HTTPS latency probe (4 packets)`,'t-yellow');
   appendTerminal(`Resolving ${host}...`,'t-gray');
 
-  // First do a DNS lookup to get the IP
   let resolvedIP = host;
   try{
     const dns = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`).then(r=>r.json());
@@ -1075,7 +1273,7 @@ async function runPing(){
         appendTerminal(`Request timeout for icmp_seq ${i}`,'t-red');
         await sleep(800); continue;
       }
-      success = true; // CORS error = server was reached
+      success = true;
     }
     if(success){
       const ms = Math.round(performance.now()-start);
@@ -1098,7 +1296,6 @@ async function runPing(){
   }
 }
 
-// ── DIG ──
 async function runDig(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter a hostname.','t-red'); return; }
@@ -1154,7 +1351,6 @@ function dnsTypeName(n){
   return m[n]||`TYPE${n}`;
 }
 
-// ── WHOIS ──
 async function runWhois(){
   const host = getHost().replace(/^https?:\/\//,'').replace(/\/.*/,'');
   if(!host){ appendTerminal('Error: enter a domain.','t-red'); return; }
@@ -1176,7 +1372,6 @@ async function runWhois(){
 
     if(d.status?.length) appendTerminal(`Status:        ${d.status.join(', ')}`,'t-cyan');
 
-    // Events (dates)
     (d.events||[]).forEach(ev=>{
       const label = {
         registration:'Created',
@@ -1187,14 +1382,12 @@ async function runWhois(){
       appendTerminal(`${label.padEnd(15)}${date}`,'t-green');
     });
 
-    // Nameservers
     if(d.nameservers?.length){
       appendTerminal('');
       appendTerminal('Name Servers:','t-yellow');
       d.nameservers.forEach(ns=> appendTerminal(`  ${ns.ldhName}`,'t-white'));
     }
 
-    // Entities (registrant, registrar)
     if(d.entities?.length){
       appendTerminal('');
       appendTerminal('Entities:','t-yellow');
@@ -1216,7 +1409,6 @@ async function runWhois(){
   }
 }
 
-// ── TRACEROUTE ──
 async function runTraceroute(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter a hostname or IP.','t-red'); return; }
@@ -1228,7 +1420,6 @@ async function runTraceroute(){
   appendTerminal('   Showing estimated hop information via DNS path analysis instead...','t-gray');
   appendTerminal('');
 
-  // Simulate a few hops as placeholder
   appendTerminal(' 1  gateway (192.168.1.1)   ~1 ms','t-green');
   appendTerminal(' 2  * * *','t-gray');
   appendTerminal(' 3  * * *','t-gray');
@@ -1249,7 +1440,6 @@ async function runTraceroute(){
   }
 }
 
-// ── NSLOOKUP ──
 async function runNslookup(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter a hostname.','t-red'); return; }
@@ -1259,7 +1449,6 @@ async function runNslookup(){
   appendTerminal(`Address:  8.8.8.8#53`,'t-yellow');
   appendTerminal('');
 
-  // A record
   try{
     const resA = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`).then(r=>r.json());
     if(resA.Answer?.length){
@@ -1271,7 +1460,6 @@ async function runNslookup(){
     }
   } catch(e){ appendTerminal(`Error: ${e.message}`,'t-red'); }
 
-  // AAAA
   try{
     const resAAAA = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=AAAA`).then(r=>r.json());
     if(resAAAA.Answer?.length){
@@ -1282,7 +1470,6 @@ async function runNslookup(){
   } catch(e){ /* skip */ }
 }
 
-// ── REVERSE DNS ──
 async function runReverseDns(){
   const host = getHost();
   if(!host){ appendTerminal('Error: enter an IP address.','t-red'); return; }
@@ -1290,7 +1477,6 @@ async function runReverseDns(){
   appendTerminal('');
   appendTerminal(`Reverse DNS lookup: ${host}`,'t-yellow');
 
-  // Convert IP to PTR format: 1.2.3.4 → 4.3.2.1.in-addr.arpa
   const parts = host.split('.');
   if(parts.length !== 4 || parts.some(p=>isNaN(parseInt(p)))){
     appendTerminal('Error: please enter a valid IPv4 address (e.g. 8.8.8.8)','t-red');
@@ -1312,7 +1498,7 @@ async function runReverseDns(){
 }
 
 /* ══════════════════════════════════════════
-   JULIE (existing)
+   JULIE
 ══════════════════════════════════════════ */
 const loveNotes=[
   "Julie, every little thing you do is magic.",
