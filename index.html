@@ -868,7 +868,7 @@ body.julie-active{ background:var(--bg); }
 <!-- Julie 90s Cartoon Overlay -->
 <div class="julie-overlay" id="julieOverlay">
   <div class="tv-frame" id="tvFrame">
-    <canvas id="julieCanvas" style="width:100%;height:100%;display:block;image-rendering:pixelated;"></canvas>
+    <canvas id="julieCanvas" style="width:100%;height:100%;display:block;"></canvas>
     <div class="scanlines"></div>
     <div class="vhs-rgb"></div>
   </div>
@@ -2708,9 +2708,9 @@ function drawColorBars(ctx){
 ══════════════════════════════════════════════════════════ */
 let _cFn=0;
 
-function renderCartoonFrame(ctx, W, H, t){
+function renderCartoonFrame(ctx, t){
   _cFn++;
-  ctx.save(); ctx.scale(W/CW, H/CH);
+  ctx.save();
 
   const lp=t%LOOP_DUR;
 
@@ -2963,16 +2963,15 @@ function activateJulie(){
 
   playJulieTheme();
 
+  // Fix canvas to native resolution — CSS handles visual scaling
+  canvas.width  = CW;
+  canvas.height = CH;
+
   function loop(ts){
     if(!_jStart) _jStart = ts;
     const elapsed = (ts - _jStart) / 1000;
     const ctx = canvas.getContext('2d');
-    const W = canvas.offsetWidth  || 400;
-    const H = canvas.offsetHeight || 300;
-    if(canvas.width !== W || canvas.height !== H){
-      canvas.width = W; canvas.height = H;
-    }
-    renderCartoonFrame(ctx, W, H, elapsed);
+    renderCartoonFrame(ctx, elapsed);
     _jAnimId = requestAnimationFrame(loop);
   }
   _jAnimId = requestAnimationFrame(loop);
